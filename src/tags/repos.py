@@ -13,8 +13,8 @@ class TagRepository:
         result = await self.db.execute(tag)
         return result.scalars().first()
 
-    async def create_tag(self, tag_name: str):
-        new_tag = Tag(name=tag_name)
+    async def create_tag(self, name: str):
+        new_tag = Tag(name=name)
         self.db.add(new_tag)
         await self.db.commit()
         await self.db.refresh(new_tag)
