@@ -10,6 +10,13 @@ from alembic import context
 from config.db import Base
 from config.general import settings
 
+from src.auth.models import User, Role
+from src.tags.models import Tag, PhotoTag
+from src.photos.models import Photo
+from src.comments.models import Comment
+
+
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
