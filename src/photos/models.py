@@ -22,10 +22,10 @@ class Photo(Base):
 
     owner: Mapped["User"] = relationship("User", back_populates="photos", lazy="selectin")
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="photo", lazy="selectin")
-    tags: Mapped[list["Tag"]] = relationship(
-        "Tag",
-        secondary="photo_tags",
-        back_populates="photos",
-        lazy="selectin"
-    )
+    # tags: Mapped[list["Tag"]] = relationship(
+    #     "Tag",
+    #     secondary="photo_tags",
+    #     back_populates="photos",
+    #     lazy="selectin"
+    # )
 

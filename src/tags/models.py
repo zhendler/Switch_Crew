@@ -18,10 +18,10 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
 
-    photos: Mapped[list["Photo"]] = relationship(
-        "Photo",
-        secondary="photo_tags",
-        back_populates="tags",
-        lazy="selectin"
-    )
+    # photos: Mapped[list["Photo"]] = relationship(
+    #     "Photo",
+    #     secondary="photo_tags",
+    #     back_populates="tags",
+    #     lazy="selectin"
+    # )
 
