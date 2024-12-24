@@ -4,6 +4,7 @@ from sqlalchemy import String, Integer, ForeignKey, TIMESTAMP, func, Text
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from config.db import Base
+from src.tags.models import photo_tags
 
 
 
@@ -19,13 +20,15 @@ class Photo(Base):
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
 
-
+    # Відношення з User
     owner: Mapped["User"] = relationship("User", back_populates="photos", lazy="selectin")
+    # Відношення з Comment
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="photo", lazy="selectin")
-    # tags: Mapped[list["Tag"]] = relationship(
-    #     "Tag",
-    #     secondary="photo_tags",
-    #     back_populates="photos",
-    #     lazy="selectin"
-    # )
+    # Відношення з Tag через проміжну таблицю
+    tags: Mapped[list["Tag"]] = relationship(
+        "Tag",
+        secondary=photo_tags,
+        back_populates="photos",
+        lazy="selectin"
+    )
 

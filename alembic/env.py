@@ -11,7 +11,7 @@ from config.db import Base
 from config.general import settings
 
 from src.auth.models import User, Role
-from src.tags.models import Tag, PhotoTag
+from src.tags.models import Tag, photo_tags
 from src.photos.models import Photo
 from src.comments.models import Comment
 
