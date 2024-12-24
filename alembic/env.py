@@ -10,10 +10,7 @@ from alembic import context
 from config.db import Base
 from config.general import settings
 
-from src.auth.models import User, Role
-from src.tags.models import Tag, photo_tags
-from src.photos.models import Photo
-from src.comments.models import Comment
+from src.models.models import User, Role, Photo, Comment, Tag, photo_tags
 
 
 
