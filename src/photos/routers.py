@@ -1,10 +1,10 @@
 import select
-
+from sqlalchemy.future import select
 import cloudinary
 from config.db import get_db
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from src.photos.models import Photo, Tag
+from src.models.models import Photo, Tag
 from src.photos.repos import (
     delete_photo,
     get_photo,
@@ -84,13 +84,15 @@ def delete_photo_by_id(photo_id: int, db: Session = Depends(get_db)):
 
 
 @photo_router.post("/transform", response_model=TransformResponse)
-def transform_photo(request: TransformRequest, db: Session = Depends(get_db)):
-    photo = db.query(Photo).filter(Photo.id == request.photo_id).first()
+async def transform_photo(request: TransformRequest, db: Session = Depends(get_db)):
+    photo = select(Photo).filter(Photo.id == request.photo_id)
+    result = await db.execute(photo)
+    photo = result.scalars().first()
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
     transformed_url = generate_transformed_image_url(
-        public_id=photo.url.split("/")[-1].split(".")[0],
+        public_id=photo.url_link.split("/")[-1].split(".")[0],
         width=request.width,
         height=request.height,
         crop_mode=request.crop_mode

@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.photos.models import Photo
+from src.models.models import Photo
 from src.photos.schemas import PhotoCreate
 import cloudinary.uploader
 from fastapi import HTTPException

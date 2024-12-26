@@ -1,7 +1,7 @@
 from io import BytesIO
+import qrcode
 
 import cloudinary.uploader
-import qrcode
 
 
 def generate_qr_code(image_url: str):
