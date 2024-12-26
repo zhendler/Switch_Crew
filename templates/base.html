@@ -23,8 +23,13 @@
                 </ul>
             </nav>
             <div class="user-actions">
-                <a href="#" class="login">Login</a>
+                {% if user %}
+                <a href="#">{{ user.username }}</a>
+                <a href="#" class="register">Log out</a>
+                {% else %}
+                <a href="/login/" class="login">Login</a>
                 <a href="#" class="register">Sign up</a>
+                {% endif %}
             </div>
         </div>
     </header>

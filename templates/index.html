@@ -3,5 +3,10 @@
 {% block content %}
 
 <h2>Main Page</h2>
+{% if user %}
+    <p>Welcome, {{ user.user.username }}!</p>
+{% else %}
+    <p>Please log in.</p>
+{% endif %}
 
 {% endblock %}

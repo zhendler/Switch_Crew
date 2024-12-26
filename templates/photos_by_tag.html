@@ -10,6 +10,9 @@
         <div class="card-content">
             <p class="author">{{ photo.owner.username }}</p>
             <p class="description">{{ photo.description }}</p>
+            {% for tag in photo.tags %}
+            <p class="description">{{ tag.name }}</p>
+            {% endfor %}
         </div>
     </div>
     {% endfor %}

@@ -5,19 +5,18 @@ from fastapi import Depends, APIRouter, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
+from ..auth.utils import RoleChecker
+from ..models.models import User
+from src.auth.schemas import RoleEnum
 tag_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-
-# @tag_router.post("/create/")
-# async def create_tag2(tag_name: str = Form(...)):
-#     return RedirectResponse(f"/tags/create/{tag_name}/", status_code=303)
 
 @tag_router.post("/create/",
                  summary="Create a new tag",
                  description="""This endpoint creates a new tag with the specified name.
     The tag name should be unique and must not exceed 50 characters.""")
-async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_db)):
+async def create_tag(tag_name: str = Form(...), user: User = Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR])), db: AsyncSession = Depends(get_db)):
     """
     Creates a new tag.
 
@@ -27,6 +26,7 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
     Returns:
     - The created tag object.
     """
+
     tag_repo = TagRepository(db)
     await tag_repo.create_tag(name=tag_name)
     return RedirectResponse("/tags/", status_code=302)
@@ -73,7 +73,7 @@ async def get_tag_by_name(tag_name: str, db: AsyncSession = Depends(get_db)):
                    summary="Delete a tag by name",
                    description="""This endpoint deletes a tag from the database by its name. 
     If the tag is not found, an error message is returned.""")
-async def delete_tag_by_name(tag_name: str, db: AsyncSession = Depends(get_db)):
+async def delete_tag_by_name(tag_name: str, user: User = Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR])), db: AsyncSession = Depends(get_db)):
     """
     Deletes a tag by its name.
 
@@ -92,7 +92,7 @@ async def delete_tag_by_name(tag_name: str, db: AsyncSession = Depends(get_db)):
                 summary="Update an existing tag's name",
                 description="""This endpoint updates the name of an existing tag.
     You need to provide the current name and the new name for the tag.""")
-async def update_tag_name(tag_name: str, tag_new_name: str, db: AsyncSession = Depends(get_db)):
+async def update_tag_name(tag_name: str, tag_new_name: str, user: User = Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR])), db: AsyncSession = Depends(get_db)):
     """
     Updates the name of an existing tag.
 
