@@ -12,13 +12,34 @@ class PhotoCreate(PhotoBase):
     pass
 
 
+class TagResponse(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
 class PhotoResponse(PhotoBase):
     id: int
     user_id: int
+    description: Optional[str] = None
+    tags: List[TagResponse]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class PhotoUpdate(BaseModel):
     description: str
+
+class TransformRequest(BaseModel):
+    photo_id: int
+    width: int
+    height: int
+    crop_mode: str = "fill"
+
+class TransformResponse(BaseModel):
+    photo_id: int
+    transformed_url: str
+    qr_code_url: str
