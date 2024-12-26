@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-container">
+  <!-- Левая секция: Добавление тегов -->
+  <div class="left-section">
+    <h2>Добавить тег</h2>
+    <form action="/tags/create/" method="post">
+      <input type="text" name="tag_name" placeholder="Name of new tag" required>
+      <button type="submit">Add</button>
+    </form>
+  </div>
+
+  <!-- Правая секция: Отображение тегов -->
+  <div class="right-section">
+    <h2>Теги:</h2>
+    <div class="styled-row">
+      {% for tag in tags %}
+        <a href="{{ tag.name }}/photos/" class="tag-link">
+          <p>{{ tag.name }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
