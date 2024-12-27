@@ -10,28 +10,27 @@ from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum, ResetPas
 from src.auth.mail_utils import send_verification
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
-    create_access_token, 
-    create_refresh_token, 
+    create_access_token,
+    create_refresh_token,
     decode_access_token,
     create_verification_token,
     decode_verification_token,
     RoleChecker
 )
 
-
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
 
 
 @router.post(
-        "/register", 
-        response_model=UserResponse, 
-        status_code=status.HTTP_201_CREATED,
+    "/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 async def register(
-    user_create: UserCreate, 
-    background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db),
+        user_create: UserCreate,
+        background_tasks: BackgroundTasks,
+        db: AsyncSession = Depends(get_db),
 
 ):
     user_repo = UserRepository(db)
@@ -64,13 +63,13 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+        form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -81,14 +80,14 @@ async def login_for_access_token(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
-    refresh_token: str, db: AsyncSession = Depends(get_db)
+        refresh_token: str, db: AsyncSession = Depends(get_db)
 ):
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(token_data.username)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -99,9 +98,9 @@ async def refresh_token(
 
 @router.get("/forgot-password")
 async def forgot_password(
-    email: str, 
-    background_tasks: BackgroundTasks, 
-    db: AsyncSession = Depends(get_db)
+        email: str,
+        background_tasks: BackgroundTasks,
+        db: AsyncSession = Depends(get_db)
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
@@ -139,8 +138,8 @@ async def reset_password_form(token: str):
 
 @router.post("/reset-password")
 async def reset_password(
-    body: ResetPasswordRequest,
-    db: AsyncSession = Depends(get_db)
+        body: ResetPasswordRequest,
+        db: AsyncSession = Depends(get_db)
 ):
     try:
         email = decode_verification_token(body.token)
@@ -175,10 +174,10 @@ async def reset_password_success():
 
 @router.put("/{user_id}/role")
 async def change_user_role(
-    user_id: int,
-    role: RoleEnum,
-    User = Depends(RoleChecker([RoleEnum.ADMIN])),
-    db: AsyncSession = Depends(get_db)
+        user_id: int,
+        role: RoleEnum,
+        User=Depends(RoleChecker([RoleEnum.ADMIN])),
+        db: AsyncSession = Depends(get_db)
 ):
     if role not in [RoleEnum.USER, RoleEnum.MODERATOR]:
         raise HTTPException(
@@ -197,4 +196,3 @@ async def change_user_role(
     await db.commit()
     return {"msg": "User role updated successfully"}
 
-   

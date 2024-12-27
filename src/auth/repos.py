@@ -7,7 +7,7 @@ from src.auth.schemas import UserCreate, RoleEnum
 
 
 class UserRepository:
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -18,7 +18,7 @@ class UserRepository:
         if not first_user:
             user_role = await RoleRepository(self.session).get_role_by_name(RoleEnum.ADMIN)
         else:
-            user_role = await RoleRepository(self.session).get_role_by_name(RoleEnum.USER)    
+            user_role = await RoleRepository(self.session).get_role_by_name(RoleEnum.USER)
         new_user = User(
             username=user_create.username,
             hashed_password=hashed_password,
@@ -30,17 +30,17 @@ class UserRepository:
         await self.session.commit()
         await self.session.refresh(new_user)
         return new_user
-    
+
     async def get_user_by_email(self, email):
         query = select(User).where(User.email == email)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def get_user_by_username(self, username):
         query = select(User).where(User.username == username)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def get_user_by_id(self, user_id: int):
         query = select(User).where(User.id == user_id)
         result = await self.session.execute(query)
@@ -55,7 +55,6 @@ class UserRepository:
     async def update_user_password(self, user: User, hashed_password: str):
         user.hashed_password = hashed_password
         await self.session.commit()
-
 
 
 class RoleRepository():
