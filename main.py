@@ -1,17 +1,21 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.templating import Jinja2Templates
-from src.tags.routers import tag_router
+from src.tags.routers import tag_router, get_user
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from src.auth.routers import router as auth_router
-import logging
+from fastapi.security import OAuth2PasswordBearer
+from src.photos.routers import photo_router
 app = FastAPI()
-logger = logging.getLogger("uvicorn")
+
 app.include_router(tag_router, prefix='/tags', tags=['tags'])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(photo_router, prefix="/photos", tags=["photos"])
 
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @app.get("/ping")
 async def ping():
@@ -19,7 +23,8 @@ async def ping():
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root( request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    user = get_user(request)
+    return templates.TemplateResponse("index.html", {"request": request, 'user': user})
 
 @app.get("/login", response_class=HTMLResponse)
 async def login(request: Request):
