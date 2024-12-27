@@ -10,8 +10,6 @@ from src.models.models import User
 from config.general import settings
 from config.db import get_db
 
-
-
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
@@ -65,14 +63,14 @@ def decode_access_token(token: str) -> TokenData | None:
         return TokenData(username=username)
     except JWTError:
         return None
-    
 
-async def get_current_user(token: str = Depends(oauth2_scheme), 
+
+async def get_current_user(token: str = Depends(oauth2_scheme),
                            db: AsyncSession = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
     token_data = decode_access_token(token)
     if token_data is None:
@@ -84,15 +82,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     return user
 
 
-
 class RoleChecker:
 
     def __init__(self, allowed_roles: list[RoleEnum]):
         self.allowed_roles = allowed_roles
 
     async def __call__(
-        self, token: str = Depends(oauth2_scheme), 
-        db: AsyncSession = Depends(get_db)
+            self, token: str = Depends(oauth2_scheme),
+            db: AsyncSession = Depends(get_db)
     ) -> User:
         user = await get_current_user(token, db)
         is_admin_or_moderator = user.role.name in [RoleEnum.ADMIN.value, RoleEnum.MODERATOR.value]

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<div class="card-container">
+    {% for photo in photos %}
+    <div class="card">
+        <img src="{{ photo.url_link }}" alt="Photo" class="card-img">
+        <div class="card-content">
+            <p class="author">{{ photo.owner.username }}</p>
+            <p class="description">{{ photo.description }}</p>
+            {% for tag in photo.tags %}
+            <p class="description">{{ tag.name }}</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
