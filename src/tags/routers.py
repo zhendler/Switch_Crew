@@ -137,10 +137,3 @@ Example:
     app.include_router(tag_router, prefix="/tags", tags=["Tags"])
 """
 
-
-async def get_user(request: Request):
-    token = request.cookies.get("access_token")
-    if token is None:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    user = decode_access_token(token)
-    return user
