@@ -1,12 +1,12 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Form, Depends
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
 from config.db import get_db
 from src.auth.repos import UserRepository, RoleRepository
-from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum, ResetPasswordRequest
+from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum
 from src.auth.mail_utils import send_verification
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
@@ -139,11 +139,12 @@ async def reset_password_form(token: str):
 
 @router.post("/reset-password")
 async def reset_password(
-    body: ResetPasswordRequest,
+    token: str = Form(...),
+    new_password: str = Form(...),
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        email = decode_verification_token(body.token)
+        email = decode_verification_token(token)
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -156,21 +157,14 @@ async def reset_password(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        hashed_password = get_password_hash(body.new_password)
+        hashed_password = get_password_hash(new_password)
         await user_repo.update_user_password(user, hashed_password)
-        return RedirectResponse(url="/auth/password-reset-success", status_code=status.HTTP_303_SEE_OTHER)
+        return {"msg": "Password reset successful!"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
-
-
-@router.get("/password-reset-success", response_class=HTMLResponse)
-async def reset_password_success():
-    template = env.get_template("reset_password_success.html")
-    html_content = template.render()
-    return HTMLResponse(content=html_content)
 
 
 @router.put("/{user_id}/role")
