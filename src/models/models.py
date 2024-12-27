@@ -80,6 +80,11 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP")
+    )
 
     user: Mapped["User"] = relationship("User", lazy="selectin")
     photo: Mapped["Photo"] = relationship("Photo", lazy="selectin")

@@ -129,3 +129,4 @@ Example:
     app = FastAPI()
     app.include_router(tag_router, prefix="/tags", tags=["Tags"])
 """
+
