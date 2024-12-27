@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
-from src.tags.routers import tag_router, get_user
+from src.tags.routers import tag_router
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from src.auth.routers import router as auth_router
