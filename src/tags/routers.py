@@ -1,17 +1,13 @@
-from http.client import HTTPException
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from .repos import TagRepository
 from config.db import get_db
 from fastapi import Depends, APIRouter, Request, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
-from fastapi.security import OAuth2PasswordBearer
-from ..auth.utils import RoleChecker, decode_access_token
+from ..auth.utils import RoleChecker
 from ..models.models import User
 from src.auth.schemas import RoleEnum
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 tag_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -49,10 +45,9 @@ async def get_all_tags(request: Request, db: AsyncSession = Depends(get_db)):
     Returns:
     - A list of all tag objects.
     """
-    user= await get_user(request)
     tag_repo = TagRepository(db)
     tags = await tag_repo.get_all_tags()
-    return templates.TemplateResponse("tags.html", {"request": request, "title": "Tags", "tags": tags, 'user': user})
+    return templates.TemplateResponse("tags.html", {"request": request, "title": "Tags", "tags": tags})
 
 
 @tag_router.get('/{tag_name}/',
