@@ -33,6 +33,11 @@ class User(Base):
     created_at: Mapped["datetime"] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP")
+    )
 
 
     role: Mapped["Role"] = relationship("Role", back_populates="users", lazy="selectin")
@@ -74,6 +79,11 @@ class Comment(Base):
     photo_id: Mapped[int] = mapped_column(ForeignKey("photos.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP")
     )
 
     user: Mapped["User"] = relationship("User", lazy="selectin")

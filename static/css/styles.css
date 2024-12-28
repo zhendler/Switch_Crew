@@ -1,0 +1,95 @@
+.styled-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+}
+
+.styled-row .tag-link {
+    text-decoration: none; /* Убираем подчеркивание у ссылки */
+}
+
+.styled-row p {
+    background-color: #2E3740;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin: 5px 0;
+    cursor: pointer; /* Указатель мыши при наведении */
+}
+
+.styled-row p:hover {
+    background-color: #ED3B1C;
+    color: white;
+}
+
+ .page-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .left-section, .right-section {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    width: 45%;
+    background-color: #f9f9f9;
+  }
+
+  .left-section h2, .right-section h2 {
+    margin-bottom: 16px;
+  }
+
+  .left-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .left-section input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .left-section button {
+    padding: 10px;
+    background-color: #2E3740;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .left-section button:hover {
+    background-color: #ED3B1C;
+  }
+
+  .styled-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .styled-row .tag-link {
+    text-decoration: none;
+  }
+
+  .styled-row p {
+    background-color: #2E3740;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .styled-row p:hover {
+    background-color: #ED3B1C;
+  }
