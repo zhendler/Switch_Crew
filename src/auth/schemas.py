@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 
 class RoleEnum(Enum):
@@ -13,16 +14,16 @@ class UserBase(BaseModel):
     
 
 class UserCreate(UserBase):
-    username: str
-    email: EmailStr
     password: str
 
 
 class UserResponse(UserBase):
     id: int
+    avatar_url: Optional[str] = None
+
 
     class Config:
-        from_atributes = True
+        orm_mode = True
 
 
 class TokenData(BaseModel):
@@ -33,8 +34,3 @@ class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
-
-
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str

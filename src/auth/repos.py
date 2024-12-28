@@ -1,6 +1,10 @@
+from fastapi import UploadFile, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import cloudinary
+import cloudinary.uploader
 
+from config.general import settings
 from src.models.models import User, Role
 from src.auth.pass_utils import get_password_hash
 from src.auth.schemas import UserCreate, RoleEnum
@@ -45,6 +49,30 @@ class UserRepository:
         query = select(User).where(User.id == user_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+    
+    async def upload_to_cloudinary(self, file: UploadFile) -> str:
+        cloudinary.config(
+            cloud_name=settings.cloudinary_cloud_name,
+            api_key=settings.cloudinary_api_key,
+            api_secret=settings.cloudinary_api_secret,
+            secure=True
+        )
+        try:
+            result = cloudinary.uploader.upload(file.file)
+            return result["secure_url"]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to upload avatar: {str(e)}"
+            )
+    
+    async def update_avatar(self, email, url: str) -> User:
+        user = await self.get_user_by_email(email)
+        user.avatar_url = url
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
 
     async def activate_user(self, user: User):
         user.is_active = True
