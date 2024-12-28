@@ -1,12 +1,16 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Query
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status, File, Form, Depends
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
+import cloudinary
+import cloudinary.uploader
 
 from config.db import get_db
-from src.auth.repos import UserRepository, RoleRepository
-from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum, ResetPasswordRequest
+from config.general import settings
+from src.models.models import User
+from src.auth.repos import UserRepository, RoleRepository 
+from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum
 from src.auth.mail_utils import send_verification
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
@@ -15,6 +19,7 @@ from src.auth.utils import (
     decode_access_token,
     create_verification_token,
     decode_verification_token,
+    get_current_user,
     RoleChecker
 )
 
@@ -28,16 +33,23 @@ env = Environment(loader=FileSystemLoader("src/templates"))
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
-        user_create: UserCreate,
-        background_tasks: BackgroundTasks,
-        db: AsyncSession = Depends(get_db),
+    background_tasks: BackgroundTasks,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    avatar: UploadFile = File(None),
+    db: AsyncSession = Depends(get_db),
 
 ):
     user_repo = UserRepository(db)
-    user = await user_repo.get_user_by_email(user_create.email)
+    user = await user_repo.get_user_by_email(email)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Account already register")
+    user_create = UserCreate(username=username, email=email, password=password, avatar=avatar)
     user = await user_repo.create_user(user_create)
+    if avatar:
+        avatar_url = await user_repo.upload_to_cloudinary(avatar)
+        await user_repo.update_avatar(user.email, avatar_url)
     verification_token = create_verification_token(user.email)
     verification_link = (
         f"http://localhost:8000/auth/verify-email?token={verification_token}"
@@ -45,7 +57,12 @@ async def register(
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification, user.email, email_body)
-    return user
+    return {
+        "username": user.username,
+        "email": user.email,
+        "id": user.id,
+        "avatar_url": user.avatar_url
+    }
 
 
 @router.get("/verify-email")
@@ -138,11 +155,12 @@ async def reset_password_form(token: str):
 
 @router.post("/reset-password")
 async def reset_password(
-        body: ResetPasswordRequest,
-        db: AsyncSession = Depends(get_db)
+    token: str = Form(...),
+    new_password: str = Form(...),
+    db: AsyncSession = Depends(get_db)
 ):
     try:
-        email = decode_verification_token(body.token)
+        email = decode_verification_token(token)
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -155,21 +173,14 @@ async def reset_password(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        hashed_password = get_password_hash(body.new_password)
+        hashed_password = get_password_hash(new_password)
         await user_repo.update_user_password(user, hashed_password)
-        return RedirectResponse(url="/auth/password-reset-success", status_code=status.HTTP_303_SEE_OTHER)
+        return {"msg": "Password reset successful!"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
-
-
-@router.get("/password-reset-success", response_class=HTMLResponse)
-async def reset_password_success():
-    template = env.get_template("reset_password_success.html")
-    html_content = template.render()
-    return HTMLResponse(content=html_content)
 
 
 @router.put("/{user_id}/role")
@@ -196,3 +207,37 @@ async def change_user_role(
     await db.commit()
     return {"msg": "User role updated successfully"}
 
+   
+@router.patch('/avatar', response_model=UserResponse)
+async def update_user_avatar(
+    file: UploadFile = File(), 
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is not active. Please activate your account first."
+        )
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret,
+        secure=True
+    )
+    try:
+        r = cloudinary.uploader.upload(
+            file.file, 
+            public_id=f'avatars/{current_user.username}',
+            overwrite=True,
+        )
+        src_url = cloudinary.CloudinaryImage(f'avatars/{current_user.username}')\
+                        .build_url(width=250, height=250, crop='fill', version=r.get('version'))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error uploading avatar: {str(e)}"
+        )
+    user_repo = UserRepository(db)
+    user = await user_repo.update_avatar(current_user.email, src_url)
+    return user
