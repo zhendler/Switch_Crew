@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, date
 
-from sqlalchemy import Integer, String, Boolean, func, ForeignKey, TIMESTAMP, text, Table, Column, Text
+from sqlalchemy import Integer, String, Boolean, func, ForeignKey, TIMESTAMP, text, Table, Column, Text, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from config.db import Base
@@ -25,6 +25,11 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    first_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    country: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -51,11 +56,13 @@ class Photo(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     url_link: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    rating: Mapped[int] = mapped_column(Integer, nullable=True)
     qr_core_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped["datetime"] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
+
 
     # Відношення з User
     owner: Mapped["User"] = relationship("User", back_populates="photos", lazy="selectin")
@@ -66,8 +73,11 @@ class Photo(Base):
         "Tag",
         secondary=photo_tags,
         back_populates="photos",
-        lazy="selectin"
-    )
+        lazy="selectin")
+    ratings: Mapped[list["PhotoRating"]] = relationship(
+        "PhotoRating", back_populates="photo", lazy="selectin")
+
+
 
 
 class Comment(Base):
@@ -105,3 +115,17 @@ class Tag(Base):
         back_populates="tags",
         lazy="selectin"
     )
+
+
+class PhotoRating(Base):
+    __tablename__ = "photo_ratings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    photo_id: Mapped[int] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    # Відношення з Photo
+    photo: Mapped["Photo"] = relationship("Photo", back_populates="ratings", lazy="selectin")
+    # Відношення з User
+    user: Mapped["User"] = relationship("User", lazy="selectin")

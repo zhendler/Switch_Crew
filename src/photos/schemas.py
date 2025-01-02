@@ -1,16 +1,19 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from fastapi import Form, Query
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional
 
 
 class PhotoBase(BaseModel):
-    url: str
-    description: Optional[str] = None
-    tags: Optional[List[str]] = []
+    id: int
+    url_link: str
 
 
-class PhotoCreate(PhotoBase):
-    pass
 
+class PhotoCreate(BaseModel):
+    description: Optional[str] = Field(None, max_length=255, description= "Description of the photo")
+    tags: List[str] = Query([], title="Теги")
 
 class TagResponse(BaseModel):
     id: int
@@ -21,10 +24,13 @@ class TagResponse(BaseModel):
 
 
 class PhotoResponse(PhotoBase):
+
     id: int
-    user_id: int
+    owner_id: int
     description: Optional[str] = None
     tags: List[TagResponse]
+    rating: Optional[float]
+    qr_core_url: Optional[str]
 
     class Config:
         from_attributes = True
@@ -33,13 +39,41 @@ class PhotoResponse(PhotoBase):
 class PhotoUpdate(BaseModel):
     description: str
 
-class TransformRequest(BaseModel):
-    photo_id: int
-    width: int
-    height: int
-    crop_mode: str = "fill"
 
-class TransformResponse(BaseModel):
+class UrlPhotoResponse(BaseModel):
+    url_link: str
+
+
+class GetPhoto(BaseModel):
     photo_id: int
-    transformed_url: str
-    qr_code_url: str
+
+class PhotoRatingResponse(BaseModel):
+    user_id: int
+    rating: int
+
+    class Config:
+        from_attributes = True
+
+# Схема для списку всіх оцінок фото
+class PhotoRatingsListResponse(BaseModel):
+    photo_id: int
+    ratings: List[PhotoRatingResponse]
+
+    class Config:
+        from_attributes = True
+
+# Схема для списку всіх оцінок користувача
+class UserRatingsListResponse(BaseModel):
+    user_id: int
+    ratings: List[PhotoRatingResponse]
+
+    class Config:
+        from_attributes = True
+
+
+
+class AverageRatingResponse(BaseModel):
+    rating: float
+
+    class Config:
+        from_attributes = True

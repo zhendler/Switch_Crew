@@ -29,7 +29,7 @@ async def get_user_comments(user: User = Depends(get_current_user),
     return await comment_repo.get_comments_by_user(user.id)
 
 @router.get("/photo/{photo_id}/", response_model=list[CommentResponse], dependencies= FORALL)
-async def get_user_comments( photo_id: int, user: User = Depends(get_current_user),
+async def get_photo_comments( photo_id: int, user: User = Depends(get_current_user),
                             db: AsyncSession = Depends(get_db)):
     comment_repo = CommentsRepository(db)
     return await comment_repo.get_comments_by_photo(photo_id)
