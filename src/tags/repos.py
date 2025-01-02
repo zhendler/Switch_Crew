@@ -132,3 +132,12 @@ class TagRepository:
             return tag.photos
         else:
             return HTTPException(status_code=404, detail="Tag not found!")
+
+    async def get_or_create_tag(self, tag_name):
+        tag = await self.get_tag_by_name(tag_name)
+        if not tag:
+            tag = Tag(name=tag_name)
+            self.db.add(tag)
+            await self.db.commit()
+            await self.db.refresh(tag)
+        return tag
