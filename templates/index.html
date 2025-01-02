@@ -1,8 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
+<link rel="stylesheet" href="/static/css/mainpage.css">
+<div class="container">
+    <div class="main-content">
+        <section class="photo-section">
+            <h2>Last photos</h2>
+            <div class="card-container">
+                {% for photo in photos %}
+                <div class="card">
+                    <a href="http://127.0.0.1:8000/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                    <div class="card-content">
+                        <a href="http://127.0.0.1:8000/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                        <p class="description">{{ photo.description|truncatechars(38) }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    <div class="sidebar">
+        <section class="sidebar-section popular-users">
+            <h3>Popular users</h3>
+            <div class="user-list">
+                {% for user in popular_users[:3] %}
+                <a href="/page/{{ user.username }}" class="user-tile">
+                    {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar">
+                    {% endif %}
+                    <p class="user-name">{{ user.username }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
 
-<h2>Main Page</h2>
+        <section class="sidebar-section popular-tags">
+            <h3>Popular tags</h3>
+            <div class="tag-list">
+                {% for tag in popular_tags[:3] %}
+                <a href="/tags/{{ tag.name }}/photos/" class="tag-tile">
+                    <p class="tag-name">#{{ tag.name }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
 
-
+        <section class="sidebar-section recent-comments">
+            <h3>Last comments</h3>
+            <div class="comment-list">
+                {% for comment in recent_comments[:3] %}
+                <a href="/photo/{{ comment.photo_id }}" class="comment-tile">
+                    <p class="comment-author">{{ comment.user.username }}</p>
+                    <p class="comment-text">{{ comment.content | truncate(50) }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
 {% endblock %}
+

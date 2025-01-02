@@ -1,8 +1,9 @@
 from http.client import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.models import Tag
+from ..models.models import Tag, Photo
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 class TagRepository:
     """
@@ -84,14 +85,21 @@ class TagRepository:
         self.db = db
 
     async def get_tag_by_name(self, tag_name: str):
-        tag = select(Tag).filter(Tag.name == tag_name)
-        result = await self.db.execute(tag)
-        if result:
-            return result.scalars().first()
+        query = select(Tag).filter(Tag.name == tag_name)
+        result = await self.db.execute(query)
+        tag = result.scalars().first()
+        if tag:
+            return tag
         else:
-            return HTTPException(status_code=404, detail="Tag not found!")
+            return None
 
     async def create_tag(self, name: str):
+        existing_tag = await self.db.execute(select(Tag).where(Tag.name == name))
+        existing_tag = existing_tag.scalar_one_or_none()
+
+        if existing_tag:
+            return existing_tag
+
         new_tag = Tag(name=name)
         self.db.add(new_tag)
         await self.db.commit()
@@ -128,16 +136,13 @@ class TagRepository:
 
     async def get_photos_by_tag(self, tag_name: str):
         tag = await self.get_tag_by_name(tag_name)
-        if tag:
-            return tag.photos
-        else:
-            return HTTPException(status_code=404, detail="Tag not found!")
-
-    async def get_or_create_tag(self, tag_name):
-        tag = await self.get_tag_by_name(tag_name)
         if not tag:
-            tag = Tag(name=tag_name)
-            self.db.add(tag)
-            await self.db.commit()
-            await self.db.refresh(tag)
-        return tag
+            raise HTTPException(status_code=404, detail="Tag not found!")
+
+        result = await self.db.execute(
+            select(Photo).options(joinedload(Photo.tags)).where(Photo.id.in_([photo.id for photo in tag.photos]))
+        )
+        photos = result.scalars().unique().all()
+        return photos
+
+
