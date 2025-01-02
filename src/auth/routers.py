@@ -50,7 +50,7 @@ async def register(
     if avatar:
         avatar_url = await user_repo.upload_to_cloudinary(avatar)
         await user_repo.update_avatar(user.email, avatar_url)
-    verification_token = create_verification_token(user.email)
+    verification_token =        create_verification_token(user.email)
     verification_link = (
         f"http://localhost:8000/auth/verify-email?token={verification_token}"
     )
