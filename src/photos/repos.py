@@ -25,7 +25,7 @@ class PhotoRepository:
         tag_ids = []
 
         for tag_name in tags:
-            tag = await tag_repo.create_tag(tag_name)
+            tag = await tag_repo.get_or_create_tag(tag_name)
             tag_ids.append(tag.id)
 
         # Додаємо зв'язки між фотографією та тегами

@@ -1,15 +1,8 @@
-import asyncio
-from typing import Sequence
-
-from fastapi import HTTPException, status
+from http.client import HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.models import Tag, Photo
+from ..models.models import Tag
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-
-from ..photos.schemas import TagResponse
-
 
 class TagRepository:
     """
@@ -75,9 +68,11 @@ class TagRepository:
         async def example():
             repository = TagRepository(db=session)
 
-            # Create a new tag             = await repository.create_tag(name="Travel")
+            # Create a new tag
+            tag = await repository.create_tag(name="Travel")
 
-            # Get all tags             = await repository.get_all_tags()
+            # Get all tags
+            tags = await repository.get_all_tags()
 
             # Update a tag's name
             updated_tag = await repository.update_tag_name("Travel", "Adventure")
@@ -88,57 +83,61 @@ class TagRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_tag_by_name(self, tag_name: str) -> Tag:
-        result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
-        tag = result.scalar_one_or_none()
-        if tag:
-            return tag
+    async def get_tag_by_name(self, tag_name: str):
+        tag = select(Tag).filter(Tag.name == tag_name)
+        result = await self.db.execute(tag)
+        if result:
+            return result.scalars().first()
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!")
+            return HTTPException(status_code=404, detail="Tag not found!")
 
-    async def create_tag(self, tag_name: str) -> Tag:
-        result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
-        existing_tag = result.scalar_one_or_none()
-        if type(existing_tag) is Tag:
-            return existing_tag
-
-        new_tag = Tag(name=tag_name)
+    async def create_tag(self, name: str):
+        new_tag = Tag(name=name)
         self.db.add(new_tag)
         await self.db.commit()
         await self.db.refresh(new_tag)
         return new_tag
 
-    async def get_all_tags(self)-> Sequence[Tag]:
+    async def get_all_tags(self):
         tags = await self.db.execute(select(Tag))
         return tags.scalars().all()
 
-    async def delete_tag_by_name(self, tag_name: str) -> str:
+    async def delete_tag_by_name(self, tag_name: str):
+        tag = select(Tag).filter(Tag.name == tag_name)
+        result = await self.db.execute(tag)
+        tag = result.scalars().first()
+        if tag:
+            await self.db.delete(tag)
+            await self.db.commit()
+            return "Successfully deleted!"
+        else:
+            return HTTPException(status_code=404, detail="Tag not found!")
+
+    async def update_tag_name(self, tag_name: str, tag_new_name: str):
+        tag = select(Tag).filter(Tag.name == tag_name)
+        result = await self.db.execute(tag)
+        tag = result.scalars().first()
+
+        if tag:
+            tag.name = tag_new_name
+            await self.db.commit()
+            await self.db.refresh(tag)
+            return tag
+        else:
+            return HTTPException(status_code=404, detail="Tag not found!")
+
+    async def get_photos_by_tag(self, tag_name: str):
         tag = await self.get_tag_by_name(tag_name)
+        if tag:
+            return tag.photos
+        else:
+            return HTTPException(status_code=404, detail="Tag not found!")
 
-        await self.db.delete(tag)
-        await self.db.commit()
-        return "Successfully deleted!"
-
-
-    async def update_tag_name(self, tag_name: str, tag_new_name: str) -> Tag:
-        tag = await self.get_tag_by_name(tag_name)
-
-        tag.name = tag_new_name
-        await self.db.commit()
-        await self.db.refresh(tag)
-        return tag
-
-
-    async def get_photos_by_tag(self, tag_name: str) -> Sequence[Photo]:
+    async def get_or_create_tag(self, tag_name):
         tag = await self.get_tag_by_name(tag_name)
         if not tag:
-            raise HTTPException(status_code=404, detail="Tag not found!")
-
-        result = await self.db.execute(
-            select(Photo).options(joinedload(Photo.tags)).where(Photo.id.in_([photo.id for photo in tag.photos]))
-        )
-        photos = result.scalars().unique().all()
-        if photos:
-            return photos
-        else:
-            raise HTTPException(status_code=404, detail="Photos not found!")
+            tag = Tag(name=tag_name)
+            self.db.add(tag)
+            await self.db.commit()
+            await self.db.refresh(tag)
+        return tag
