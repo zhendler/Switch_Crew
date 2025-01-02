@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/photo-page-style.css">
+<main class="content">
+    <div class="photo-container">
+        <div class="photo-section">
+            <img src="{{ photo.url_link }}" alt="{{ photo.title }}" class="photo-img">
+            <div class="photo-details">
+                {% if photo.owner.username == user.username %}
+                    <div class="delete-button-container">
+                        <form action="http://127.0.0.1:8000/web/photos/delete/{{ photo.id }}" method="post">
+                            <button type="submit" class="delete-button-photo">
+                                <p class="delete-text">Delete photo <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="trash-icon-photo"></p>
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+                <div class="user-info">
+                    <img src="{{ photo.owner.avatar_url }}" alt="{{ photo.owner.username }}" class="avatar">
+                    <p class="username">{{ photo.owner.username }}</p>
+                </div>
+                <p class="description">{{ photo.description }}</p>
+                <div class="tags">
+                    {% for tag in photo.tags %}
+                        <a href="/tags/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="comment-section">
+            <h3>Comments</h3>
+            <form class="comment-form" action="http://127.0.0.1:8000/web/comments/create/{{ photo.id }}/" method="post">
+                <textarea class="comment-input" name="comment_content" placeholder="Add your comment..."></textarea>
+                <button type="submit" class="post-button">Post</button>
+            </form>
+            {% if photo.comments %}
+            <div class="comments">
+                {% for comment in photo.comments %}
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="comment-author-container">
+                            <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="comment-avatar">
+                            <p class="comment-author">{{ comment.user.username }}</p>
+                        </div>
+                        {% if comment.user.username == user.username %}
+                        <form action="http://127.0.0.1:8000/web/comments/delete/{{ comment.id }}/" method="post">
+                            <button type="submit" class="delete-button">
+                                <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="trash-icon">
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <p class="comment-text">{{ comment.content }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

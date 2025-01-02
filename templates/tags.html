@@ -1,23 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<link rel="stylesheet" href="/static/css/tags.css">
 <section class="page-container">
   <!-- Левая секция: Добавление тегов -->
+  {% if user %}
   <div class="left-section">
-    <h2>Add new tag</h2>
-    <form action="/tags/create/" method="post">
-      <input type="text" name="tag_name" placeholder="Name of new tag" required>
-      <button type="submit">Add</button>
-    </form>
+      <h2>Add new tag</h2>
+      <form action="/tags/create/" method="post">
+        <input type="text" name="tag_name" placeholder="Name of new tag" required>
+        <button type="submit">Add</button>
+      </form>
+    {% if user.role_id != 3 %}
+      <form action="/tags/delete/" method="post">
+        <input type="text" name="tag_name" placeholder="Name of new tag" required>
+        <button type="submit">Delete</button>
+      </form>
+      <h2>Change tag name</h2>
+      <form action="/tags/create/" method="post">
+        <input type="text" name="tag_name" placeholder="Old tag's name" required>
+      </form>
+      <form action="/tags/delete/" method="post">
+        <input type="text" name="tag_name" placeholder="New tag's name" required>
+        <button type="submit">New tag's name</button>
+      </form>
+    {% endif %}
   </div>
 
-  <!-- Правая секция: Отображение тегов -->
+  {% endif %}
+
   <div class="right-section">
-    <h2>Теги:</h2>
-    <div class="styled-row">
+    <h2>Tags:</h2>
+    <div class="styled-row tags">
       {% for tag in tags %}
-        <a href="{{ tag.name }}/photos/" class="tag-link">
+        <a href="http://127.0.0.1:8000/web/tags/{{ tag.name }}/photos/" class="tag-link">
           <p>{{ tag.name }}</p>
         </a>
       {% endfor %}

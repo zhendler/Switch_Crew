@@ -1,0 +1,54 @@
+.page-container {
+    display: flex;
+    justify-content: flex-start; /* Выравниваем содержимое влево */
+    align-items: flex-start;
+    gap: 20px; /* Расстояние между секциями */
+    margin: 20px auto; /* Центрируем страницу горизонтально */
+    max-width: 1200px; /* Устанавливаем максимальную ширину страницы */
+}
+
+.left-section {
+    flex: 0 0 30%; /* Фиксированная ширина для левых секций */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.right-section {
+    flex: 1; /* Правая секция занимает оставшееся пространство */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+.left-section h2, .right-section h2 {
+    margin-bottom: 16px;
+}
+
+.left-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.left-section input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.left-section button {
+    padding: 10px;
+    background-color: #2E3740;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.left-section button:hover {
+    background-color: #ED3B1C;
+}

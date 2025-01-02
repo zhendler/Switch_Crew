@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p class="centered-title">{{ title }}</p>
+
+<div class="card-container-wrapper">
+    <div class="card-container">
+        {% for photo in photos %}
+        <div class="card">
+            <a href="http://127.0.0.1:8000/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                <div class="card-content">
+                    <a href="http://127.0.0.1:8000/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                    <p class="description">{{ photo.description }}</p>
+                    <div class="card-tags">
+                        {% for tag in photo.tags %}
+                        <a href="http://127.0.0.1:8000/web/tags/{{ tag.name }}/photos/" class="tag-link">
+                            #{{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <div class="comments-section">
+                        {% for comment in photo.comments[:1] %}
+                        <div class="comment">
+                            <a href="http://127.0.0.1:8000/web/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
+                            <p class="comment-text">{{ comment.content }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="pagination">
+    {% if current_page > 1 %}
+    <a href="?page={{ current_page - 1 }}" class="pagination-link">Previous</a>
+    {% endif %}
+    {% for page_num in range(1, total_pages + 1) %}
+    <a href="?page={{ page_num }}" class="pagination-link {% if page_num == current_page %}active{% endif %}">
+        {{ page_num }}
+    </a>
+    {% endfor %}
+    {% if current_page < total_pages %}
+    <a href="?page={{ current_page + 1 }}" class="pagination-link">Next</a>
+    {% endif %}
+</div>
+
+{% endblock %}

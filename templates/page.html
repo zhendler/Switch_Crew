@@ -1,17 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="center-horizontal">
+    <h1>{{ user_page.username }}</h1>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <div>
+        <img src="{{ user_page.avatar_url }}" alt="User Avatar" class="avatar">
+    </div>
+    <p class="photo-count">
+    <span class="count">{{ amount_of_photos }}</span> publications
+    </p>
+    <h5>Date of registration: {{ Date_reg }}</h5>
+</div>
 
-<p class="centered-title">{{ title }}</p>
-
-<div class="card-container-wrapper">
-        <div class="card-container">
+<div class="card-container">
             {% if photos %}
                 {% for photo in photos %}
                 <div class="card">
                 <a href="http://127.0.0.1:8000/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                     <div class="card-content">
-                        <a href="http://127.0.0.1:8000/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                        <a href=http://127.0.0.1:8000/web/page/{{photo.owner.username}}><p class="author" >{{ photo.owner.username }}</p></a>
                         <p class="description">{{ photo.description }}</p>
                         <div class="card-tags">
                             {% for tag in photo.tags %}
@@ -23,7 +31,7 @@
                         <div class="comments-section">
                             {% for comment in photo.comments[:1] %}
                             <div class="comment">
-                                <a href="/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
+                                <a href="http://127.0.0.1:8000/web/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
                                 <p class="comment-text">{{ comment.content }}</p>
                             </div>
                             {% endfor %}
@@ -35,6 +43,6 @@
             <h3>Any photos with #{{ title }}</h3>
             {% endif %}
         </div>
-    </div>
+
 
 {% endblock %}
