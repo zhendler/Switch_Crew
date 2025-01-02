@@ -1,9 +1,10 @@
-
+import templates
 from config.db import get_db
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
-from src.auth.utils import  get_current_user, FORALL, FORMODER
+from src.auth.schemas import RoleEnum
+from src.auth.utils import RoleChecker, decode_access_token, get_current_user
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import PhotoResponse, PhotoUpdate, UrlPhotoResponse, PhotoRatingsListResponse, \
@@ -15,17 +16,17 @@ from src.utils.cloudinary_helper import upload_photo_to_cloudinary, get_cloudina
 
 from src.utils.qr_code_helper import generate_qr_code
 from typing import Optional, List, Union
-
+from sqlalchemy import insert
+from fastapi.templating import Jinja2Templates
 
 photo_router = APIRouter()
 
+FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
+FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 
 
-
-@photo_router.post("/", response_model=PhotoResponse,
-                   status_code=status.HTTP_201_CREATED,
-                   dependencies=FORALL)
-async def create_photo(tags: List[str] = Query([], title="Tegs", description="Photo tags, max 5", max_items = 5),
+@photo_router.post("/", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED, dependencies=FORALL)
+async def create_photo(tags: List[str] = Query([], title="Теги", description="Теги фотографії", max_items = 5),
                        description: str = Query(None, title="Опис фотографії", description="Опис фотографії"),
                        file: UploadFile = File(...),
                        user: User = Depends(get_current_user),
@@ -38,20 +39,16 @@ async def create_photo(tags: List[str] = Query([], title="Tegs", description="Ph
     return new_photo
 
 
-@photo_router.get("/users_all_photos",
-                  response_model=list[PhotoResponse],
-                  dependencies=FORALL)
+@photo_router.get("/all_user_photos", response_model=list[PhotoResponse], dependencies=FORALL)
 async def get_all_photos(user: User = Depends(get_current_user),
                          db: AsyncSession = Depends(get_db)):
     photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_users_all_photos(user)
+    photos = await photo_repo.get_all_user_photos(user)
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos
 
-@photo_router.get("/all_photos",
-                  response_model=list[PhotoResponse],
-                  dependencies=FORALL)
+@photo_router.get("/all_photos", response_model=list[PhotoResponse], dependencies=FORALL)
 async def get_all_photos(user: User = Depends(get_current_user),
                          db: AsyncSession = Depends(get_db)):
     photo_repo = PhotoRepository(db)
@@ -60,10 +57,8 @@ async def get_all_photos(user: User = Depends(get_current_user),
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos
 
-@photo_router.get("/get_url/{photo_id}",
-                  response_model=UrlPhotoResponse,
-                  dependencies=FORALL)
-async def get_photo_url(photo_id: int = Path(..., description="ID світлини"),
+@photo_router.get("/get_url/{photo_id}", response_model=UrlPhotoResponse, dependencies=FORALL)
+async def get_photo_url(photo_id: int,
                         db: AsyncSession = Depends(get_db)) -> UrlPhotoResponse:
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
@@ -73,10 +68,8 @@ async def get_photo_url(photo_id: int = Path(..., description="ID світлин
     return photo
 
 
-@photo_router.get("/{photo_id}",
-                  response_model=PhotoResponse,
-                  dependencies=FORALL)
-async def get_photo_by_id(photo_id: int = Path(..., description="ID світлини"),
+@photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
+async def get_photo_by_id(photo_id: int,
                         db: AsyncSession = Depends(get_db)) -> PhotoResponse:
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
@@ -87,25 +80,22 @@ async def get_photo_by_id(photo_id: int = Path(..., description="ID світли
 
 
 
-@photo_router.put("/update/{photo_id}",
-                  response_model=PhotoResponse,
-                  dependencies=FORALL)
+@photo_router.put("/update/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
 async def update_photo_description(
-                        photo_id: int,
-                        photo: PhotoUpdate,
-                        user: User = Depends(get_current_user),
-                        db: AsyncSession = Depends(get_db),
-                        ):
+    photo_id: int,
+    photo: PhotoUpdate,
+    db: AsyncSession = Depends(get_db),
+    ):
     photo_repo = PhotoRepository(db)
-    update_photo = await photo_repo.update_photo_description(photo_id, photo.description, user.id)
+    update_photo = await photo_repo.update_photo_description(photo_id, photo.description)
     return update_photo
 
 @photo_router.delete("/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORALL)
 async def delete_own_photo(
-                        photo_id: int,
-                        user: User = Depends(get_current_user),
-                        db: AsyncSession = Depends(get_db),
-                    ):
+    photo_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
 
@@ -121,16 +111,15 @@ async def delete_own_photo(
 
 
 
-@photo_router.get("/{photo_id}/transform",
-                  dependencies=FORALL, )
+@photo_router.get("/{photo_id}/transform", dependencies=FORALL, )
 async def transform_photo(
-                        photo_id: int,
-                        width: int = Query(None, description="Width"),
-                        height: int = Query(None, description="Height"),
-                        crop: str = Query(None, description="Crop mode (наприклад, 'fill', 'fit')"),
-                        effect: str = Query(None, description="Effect (наприклад, 'sepia', 'grayscale')"),
-                        db: AsyncSession = Depends(get_db),
-                    ):
+    photo_id: int,
+    width: int = Query(None, description="Ширина зображення"),
+    height: int = Query(None, description="Висота зображення"),
+    crop: str = Query(None, description="Тип обтинання (наприклад, 'fill', 'fit')"),
+    effect: str = Query(None, description="Фільтр (наприклад, 'sepia', 'grayscale')"),
+    db: AsyncSession = Depends(get_db),
+):
     # Отримуємо фото з бази
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
@@ -164,14 +153,13 @@ async def transform_photo(
 
 
 
-@photo_router.post("/rate/{photo_id}",
-                   dependencies=FORALL)
+@photo_router.post("/rate/{photo_id}", dependencies=FORALL)
 async def rate_photo(
-                        photo_id: int = Path(..., description="ID світлини"),
-                        rating: int = Query(..., ge=1, le=5, description="Рейтинг світлини від 1 до 5"),
-                        user: User = Depends(get_current_user),
-                        db: AsyncSession = Depends(get_db),
-                ):
+        photo_id: int = Path(..., description="ID світлини"),
+        rating: int = Query(..., ge=1, le=5, description="Рейтинг світлини від 1 до 5"),
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
     if not photo:
@@ -186,13 +174,11 @@ async def rate_photo(
     return {"detail": "Rating added successfully."}
 
 
-@photo_router.get("/rating/{photo_id}",
-                  response_model=AverageRatingResponse,
-                  dependencies=FORALL)
+@photo_router.get("/rating/{photo_id}", response_model=AverageRatingResponse, dependencies=FORALL)
 async def get_current_photo_ratings(
-                        photo_id: int = Path(..., description="ID світлини"),
-                        db: AsyncSession = Depends(get_db),
-                      ) -> AverageRatingResponse:
+        photo_id: int = Path(..., description="ID світлини"),
+        db: AsyncSession = Depends(get_db),
+) -> AverageRatingResponse:
 
     rating_repo = PhotoRatingRepository(db)
     rating = await rating_repo.get_average_rating(photo_id)
@@ -202,13 +188,12 @@ async def get_current_photo_ratings(
     return  AverageRatingResponse(rating=rating)
 
 
-@photo_router.delete("/admin/del_rate",
-                     dependencies=FORMODER)
+@photo_router.delete("/admin/del_rate", dependencies=FORMODER)
 async def delete_photo_rating(
-                        photo_id: int = Query(..., description="ID світлини, оцінку якої потрібно видалити"),
-                        user_id: int = Query(..., description="ID користувача, чий рейтинг потрібно видалити"),
-                        db: AsyncSession = Depends(get_db),
-                          ):
+    photo_id: int = Query(..., description="ID світлини, оцінку якої потрібно видалити"),
+    user_id: int = Query(..., description="ID користувача, чий рейтинг потрібно видалити"),
+    db: AsyncSession = Depends(get_db),
+):
     # Отримуємо фото за ID
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
@@ -231,14 +216,12 @@ async def delete_photo_rating(
 
 
 
-@photo_router.get("/admin/rate",
-                  dependencies=FORMODER,
-                  response_model=Union[PhotoRatingsListResponse, UserRatingsListResponse, PhotoRatingResponse])
+@photo_router.get("/admin/rate", dependencies=FORMODER, response_model=Union[PhotoRatingsListResponse, UserRatingsListResponse, PhotoRatingResponse])
 async def get_ratings_by_user_or_photo(
-                        photo_id: int = Query(None, description="ID фото для перегляду всіх оцінок"),
-                        user_id: int = Query(None, description="ID користувача для перегляду його оцінок"),
-                        db: AsyncSession = Depends(get_db),
-                ):
+        photo_id: int = Query(None, description="ID фото для перегляду всіх оцінок"),
+        user_id: int = Query(None, description="ID користувача для перегляду його оцінок"),
+        db: AsyncSession = Depends(get_db),
+):
     rating_repo = PhotoRatingRepository(db)
 
     # Якщо передано тільки photo_id — показуємо всі оцінки для фото
@@ -266,13 +249,11 @@ async def get_ratings_by_user_or_photo(
     raise HTTPException(status_code=400, detail="Either 'photo_id' or 'user_id' must be provided")
 
 
-@photo_router.delete("/admin/{photo_id}",
-                     status_code=status.HTTP_204_NO_CONTENT,
-                     dependencies=FORMODER)
+@photo_router.delete("/admin/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORMODER)
 async def delete_any_photo(
-                        photo_id: int,
-                        db: AsyncSession = Depends(get_db),
-                    ):
+    photo_id: int,
+    db: AsyncSession = Depends(get_db),
+):
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
 
@@ -281,3 +262,28 @@ async def delete_any_photo(
 
     await photo_repo.delete_photo(photo_id)
     return {"detail": "Photo deleted successfully"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @photo_router.get('/photos/')
+# async def get_all_photos_html(request: Request, db: AsyncSession = Depends(get_db)):
+#     token = request.cookies.get("access_token")
+#     user = decode_access_token(token)
+#     tag_repo = TagRepository(db)
+#     photos = await tag_repo.get_all_photos_html()
+#     if photos:
+#         return templates.TemplateResponse("photos_by_tag.html",
+#                                           {"request": request, "title": 'Photos', "photos": photos,"user": user})
+#     else:
+#         return templates.TemplateResponse("index.html", {"request": request, "title": "Home Page","user": user})
