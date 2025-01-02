@@ -1,6 +1,6 @@
 from datetime import datetime, date
 
-from sqlalchemy import Integer, String, Boolean, func, ForeignKey, TIMESTAMP, text, Table, Column, Text, Date
+from sqlalchemy import Integer, String, Boolean, func, ForeignKey, TIMESTAMP, text, Table, Column, Text, Date, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from config.db import Base
@@ -56,7 +56,7 @@ class Photo(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     url_link: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    rating: Mapped[int] = mapped_column(Integer, nullable=True)
+    rating: Mapped[int] = mapped_column(Float, nullable=True)
     qr_core_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped["datetime"] = mapped_column(
@@ -123,7 +123,7 @@ class PhotoRating(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     photo_id: Mapped[int] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    rating: Mapped[int] = mapped_column(Float, nullable=False)
 
     # Відношення з Photo
     photo: Mapped["Photo"] = relationship("Photo", back_populates="ratings", lazy="selectin")
