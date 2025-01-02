@@ -1,164 +1,289 @@
-from fileinput import close
-
-import select
-from sqlalchemy.future import select
-from tempfile import NamedTemporaryFile
-import cloudinary
+import templates
 from config.db import get_db
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
-import os
+from cloudinary.utils import cloudinary_url
 from src.auth.schemas import RoleEnum
-from src.auth.utils import RoleChecker, decode_access_token
-from src.models.models import Photo, Tag, photo_tags, User
-from src.photos.repos import (
-    delete_photo,
-    get_photo,
-    update_photo_description,
-    upload_photo_to_cloudinary,
-)
-from src.photos.schemas import PhotoCreate, PhotoResponse, PhotoUpdate
-from src.photos.schemas import TransformRequest, TransformResponse
+from src.auth.utils import RoleChecker, decode_access_token, get_current_user
+from src.models.models import User
+from src.photos.repos import PhotoRepository, PhotoRatingRepository
+from src.photos.schemas import PhotoResponse, PhotoUpdate, UrlPhotoResponse, PhotoRatingsListResponse, \
+    UserRatingsListResponse, PhotoRatingResponse, AverageRatingResponse
+
 from src.tags.repos import TagRepository
-from src.tags.routers import create_tag, get_tag_by_name
-from src.utils.cloudinary_helper import generate_transformed_image_url
+
+from src.utils.cloudinary_helper import upload_photo_to_cloudinary, get_cloudinary_image_id
+
 from src.utils.qr_code_helper import generate_qr_code
-from typing import Optional, List
+from typing import Optional, List, Union
 from sqlalchemy import insert
 from fastapi.templating import Jinja2Templates
 
 photo_router = APIRouter()
 
-
-@photo_router.post("/")
-async def upload_photo(
-    description: str = Form(...),
-    tags: Optional[List[str]] = Form(None),
-    file: UploadFile = File(...),
-    user: User = Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER])),
-    db: AsyncSession = Depends(get_db)
-):
-
-    if len(tags) > 5:
-        raise HTTPException(status_code=400, detail="Maximum of 5 tags allowed")
-    try:
-        with NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(file.file.read())
-            tmp_file_path = tmp_file.name
-            cloudinary_url = await upload_photo_to_cloudinary(tmp_file_path)
-    except Exception as e:
-        os.remove(tmp_file_path)
-        raise HTTPException(status_code=500, detail=f"Error uploading to Cloudinary: {str(e)}")
-    finally:
-        tmp_file.close()
+FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
+FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 
 
-    qr_core_url = generate_qr_code(cloudinary_url)
-    new_photo = Photo(url_link=cloudinary_url, description=description, owner_id=user[0].id, qr_core_url=qr_core_url)
+@photo_router.post("/", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED, dependencies=FORALL)
+async def create_photo(tags: List[str] = Query([], title="Теги", description="Теги фотографії", max_items = 5),
+                       description: str = Query(None, title="Опис фотографії", description="Опис фотографії"),
+                       file: UploadFile = File(...),
+                       user: User = Depends(get_current_user),
+                       db: AsyncSession = Depends(get_db)) -> PhotoResponse:
+    cloudinary_url = await upload_photo_to_cloudinary(file)
 
-    tags = [tag.strip('"') for tag in tags[0].strip('[]').split(',')]
-    db.add(new_photo)
-    await db.commit()
-    await db.refresh(new_photo)
-    tag_repo = TagRepository(db)
-    if tags:
-        for tag in tags:
-            new_tag = await tag_repo.get_tag_by_name(tag)
-            if new_tag:
-                await db.refresh(new_photo)
-                await db.refresh(new_tag)
-                stmt = insert(photo_tags).values(photo_id=new_photo.id, tag_id=new_tag.id)
-                await db.execute(stmt)
-            else:
-                tag = await tag_repo.create_tag(tag)
-                await db.refresh(new_photo)
-                await db.refresh(tag)
-                stmt = insert(photo_tags).values(photo_id=new_photo.id, tag_id=tag.id)
-                await db.execute(stmt)
+    photo_repo = PhotoRepository(db)
+    new_photo = await photo_repo.create_photo(cloudinary_url, description, user, tags)
 
-    await db.commit()
-    await db.refresh(new_photo)
-    data = {
-        'photo_id': new_photo.id,
-        'owner_id': new_photo.owner_id,
-        'description': new_photo.description,
-        'tags': new_photo.tags,
-        'url_link': new_photo.url_link
-    }
-
-    if os.path.exists(tmp_file_path):
-        os.remove(tmp_file_path)
+    return new_photo
 
 
-    return data
+@photo_router.get("/all_user_photos", response_model=list[PhotoResponse], dependencies=FORALL)
+async def get_all_photos(user: User = Depends(get_current_user),
+                         db: AsyncSession = Depends(get_db)):
+    photo_repo = PhotoRepository(db)
+    photos = await photo_repo.get_all_user_photos(user)
+    if not photos:
+        raise HTTPException(status_code=404, detail="Photos not found")
+    return photos
 
+@photo_router.get("/all_photos", response_model=list[PhotoResponse], dependencies=FORALL)
+async def get_all_photos(user: User = Depends(get_current_user),
+                         db: AsyncSession = Depends(get_db)):
+    photo_repo = PhotoRepository(db)
+    photos = await photo_repo.get_all_photos(user)
+    if not photos:
+        raise HTTPException(status_code=404, detail="Photos not found")
+    return photos
 
-@photo_router.get("/{photo_id}", response_model=PhotoResponse)
-def get_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
-    db_photo = get_photo(db, photo_id)
-    if db_photo is None:
+@photo_router.get("/get_url/{photo_id}", response_model=UrlPhotoResponse, dependencies=FORALL)
+async def get_photo_url(photo_id: int,
+                        db: AsyncSession = Depends(get_db)) -> UrlPhotoResponse:
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+
+    if photo is None:
         raise HTTPException(status_code=404, detail="Photo not found")
-    return db_photo
+    return photo
 
 
-@photo_router.put("/{photo_id}", response_model=PhotoResponse)
-def update_photo_description_endpoint(
+@photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
+async def get_photo_by_id(photo_id: int,
+                        db: AsyncSession = Depends(get_db)) -> PhotoResponse:
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return photo
+
+
+
+@photo_router.put("/update/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
+async def update_photo_description(
     photo_id: int,
     photo: PhotoUpdate,
     db: AsyncSession = Depends(get_db),
-    description: str = None,
-):
-    update_photo = update_photo_description(db, photo_id, photo.description)
+    ):
+    photo_repo = PhotoRepository(db)
+    update_photo = await photo_repo.update_photo_description(photo_id, photo.description)
     return update_photo
 
+@photo_router.delete("/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORALL)
+async def delete_own_photo(
+    photo_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    if photo.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="You can delete only your own photos")
+
+    await photo_repo.delete_photo(photo_id)
+    return {"detail": "Photo deleted successfully"}
 
 
-@photo_router.delete("/{photo_id}")
-def delete_photo_by_id(photo_id: int, db: AsyncSession = Depends(get_db)):
-    delete_photo(db, photo_id)
-    return {"message": "Photo deleted successfully"}
 
 
-@photo_router.post("/transform", response_model=TransformResponse)
-async def transform_photo(request: TransformRequest, db: AsyncSession = Depends(get_db)):
-    photo = select(Photo).filter(Photo.id == request.photo_id)
-    result = await db.execute(photo)
-    photo = result.scalars().first()
+@photo_router.get("/{photo_id}/transform", dependencies=FORALL, )
+async def transform_photo(
+    photo_id: int,
+    width: int = Query(None, description="Ширина зображення"),
+    height: int = Query(None, description="Висота зображення"),
+    crop: str = Query(None, description="Тип обтинання (наприклад, 'fill', 'fit')"),
+    effect: str = Query(None, description="Фільтр (наприклад, 'sepia', 'grayscale')"),
+    db: AsyncSession = Depends(get_db),
+):
+    # Отримуємо фото з бази
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+
+    transformation = {
+        "width": width,
+        "height": height,
+        "crop": crop,
+        "effect": effect,
+    }
+
+    transformation = {k: v for k, v in transformation.items() if v is not None}
+
+    image_id = get_cloudinary_image_id(photo.url_link)
+
+    if not image_id:
+        raise ValueError("Invalid Cloudinary URL")
+
+    transformed_url, _ = cloudinary_url(image_id, transformation=transformation)
+
+    qr_code_data = generate_qr_code(transformed_url)
+
+
+    return {"original_url": photo.url_link, "transformed_url": transformed_url, "qr_code_url": qr_code_data}
+
+
+
+
+
+@photo_router.post("/rate/{photo_id}", dependencies=FORALL)
+async def rate_photo(
+        photo_id: int = Path(..., description="ID світлини"),
+        rating: int = Query(..., ge=1, le=5, description="Рейтинг світлини від 1 до 5"),
+        user: User = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+):
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    transformed_url = generate_transformed_image_url(
-        public_id=photo.url_link.split("/")[-1].split(".")[0],
-        width=request.width,
-        height=request.height,
-        crop_mode=request.crop_mode
-    )
+    if photo.owner_id == user.id:
+        raise HTTPException(status_code=403, detail="You cannot rate your own photo.")
 
-    qr_code_url = generate_qr_code(transformed_url)
+    rating_repo = PhotoRatingRepository(db)
+    await rating_repo.add_and_update_rating(photo_id, user.id, rating)
 
-    photo.transformed_url = transformed_url
-    photo.qr_code_url = qr_code_url
-    await db.commit()
-    await db.refresh(photo)
-
-    return {
-        "photo_id": photo.id,
-        "transformed_url": photo.transformed_url,
-        "qr_code_url": photo.qr_code_url
-    }
+    return {"detail": "Rating added successfully."}
 
 
-templates = Jinja2Templates(directory="templates")
+@photo_router.get("/rating/{photo_id}", response_model=AverageRatingResponse, dependencies=FORALL)
+async def get_current_photo_ratings(
+        photo_id: int = Path(..., description="ID світлини"),
+        db: AsyncSession = Depends(get_db),
+) -> AverageRatingResponse:
+
+    rating_repo = PhotoRatingRepository(db)
+    rating = await rating_repo.get_average_rating(photo_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Not rated yet")
+
+    return  AverageRatingResponse(rating=rating)
 
 
-@photo_router.get('/photos/')
-async def get_all_photos_html(request: Request, db: AsyncSession = Depends(get_db)):
-    token = request.cookies.get("access_token")
-    user = decode_access_token(token)
-    tag_repo = TagRepository(db)
-    photos = await tag_repo.get_all_photos_html()
-    if photos:
-        return templates.TemplateResponse("photos_by_tag.html",
-                                          {"request": request, "title": 'Photos', "photos": photos,"user": user})
-    else:
-        return templates.TemplateResponse("index.html", {"request": request, "title": "Home Page","user": user})
+@photo_router.delete("/admin/del_rate", dependencies=FORMODER)
+async def delete_photo_rating(
+    photo_id: int = Query(..., description="ID світлини, оцінку якої потрібно видалити"),
+    user_id: int = Query(..., description="ID користувача, чий рейтинг потрібно видалити"),
+    db: AsyncSession = Depends(get_db),
+):
+    # Отримуємо фото за ID
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    rating_repo = PhotoRatingRepository(db)
+    rating = await rating_repo.get_rating(photo_id, user_id)
+    if not rating:
+        raise HTTPException(status_code=404, detail="Rating not found")
+
+    # Видалення рейтингу
+    await rating_repo.delete_rating(photo_id, user_id)
+
+    # Оновлюємо середній рейтинг
+    await rating_repo.update_average_rating(photo_id)
+
+    return {"detail": "Rating deleted successfully."}
+
+
+
+
+@photo_router.get("/admin/rate", dependencies=FORMODER, response_model=Union[PhotoRatingsListResponse, UserRatingsListResponse, PhotoRatingResponse])
+async def get_ratings_by_user_or_photo(
+        photo_id: int = Query(None, description="ID фото для перегляду всіх оцінок"),
+        user_id: int = Query(None, description="ID користувача для перегляду його оцінок"),
+        db: AsyncSession = Depends(get_db),
+):
+    rating_repo = PhotoRatingRepository(db)
+
+    # Якщо передано тільки photo_id — показуємо всі оцінки для фото
+    if photo_id and not user_id:
+        ratings = await rating_repo.get_ratings_by_photo_id(photo_id)
+        if not ratings:
+            raise HTTPException(status_code=404, detail="No ratings found for this photo")
+        return PhotoRatingsListResponse(photo_id=photo_id, ratings=ratings)
+
+    # Якщо передано тільки user_id — показуємо всі оцінки цього користувача
+    elif user_id and not photo_id:
+        ratings = await rating_repo.get_ratings_by_user_id(user_id)
+        if not ratings:
+            raise HTTPException(status_code=404, detail="No ratings found for this user")
+        return UserRatingsListResponse(user_id=user_id, ratings=ratings)
+
+    # Якщо передано обидва параметри — показуємо конкретну оцінку
+    elif photo_id and user_id:
+        rating = await rating_repo.get_rating(photo_id, user_id)
+        if not rating:
+            raise HTTPException(status_code=404, detail="Rating not found for this user on this photo")
+        return PhotoRatingResponse(user_id=rating.user_id, rating=rating.rating)
+
+    # Якщо не передано жодного параметра — повертаємо помилку
+    raise HTTPException(status_code=400, detail="Either 'photo_id' or 'user_id' must be provided")
+
+
+@photo_router.delete("/admin/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORMODER)
+async def delete_any_photo(
+    photo_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+
+    if photo is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    await photo_repo.delete_photo(photo_id)
+    return {"detail": "Photo deleted successfully"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @photo_router.get('/photos/')
+# async def get_all_photos_html(request: Request, db: AsyncSession = Depends(get_db)):
+#     token = request.cookies.get("access_token")
+#     user = decode_access_token(token)
+#     tag_repo = TagRepository(db)
+#     photos = await tag_repo.get_all_photos_html()
+#     if photos:
+#         return templates.TemplateResponse("photos_by_tag.html",
+#                                           {"request": request, "title": 'Photos', "photos": photos,"user": user})
+#     else:
+#         return templates.TemplateResponse("index.html", {"request": request, "title": "Home Page","user": user})

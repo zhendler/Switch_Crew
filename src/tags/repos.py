@@ -145,3 +145,4 @@ class TagRepository:
         photos = result.scalars().unique().all()
         return photos
 
+
