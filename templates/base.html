@@ -7,35 +7,64 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/header-style.css">
     <link rel="stylesheet" href="/static/css/photo-card-style.css">
+
 </head>
   <body>
     <header class="header">
-        <div class="container">
-            <div class="logo">
-                <a href="/">Switch Crew</a>
-            </div>
-            <nav class="nav">
-                <ul>
-                    <li><a href="#">Main</a></li>
-                    <li><a href="/photos/">Photos</a></li>
-                    <li><a href="/tags/">Tags</a></li>
-                    <li><a href="#">Comments</a></li>
-                </ul>
-            </nav>
-            <div class="user-actions">
-                {% if user %}
-                <a href="#">{{ user.username }}</a>
-                <a href="#" class="register">Log out</a>
-                {% else %}
-                <a href="/login/" class="login">Login</a>
-                <a href="#" class="register">Sign up</a>
-                {% endif %}
-            </div>
+    <div class="container">
+        <div class="logo">
+            <a href="/web">Switch Crew</a>
         </div>
-    </header>
+        <nav class="nav">
+            <ul>
+                <li><a href="/web">Main</a></li>
+                <li><a href="/web/photos/photos/">Photos</a></li>
+                <li><a href="/web/tags/">Tags</a></li>
+            </ul>
+        </nav>
+
+        {% if user %}
+        <div class="user-profile-header">
+            <a href="http://127.0.0.1:8000/web/upload_photo">
+                <button class="add-button">
+                    <span class="plus-icon">+</span>
+                </button>
+            </a>
+            <a href="http://127.0.0.1:8000/web/page/{{ user.username }}">
+                <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar-header">
+            </a>
+            <a href="http://127.0.0.1:8000/web/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
+        </div>
+        <div class="user-actions">
+            <a href="http://127.0.0.1:8000/web/auth/logout" class="register">Log out</a>
+        </div>
+        {% else %}
+        <div class="user-actions">
+            <a href="http://127.0.0.1:8000/web/login/" class="login">Login</a>
+            <a href="#" class="register">Sign up</a>
+        </div>
+        {% endif %}
+    </div>
+</header>
+
+<main class="content">
     {% block content %}
 
     {% endblock %}
-  </body>
+</main>
+
+<footer class="footer">
+    <div class="footer-container">
+        <p>&copy; 2024 Switch Crew. All rights reserved.</p>
+        <nav class="footer-nav">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact Us</a>
+        </nav>
+    </div>
+</footer>
+
+</body>
+
   </html>
 
