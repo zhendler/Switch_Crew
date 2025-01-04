@@ -40,7 +40,7 @@ class UserRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_user_by_username(self, username):
+    async def get_user_by_username(self, username: str):
         query = select(User).where(User.username == username)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
