@@ -16,6 +16,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
 VERIFICATION_TOKEN_EXPIRE_HOURS = settings.verification_token_expire_hours
 
+
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 

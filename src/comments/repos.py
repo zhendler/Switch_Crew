@@ -1,11 +1,9 @@
-from datetime import datetime
-
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from src.comments.schemas import CommentResponse
 from src.models.models import Comment
+
 
 class CommentsRepository:
 
@@ -41,7 +39,8 @@ class CommentsRepository:
                                 detail="You do not have permission to update this comment")
 
         comment.content = content
-        comment.updated_at = datetime.now(datetime.UTC)
+        import datetime
+        comment.updated_at = datetime.datetime.now(datetime.timezone.utc)
         await self.session.commit()
         await self.session.refresh(comment)
         return comment

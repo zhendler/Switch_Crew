@@ -12,7 +12,7 @@ from src.auth.repos import UserRepository
 from src.auth.utils import create_access_token, create_refresh_token, decode_access_token
 from src.comments.repos import CommentsRepository
 from src.models.models import User, Photo, photo_tags
-from src.photos.repos import get_photo_by_user, get_photo, upload_photo_to_cloudinary, delete_photo
+# from src.photos.repos import get_photo_by_user, get_photo, upload_photo_to_cloudinary, delete_photo
 from src.tags.repos import TagRepository
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
