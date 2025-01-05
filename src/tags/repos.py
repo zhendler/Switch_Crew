@@ -90,6 +90,7 @@ class TagRepository:
 
     async def get_tag_by_name(self, tag_name: str) -> Tag:
         result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
+        print('Hello')
         tag = result.scalar_one_or_none()
         if tag:
             return tag
