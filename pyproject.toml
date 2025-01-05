@@ -20,8 +20,13 @@ fastapi-mail = "^1.4.2"
 passlib = "^1.7.4"
 bcrypt = "4.0.0"
 python-jose = "^3.3.0"
+pytest = "^8.3.4"
+pytest-cov = "^6.0.0"
 
 
+
+[tool.poetry.group.dev.dependencies]
+pytest-asyncio = "^0.25.1"
 
 [build-system]
 requires = ["poetry-core"]

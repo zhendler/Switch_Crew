@@ -25,22 +25,22 @@
 
         {% if user %}
         <div class="user-profile-header">
-            <a href="http://127.0.0.1:8000/web/upload_photo">
+            <a href="/web/upload_photo">
                 <button class="add-button">
                     <span class="plus-icon">+</span>
                 </button>
             </a>
-            <a href="http://127.0.0.1:8000/web/page/{{ user.username }}">
+            <a href="/web/page/{{ user.username }}">
                 <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar-header">
             </a>
-            <a href="http://127.0.0.1:8000/web/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
+            <a href="/web/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
         </div>
         <div class="user-actions">
-            <a href="http://127.0.0.1:8000/web/auth/logout" class="register">Log out</a>
+            <a href="/web/auth/logout" class="register">Log out</a>
         </div>
         {% else %}
         <div class="user-actions">
-            <a href="http://127.0.0.1:8000/web/login/" class="login">Login</a>
+            <a href="/web/login/" class="login">Login</a>
             <a href="#" class="register">Sign up</a>
         </div>
         {% endif %}

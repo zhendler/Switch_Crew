@@ -9,7 +9,7 @@
             <div class="photo-details">
                 {% if photo.owner.username == user.username %}
                     <div class="delete-button-container">
-                        <form action="http://127.0.0.1:8000/web/photos/delete/{{ photo.id }}" method="post">
+                        <form action="/web/photos/delete/{{ photo.id }}" method="post">
                             <button type="submit" class="delete-button-photo">
                                 <p class="delete-text">Delete photo <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="trash-icon-photo"></p>
                             </button>
@@ -23,14 +23,14 @@
                 <p class="description">{{ photo.description }}</p>
                 <div class="tags">
                     {% for tag in photo.tags %}
-                        <a href="/tags/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
+                        <a href="/web/tags/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
                     {% endfor %}
                 </div>
             </div>
         </div>
         <div class="comment-section">
             <h3>Comments</h3>
-            <form class="comment-form" action="http://127.0.0.1:8000/web/comments/create/{{ photo.id }}/" method="post">
+            <form class="comment-form" action="/web/comments/create/{{ photo.id }}/" method="post">
                 <textarea class="comment-input" name="comment_content" placeholder="Add your comment..."></textarea>
                 <button type="submit" class="post-button">Post</button>
             </form>
@@ -44,7 +44,7 @@
                             <p class="comment-author">{{ comment.user.username }}</p>
                         </div>
                         {% if comment.user.username == user.username %}
-                        <form action="http://127.0.0.1:8000/web/comments/delete/{{ comment.id }}/" method="post">
+                        <form action="/web/comments/delete/{{ comment.id }}/" method="post">
                             <button type="submit" class="delete-button">
                                 <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="trash-icon">
                             </button>
