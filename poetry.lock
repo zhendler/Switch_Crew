@@ -298,6 +298,7 @@ files = [
 toml = ["tomli"]
 
 [[package]]
+
 name = "decorator"
 version = "5.1.1"
 description = "Decorators for Humans"
@@ -309,6 +310,7 @@ files = [
 ]
 
 [[package]]
+
 name = "dnspython"
 version = "2.7.0"
 description = "DNS toolkit"
@@ -1159,6 +1161,26 @@ pluggy = ">=1.5,<2"
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
+
+name = "pytest-asyncio"
+version = "0.25.1"
+description = "Pytest support for asyncio"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pytest_asyncio-0.25.1-py3-none-any.whl", hash = "sha256:c84878849ec63ff2ca509423616e071ef9cd8cc93c053aa33b5b8fb70a990671"},
+    {file = "pytest_asyncio-0.25.1.tar.gz", hash = "sha256:79be8a72384b0c917677e00daa711e07db15259f4d23203c59012bcd989d4aee"},
+]
+
+[package.dependencies]
+pytest = ">=8.2,<9"
+
+[package.extras]
+docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1)"]
+testing = ["coverage (>=6.2)", "hypothesis (>=5.7.1)"]
+
+[[package]]
+
 name = "pytest-cov"
 version = "6.0.0"
 description = "Pytest plugin for measuring coverage."
@@ -1828,4 +1850,6 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "6f88786cf325e46233202980fc4c18a890479f75ef2877b6f7e41de1766b193b"
+
+content-hash = "cb1b8bbf3147c9b7d31a519b68e17a8d2cab17b6401cb302857851c814ce221e"
+
