@@ -80,7 +80,9 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: AsyncSession = Depends(get_db)
+
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
@@ -97,7 +99,10 @@ async def login_for_access_token(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
-        refresh_token: str, db: AsyncSession = Depends(get_db)
+
+    refresh_token: str, 
+    db: AsyncSession = Depends(get_db),
+
 ):
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)
