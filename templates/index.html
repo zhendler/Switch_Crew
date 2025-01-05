@@ -9,9 +9,9 @@
             <div class="card-container">
                 {% for photo in photos %}
                 <div class="card">
-                    <a href="http://127.0.0.1:8000/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                    <a href="/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                     <div class="card-content">
-                        <a href="http://127.0.0.1:8000/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                        <a href="/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
                         <p class="description">{{ photo.description|truncatechars(38) }}</p>
                     </div>
                 </div>
