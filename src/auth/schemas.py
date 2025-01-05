@@ -20,6 +20,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     avatar_url: Optional[str] = None
+    detail: str
 
 
     class Config:

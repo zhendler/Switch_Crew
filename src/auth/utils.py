@@ -10,6 +10,7 @@ from src.models.models import User
 from config.general import settings
 from config.db import get_db
 
+
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
@@ -67,8 +68,10 @@ def decode_access_token(token: str) -> TokenData | None:
         return None
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme),
-                           db: AsyncSession = Depends(get_db)) -> User:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db)
+)-> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -82,6 +85,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
     if user is None:
         raise credentials_exception
     return user
+
+
+async def check_user_active(current_user: User = Depends(get_current_user)) -> None:
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is not active. Please activate your account first."
+        )
+    
+async def check_user_banned(user: User = Depends(get_current_user)) -> None:
+    if user.is_banned:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been banned. Please contact the administrator."
+        )
+
 
 
 class RoleChecker:
@@ -101,6 +120,10 @@ class RoleChecker:
                 detail="You do not have permission to perform this action"
             )
         return user, is_admin_or_moderator
-
-FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
+    
+FORADMIN = [Depends(RoleChecker([RoleEnum.ADMIN]))]
 FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
+FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
+ACTIVATE = [Depends(check_user_active)]
+BANNED_CHECK = [Depends(check_user_banned)]
+
