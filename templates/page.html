@@ -17,13 +17,13 @@
             {% if photos %}
                 {% for photo in photos %}
                 <div class="card">
-                <a href="http://127.0.0.1:8000/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                <a href="/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                     <div class="card-content">
-                        <a href=http://127.0.0.1:8000/web/page/{{photo.owner.username}}><p class="author" >{{ photo.owner.username }}</p></a>
+                        <a href=/web/page/{{photo.owner.username}}><p class="author" >{{ photo.owner.username }}</p></a>
                         <p class="description">{{ photo.description }}</p>
                         <div class="card-tags">
                             {% for tag in photo.tags %}
-                            <a href="http://127.0.0.1:8000/web/tags/{{ tag.name }}/photos/" class="tag-link">
+                            <a href="/web/tags/{{ tag.name }}/photos/" class="tag-link">
                                 #{{ tag.name }}
                             </a>
                             {% endfor %}
@@ -31,7 +31,7 @@
                         <div class="comments-section">
                             {% for comment in photo.comments[:1] %}
                             <div class="comment">
-                                <a href="http://127.0.0.1:8000/web/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
+                                <a href="/web/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
                                 <p class="comment-text">{{ comment.content }}</p>
                             </div>
                             {% endfor %}
@@ -40,7 +40,7 @@
                 </div>
                 {% endfor %}
             {% else %}
-            <h3>Any photos with #{{ title }}</h3>
+            <h3>{{ user_page.username }} doesn't have photos yet.</h3>
             {% endif %}
         </div>
 
