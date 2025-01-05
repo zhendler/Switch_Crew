@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from fastapi.params import Query
 from pydantic import BaseModel
 
 
@@ -10,8 +10,7 @@ class Comment(BaseModel):
 
 
 class CommentCreate(BaseModel):
-    photo_id: int
-    content: str
+        content: str = Query(..., min_length=1, max_length=255, description="Текст коментаря")
 
 class CommentResponse(BaseModel):
     id: int
@@ -22,4 +21,12 @@ class CommentResponse(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+
+class CommentUpdateResponse(BaseModel):
+    id: int
+    user_id: int
+    photo_id: int
+    content: str
+    updated_at: datetime
