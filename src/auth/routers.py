@@ -3,14 +3,10 @@ from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
-import cloudinary
-import cloudinary.uploader
 
 from config.db import get_db
-from config.general import settings
-from src.models.models import User
-from src.auth.repos import UserRepository, RoleRepository 
-from src.auth.schemas import UserCreate, UserResponse, Token, RoleEnum
+from src.auth.repos import UserRepository
+from src.auth.schemas import UserCreate, UserResponse, Token
 from src.auth.mail_utils import send_verification
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
@@ -19,19 +15,13 @@ from src.auth.utils import (
     decode_access_token,
     create_verification_token,
     decode_verification_token,
-    get_current_user,
-    RoleChecker
 )
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
 
 
-@router.post(
-    "/register",
-    response_model=UserResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED,)
 async def register(
     background_tasks: BackgroundTasks,
     username: str = Form(...),
@@ -50,20 +40,18 @@ async def register(
     if avatar:
         avatar_url = await user_repo.upload_to_cloudinary(avatar)
         await user_repo.update_avatar(user.email, avatar_url)
-    verification_token =        create_verification_token(user.email)
-    verification_link = (
-        f"http://localhost:8000/auth/verify-email?token={verification_token}"
-    )
+    verification_token = create_verification_token(user.email)
+    verification_link = (f"http://localhost:8000/auth/verify-email?token={verification_token}")
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification, user.email, email_body)
-    return {
-        "username": user.username,
-        "email": user.email,
-        "id": user.id,
-        "avatar_url": user.avatar_url
-    }
-
+    return UserResponse(
+        username=user.username,
+        email=user.email,
+        id=user.id,
+        avatar_url=user.avatar_url,
+        detail=f"Please verify your email address. A verification link has been sent to your email."
+    )
 
 @router.get("/verify-email")
 async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
@@ -75,14 +63,34 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     await user_repo.activate_user(user)
-    return {"msg": "Email verified successfully"}
+    return {"detail": "Email verified successfully"}
+
+
+@router.post("/resend-verifi-email", status_code=status.HTTP_200_OK)
+async def resend_verifi_email(
+    background_tasks: BackgroundTasks,
+    email: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    user_repo = UserRepository(db)
+    user = await user_repo.get_user_by_email(email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User with this email does not exist.",
+        )
+    verification_token = create_verification_token(user.email)
+    verification_link = f"http://localhost:8000/auth/verify-email?token={verification_token}"
+    template = env.get_template("email.html")
+    email_body = template.render(verification_link=verification_link)
+    background_tasks.add_task(send_verification, user.email, email_body)
+    return {"detail": "A new verification email has been sent. Please check your inbox."}
 
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
     db: AsyncSession = Depends(get_db)
-
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
@@ -99,10 +107,8 @@ async def login_for_access_token(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
-
     refresh_token: str, 
     db: AsyncSession = Depends(get_db),
-
 ):
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)
@@ -136,7 +142,7 @@ async def forgot_password(
     template = env.get_template("reset_password_email.html")
     email_body = template.render(reset_link=reset_link)
     background_tasks.add_task(send_verification, user.email, email_body)
-    return {"msg": "Password reset email sent"}
+    return {"detail": "Password reset email sent"}
 
 
 @router.get("/reset-password")
@@ -180,69 +186,9 @@ async def reset_password(
             )
         hashed_password = get_password_hash(new_password)
         await user_repo.update_user_password(user, hashed_password)
-        return {"msg": "Password reset successful!"}
+        return {"detail": "Password reset successful!"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
-
-
-@router.put("/{user_id}/role")
-async def change_user_role(
-        user_id: int,
-        role: RoleEnum,
-        User=Depends(RoleChecker([RoleEnum.ADMIN])),
-        db: AsyncSession = Depends(get_db)
-):
-    if role not in [RoleEnum.USER, RoleEnum.MODERATOR]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Admin can only assign 'USER' or 'MODERATOR' roles"
-        )
-    user_repo = UserRepository(db)
-    user = await user_repo.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    role_repo = RoleRepository(db)
-    role_obj = await role_repo.get_role_by_name(role)
-    if not role_obj:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
-    user.role = role_obj
-    await db.commit()
-    return {"msg": "User role updated successfully"}
-
-   
-@router.patch('/avatar', response_model=UserResponse)
-async def update_user_avatar(
-    file: UploadFile = File(), 
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    if not current_user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is not active. Please activate your account first."
-        )
-    cloudinary.config(
-        cloud_name=settings.cloudinary_cloud_name,
-        api_key=settings.cloudinary_api_key,
-        api_secret=settings.cloudinary_api_secret,
-        secure=True
-    )
-    try:
-        r = cloudinary.uploader.upload(
-            file.file, 
-            public_id=f'avatars/{current_user.username}',
-            overwrite=True,
-        )
-        src_url = cloudinary.CloudinaryImage(f'avatars/{current_user.username}')\
-                        .build_url(width=250, height=250, crop='fill', version=r.get('version'))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error uploading avatar: {str(e)}"
-        )
-    user_repo = UserRepository(db)
-    user = await user_repo.update_avatar(current_user.email, src_url)
-    return user
