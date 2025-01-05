@@ -1,9 +1,15 @@
-from http.client import HTTPException
+import asyncio
+from typing import Sequence
+
+from fastapi import HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..models.models import Tag, Photo
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+
+from ..photos.schemas import TagResponse
+
 
 class TagRepository:
     """
@@ -69,11 +75,9 @@ class TagRepository:
         async def example():
             repository = TagRepository(db=session)
 
-            # Create a new tag
-            tag = await repository.create_tag(name="Travel")
+            # Create a new tag             = await repository.create_tag(name="Travel")
 
-            # Get all tags
-            tags = await repository.get_all_tags()
+            # Get all tags             = await repository.get_all_tags()
 
             # Update a tag's name
             updated_tag = await repository.update_tag_name("Travel", "Adventure")
@@ -84,57 +88,48 @@ class TagRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_tag_by_name(self, tag_name: str):
-        query = select(Tag).filter(Tag.name == tag_name)
-        result = await self.db.execute(query)
-        tag = result.scalars().first()
+    async def get_tag_by_name(self, tag_name: str) -> Tag:
+        result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
+        tag = result.scalar_one_or_none()
         if tag:
             return tag
         else:
-            return None
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!")
 
-    async def create_tag(self, name: str):
-        existing_tag = await self.db.execute(select(Tag).where(Tag.name == name))
-        existing_tag = existing_tag.scalar_one_or_none()
-
-        if existing_tag:
+    async def create_tag(self, tag_name: str) -> Tag:
+        result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
+        existing_tag = result.scalar_one_or_none()
+        if type(existing_tag) is Tag:
             return existing_tag
 
-        new_tag = Tag(name=name)
+        new_tag = Tag(name=tag_name)
         self.db.add(new_tag)
         await self.db.commit()
         await self.db.refresh(new_tag)
         return new_tag
 
-    async def get_all_tags(self):
+    async def get_all_tags(self)-> Sequence[Tag]:
         tags = await self.db.execute(select(Tag))
         return tags.scalars().all()
 
-    async def delete_tag_by_name(self, tag_name: str):
-        tag = select(Tag).filter(Tag.name == tag_name)
-        result = await self.db.execute(tag)
-        tag = result.scalars().first()
-        if tag:
-            await self.db.delete(tag)
-            await self.db.commit()
-            return "Successfully deleted!"
-        else:
-            return HTTPException(status_code=404, detail="Tag not found!")
+    async def delete_tag_by_name(self, tag_name: str) -> str:
+        tag = await self.get_tag_by_name(tag_name)
 
-    async def update_tag_name(self, tag_name: str, tag_new_name: str):
-        tag = select(Tag).filter(Tag.name == tag_name)
-        result = await self.db.execute(tag)
-        tag = result.scalars().first()
+        await self.db.delete(tag)
+        await self.db.commit()
+        return "Successfully deleted!"
 
-        if tag:
-            tag.name = tag_new_name
-            await self.db.commit()
-            await self.db.refresh(tag)
-            return tag
-        else:
-            return HTTPException(status_code=404, detail="Tag not found!")
 
-    async def get_photos_by_tag(self, tag_name: str):
+    async def update_tag_name(self, tag_name: str, tag_new_name: str) -> Tag:
+        tag = await self.get_tag_by_name(tag_name)
+
+        tag.name = tag_new_name
+        await self.db.commit()
+        await self.db.refresh(tag)
+        return tag
+
+
+    async def get_photos_by_tag(self, tag_name: str) -> Sequence[Photo]:
         tag = await self.get_tag_by_name(tag_name)
         if not tag:
             raise HTTPException(status_code=404, detail="Tag not found!")
@@ -143,5 +138,7 @@ class TagRepository:
             select(Photo).options(joinedload(Photo.tags)).where(Photo.id.in_([photo.id for photo in tag.photos]))
         )
         photos = result.scalars().unique().all()
-        return photos
-
+        if photos:
+            return photos
+        else:
+            raise HTTPException(status_code=404, detail="Photos not found!")
