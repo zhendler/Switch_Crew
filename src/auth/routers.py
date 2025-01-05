@@ -14,8 +14,9 @@ from src.auth.utils import (
     create_refresh_token,
     decode_access_token,
     create_verification_token,
-    decode_verification_token,
+    decode_verification_token, get_current_user,
 )
+from src.models.models import User
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
@@ -90,9 +91,7 @@ async def resend_verifi_email(
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
         form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db),
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
@@ -174,9 +173,7 @@ async def logout(
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
         refresh_token: str, 
-        db: AsyncSession = Depends(get_db)
-        refresh_token: str, 
-        db: AsyncSession = Depends(get_db)
+        db: AsyncSession = Depends(get_db),
 ):
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)

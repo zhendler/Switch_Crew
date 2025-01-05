@@ -1,6 +1,6 @@
 
 from config.db import get_db
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request, status, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
 from src.auth.utils import  get_current_user, FORALL, FORMODER
@@ -9,12 +9,12 @@ from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import PhotoResponse, PhotoUpdate, UrlPhotoResponse, PhotoRatingsListResponse, \
     UserRatingsListResponse, PhotoRatingResponse, AverageRatingResponse
 
-from src.tags.repos import TagRepository
+
 
 from src.utils.cloudinary_helper import upload_photo_to_cloudinary, get_cloudinary_image_id
 
 from src.utils.qr_code_helper import generate_qr_code
-from typing import Optional, List, Union
+from typing import List, Union
 
 
 photo_router = APIRouter()
