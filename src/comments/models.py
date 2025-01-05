@@ -20,3 +20,5 @@ from config.db import Base
 #
 #     user: Mapped["User"] = relationship("User", lazy="selectin")
 #     photo: Mapped["Photo"] = relationship("Photo", lazy="selectin")
+class Comment:
+    pass
