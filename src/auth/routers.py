@@ -14,8 +14,9 @@ from src.auth.utils import (
     create_refresh_token,
     decode_access_token,
     create_verification_token,
-    decode_verification_token,
+    decode_verification_token, get_current_user,
 )
+from src.models.models import User
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
