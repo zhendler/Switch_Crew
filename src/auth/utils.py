@@ -124,4 +124,5 @@ FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
 ACTIVATE = [Depends(check_user_active)]
 BANNED_CHECK = [Depends(check_user_banned)]
+ACTIV_AND_BANNED = [Depends(check_user_active), Depends(check_user_banned)]
 

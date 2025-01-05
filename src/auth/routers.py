@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status, File, Form, Depends
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
@@ -89,10 +89,8 @@ async def resend_verifi_email(
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    db: AsyncSession = Depends(get_db)
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
@@ -107,76 +105,10 @@ async def login_for_access_token(
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 
-@router.post("/login")
-async def login(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
-):
-    user_repo = UserRepository(db)
-    user = await user_repo.get_user_by_username(form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(data={"sub": user.username})
-    refresh_token = create_refresh_token(data={"sub": user.username})
-    response = RedirectResponse(url="/", status_code=302)
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-    return response
-
-
-@router.post("/logout")
-async def logout(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    response = RedirectResponse(url="/", status_code=302)
-    response.delete_cookie(key="accsdgess_token", httponly=True)
-    response.delete_cookie(key="refdsgresh_token", httponly=True)
-    return response
-
-
-@router.post("/login")
-async def login(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
-):
-    user_repo = UserRepository(db)
-    user = await user_repo.get_user_by_username(form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(data={"sub": user.username})
-    refresh_token = create_refresh_token(data={"sub": user.username})
-    response = RedirectResponse(url="/", status_code=302)
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
-    return response
-
-
-@router.post("/logout")
-async def logout(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    response = RedirectResponse(url="/", status_code=302)
-    response.delete_cookie(key="accsdgess_token", httponly=True)
-    response.delete_cookie(key="refdsgresh_token", httponly=True)
-    return response
-
-
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
-        refresh_token: str, 
-        db: AsyncSession = Depends(get_db)
-        refresh_token: str, 
-        db: AsyncSession = Depends(get_db)
+    refresh_token: str, 
+    db: AsyncSession = Depends(get_db),
 ):
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)
@@ -190,7 +122,6 @@ async def refresh_token(
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
     return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
-
 
 
 @router.get("/forgot-password")
