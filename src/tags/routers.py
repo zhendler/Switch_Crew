@@ -7,14 +7,12 @@ from fastapi.responses import JSONResponse
 from .schemas import TagResponse
 from ..auth.utils import RoleChecker, get_current_user
 from src.auth.schemas import RoleEnum
-from ..photos.routers import FORALL
+from ..auth.utils import FORALL, FORMODER, check_user_active, check_user_banned
 from ..photos.schemas import PhotoResponse
 
 tag_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
-FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 
 @tag_router.post("/create/",
                  summary="Create a new tag",
