@@ -1,3 +1,15 @@
+"""
+This module defines the routes for user profile management in a FastAPI application.
+The routes include functionalities for users to update their profiles, avatars,
+and view profile information. Additionally, it provides administrative routes for managing
+user roles and banning/unbanning users. 
+
+Dependencies:
+- FastAPI for API routing and HTTP exception handling.
+- SQLAlchemy for database interaction.
+- Cloudinary for handling file uploads.
+"""
+
 from fastapi import APIRouter, UploadFile, HTTPException, status, Depends, File
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +40,17 @@ async def update_own_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """
+    Update the current user's profile with the provided information.
+
+    Args:
+        user_update (UserProfileUpdate): Data for updating the user profile.
+        db (AsyncSession): Database session dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        UserProfileResponse: Updated profile information.
+    """
     user_repo = UserProfileRepository(db)
     updated_user = await user_repo.update_user(current_user.id, user_update)
     if not updated_user:
@@ -54,6 +77,17 @@ async def update_own_avatar(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Update the current user's avatar.
+
+    Args:
+        file (UploadFile): The new avatar file.
+        current_user (User): The currently authenticated user.
+        db (AsyncSession): Database session dependency.
+
+    Returns:
+        UserAvatarResponse: Updated avatar URL.
+    """
     cloudinary.config(
         cloud_name=settings.cloudinary_cloud_name,
         api_key=settings.cloudinary_api_key,
@@ -83,6 +117,16 @@ async def get_own_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    """
+    Retrieve the current user's profile information.
+
+    Args:
+        current_user (User): The currently authenticated user.
+        db (AsyncSession): Database session dependency.
+
+    Returns:
+        UserProfileResponse: The current user's profile information.
+    """
     user_repo = UserProfileRepository(db)
     user= await user_repo.get_user(current_user.username)
     if not user:
@@ -115,6 +159,20 @@ async def get_user_profile(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Retrieve profile information for a specific user by their username.
+
+    Args:
+        username (str): The username of the user whose profile is being requested.
+        db (AsyncSession): Database session dependency.
+        current_user (User): The currently authenticated user.
+
+    Returns:
+        UserProfileResponse: The profile information of the specified user.
+    
+    Raises:
+        HTTPException: If the user with the specified username is not found.
+    """
     user_repo = UserProfileRepository(db)
     user = await user_repo.get_user(username=username)
     if not user:
@@ -150,6 +208,21 @@ async def get_user_profile_for_admin(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """
+    Retrieve detailed profile information for a specific user by an admin.
+
+    Args:
+        username (str): The username of the user whose profile is being requested.
+        db (AsyncSession): Database session dependency.
+        current_user (User): The currently authenticated admin.
+
+    Returns:
+        AdminUserProfileResponse: The profile information of the specified user, 
+        including role and moderation-related details.
+
+    Raises:
+        HTTPException: If the user with the specified username is not found.
+    """
     user_repo = UserProfileRepository(db)
     user = await user_repo.get_user(username=username)
     if not user:
@@ -182,6 +255,20 @@ async def get_user_profile_for_admin(
 
 @router.put("/admin/{user_id}/role", dependencies=FORADMIN, status_code=status.HTTP_200_OK)
 async def change_user_role(user_id: int, role: RoleEnum, db: AsyncSession = Depends(get_db)):
+    """
+    Change the role of a user by an admin.
+
+    Args:
+        user_id (int): The ID of the user whose role is to be changed.
+        role (RoleEnum): The new role to be assigned to the user.
+        db (AsyncSession): Database session dependency.
+
+    Returns:
+        dict: Confirmation message indicating the role change.
+
+    Raises:
+        HTTPException: If the role is not allowed, the user is not found, or the role is not found.
+    """
     if role not in [RoleEnum.USER, RoleEnum.MODERATOR]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -206,6 +293,20 @@ async def ban_user(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """
+    Ban a specific user by their username.
+
+    Args:
+        username (str): The username of the user to ban.
+        db (AsyncSession): Database session dependency.
+        current_user (User): The currently authenticated admin.
+
+    Returns:
+        dict: Confirmation message indicating the user has been banned.
+
+    Raises:
+        HTTPException: If the user is not found or the admin attempts to ban themselves.
+    """
     if username == current_user.username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -227,6 +328,20 @@ async def unban_user(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    """
+    Unban a specific user by their username.
+
+    Args:
+        username (str): The username of the user to unban.
+        db (AsyncSession): Database session dependency.
+        current_user (User): The currently authenticated admin.
+
+    Returns:
+        dict: Confirmation message indicating the user has been unbanned.
+
+    Raises:
+        HTTPException: If the user is not found or the admin attempts to unban themselves.
+    """
     if username == current_user.username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
