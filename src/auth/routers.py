@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
+from src.models.models import User
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.auth.schemas import UserCreate, UserResponse, Token
@@ -15,6 +16,7 @@ from src.auth.utils import (
     decode_access_token,
     create_verification_token,
     decode_verification_token,
+    get_current_user,
 )
 
 router = APIRouter()
@@ -89,8 +91,6 @@ async def resend_verifi_email(
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), 
-        db: AsyncSession = Depends(get_db)
         form_data: OAuth2PasswordRequestForm = Depends(), 
         db: AsyncSession = Depends(get_db)
 ):
@@ -173,8 +173,6 @@ async def logout(
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(
-        refresh_token: str, 
-        db: AsyncSession = Depends(get_db)
         refresh_token: str, 
         db: AsyncSession = Depends(get_db)
 ):
