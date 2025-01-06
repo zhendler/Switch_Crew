@@ -16,6 +16,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
+from src.models.models import User
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.auth.schemas import UserCreate, UserResponse, Token
@@ -26,8 +27,9 @@ from src.auth.utils import (
     create_refresh_token,
     decode_access_token,
     create_verification_token,
-    decode_verification_token,
+    decode_verification_token, get_current_user,
 )
+from src.models.models import User
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
