@@ -1,6 +1,8 @@
+
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.comments.schemas import CommentResponse
 from src.models.models import Comment
 
@@ -18,11 +20,10 @@ class CommentsRepository:
         return new_comment
 
 
-    async def get_comments_by_user(self, user_id: int) -> list[Comment:CommentResponse]:
-        result = await self.session.execute(
-            select(Comment).where(Comment.user_id == user_id)
-        )
-        return result.scalars().all()
+    async def get_comments_by_user(self, user_id: int):
+        query = (select(Comment).where(Comment.user_id == user_id))
+        comments = await self.session.execute(query)
+        return comments.scalars().all()
 
     async def get_comments_by_photo(self, photo_id: int) -> list[Comment:CommentResponse]:
         result = await self.session.execute(

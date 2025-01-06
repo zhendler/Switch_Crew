@@ -34,8 +34,7 @@ from src.utils.cloudinary_helper import (
 )
 
 from src.utils.qr_code_helper import generate_qr_code
-from typing import Optional, List, Union
-
+from typing import List, Union
 
 photo_router = APIRouter()
 
@@ -107,7 +106,7 @@ async def get_all_photos(
         HTTPException: If no photos are found for the user.
     """
     photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_users_all_photos(user)
+    photos = await photo_repo.get_all_user_photos(user)
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos
@@ -303,6 +302,7 @@ async def transform_photo(
 
 
 @photo_router.post("/rate/{photo_id}", dependencies=FORALL)
+@photo_router.post("/rate/{photo_id}", dependencies=FORALL)
 async def rate_photo(
     photo_id: int = Path(..., description="ID of the photo"),
     rating: int = Query(..., ge=1, le=5, description="Rating between 1 and 5"),
@@ -371,6 +371,7 @@ async def get_current_photo_ratings(
     return AverageRatingResponse(rating=rating)
 
 
+@photo_router.delete("/admin/del_rate", dependencies=FORMODER)
 @photo_router.delete("/admin/del_rate", dependencies=FORMODER)
 async def delete_photo_rating(
     photo_id: int = Query(
@@ -503,3 +504,28 @@ async def delete_any_photo(
 
     await photo_repo.delete_photo(photo_id)
     return {"detail": "Photo deleted successfully"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @photo_router.get('/photos/')
+# async def get_all_photos_html(request: Request, db: AsyncSession = Depends(get_db)):
+#     token = request.cookies.get("access_token")
+#     user = decode_access_token(token)
+#     tag_repo = TagRepository(db)
+#     photos = await tag_repo.get_all_photos_html()
+#     if photos:
+#         return templates.TemplateResponse("photos_by_tag.html",
+#                                           {"request": request, "title": 'Photos', "photos": photos,"user": user})
+#     else:
+#         return templates.TemplateResponse("index.html", {"request": request, "title": "Home Page","user": user})

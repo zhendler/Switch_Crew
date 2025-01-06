@@ -37,7 +37,8 @@ class PhotoResponse(PhotoBase):
 
 
 class PhotoUpdate(BaseModel):
-    description: Optional[str] = Query(None, max_length=255, description="Description of the photo")
+    description: str
+
 
 class UrlPhotoResponse(BaseModel):
     url_link: str
@@ -76,4 +77,3 @@ class AverageRatingResponse(BaseModel):
 
     class Config:
         from_attributes = True
-

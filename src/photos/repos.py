@@ -1,11 +1,11 @@
-from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import func
+from sqlalchemy import insert, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 from src.models.models import Photo, photo_tags, User, PhotoRating
-from fastapi import HTTPException
+from src.photos.schemas import PhotoCreate, PhotoResponse
+from fastapi import HTTPException, UploadFile
+
 from src.tags.repos import TagRepository
 
 MAX_TAGS_COUNT = 5
@@ -84,9 +84,7 @@ class PhotoRepository:
             await self.session.refresh(new_photo)
             return new_photo
 
-        except SQLAlchemyError as e:
-            await self.session.rollback()
-            raise e
+
 
     async def get_photo_by_id(self, photo_id: int) -> Photo:
         """
@@ -151,7 +149,7 @@ class PhotoRepository:
             )
             photo = query.scalars().first()
             if not photo:
-                return "Photo not found"
+                return None
             await self.session.delete(photo)
             await self.session.commit()
             return "Deleted"
@@ -212,10 +210,10 @@ class PhotoRatingRepository:
         # Update the average_rating field in the photo
         if avg_rating is not None:
             avg_rating = round(float(avg_rating), 2)
+            print(avg_rating)
+            print ("________________________________________________________________________________")
             photo = await self.session.scalar(select(Photo).where(Photo.id == photo_id))
             photo.rating = avg_rating
-            print(type(avg_rating))
-            print(type(photo.rating))
             await self.session.commit()
 
     async def add_and_update_rating(
@@ -285,6 +283,7 @@ class PhotoRatingRepository:
         if not rating:
             raise HTTPException(status_code=404, detail="Rating not found")
 
+
         await self.session.delete(rating)
         await self.session.commit()
 
@@ -303,6 +302,7 @@ class PhotoRatingRepository:
         get_rating = await self.session.execute(
             select(PhotoRating).where(PhotoRating.photo_id == photo_id)
         )
+
         return get_rating.scalars().all()
 
     async def get_ratings_by_user_id(self, user_id: int):

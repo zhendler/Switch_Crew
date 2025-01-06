@@ -3,7 +3,6 @@
 {% block content %}
 <link rel="stylesheet" href="/static/css/tags.css">
 <section class="page-container">
-  <!-- Левая секция: Добавление тегов -->
   {% if user %}
   <div class="left-section">
       <h2>Add new tag</h2>
@@ -33,7 +32,7 @@
     <h2>Tags:</h2>
     <div class="styled-row tags">
       {% for tag in tags %}
-        <a href="http://127.0.0.1:8000/web/tags/{{ tag.name }}/photos/" class="tag-link">
+        <a href="/web/tags/{{ tag.name }}/photos/" class="tag-link">
           <p>{{ tag.name }}</p>
         </a>
       {% endfor %}
