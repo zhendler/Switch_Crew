@@ -21,8 +21,8 @@ class PhotoRepository:
             await self.session.commit()  # Отримуємо ID фото
             await self.session.refresh(new_photo)
             if len (tags) > 5:
+                print("You can add only 5 tags, tags 6 and above will be ignored")
 
-                raise HTTPException(status_code=400, detail="You can add only 5 tags, tags 6 and above will be ignored")
             tags = tags[:MAX_TAGS_COUNT]
             tag_repo = TagRepository(self.session)
             tag_ids = []

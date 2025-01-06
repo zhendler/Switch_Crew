@@ -1,10 +1,9 @@
-import templates
 from config.db import get_db
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
 from src.auth.schemas import RoleEnum
-from src.auth.utils import RoleChecker, decode_access_token, get_current_user
+from src.auth.utils import RoleChecker, get_current_user
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import PhotoResponse, PhotoUpdate, UrlPhotoResponse, PhotoRatingsListResponse, \
@@ -20,9 +19,17 @@ FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER
 FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 
 
-@photo_router.post("/", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED, dependencies=FORALL)
-async def create_photo(tags: List[str] = Query([], title="Теги", description="Теги фотографії", max_items = 5),
-                       description: str = Query(None, title="Опис фотографії", description="Опис фотографії"),
+@photo_router.post("/", response_model=PhotoResponse,
+                   status_code=status.HTTP_201_CREATED,
+                   dependencies=FORALL)
+async def create_photo(tags: List[str] = Query([],
+                                               title="Tags",
+                                               description="Max 5 tags, tags 6 and above will be ignored",
+                                               max_items = 5),
+                       description: str = Query(None,
+                                                title="Description",
+                                                description="Photo description",
+                                                max_length=255),
                        file: UploadFile = File(...),
                        user: User = Depends(get_current_user),
                        db: AsyncSession = Depends(get_db)) -> PhotoResponse:
@@ -38,7 +45,7 @@ async def create_photo(tags: List[str] = Query([], title="Теги", description
 async def get_all_photos(user: User = Depends(get_current_user),
                          db: AsyncSession = Depends(get_db)):
     photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_all_user_photos(user)
+    photos = await photo_repo.get_users_all_photos(user)
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos

@@ -14,7 +14,9 @@ FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER
 FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 
 
-@router.post("/", response_model=CommentResponse, dependencies= FORALL, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CommentResponse,
+             dependencies= FORALL,
+             status_code=status.HTTP_201_CREATED)
 async def create_comment(comment: CommentCreate,
                         user: User = Depends (get_current_user),
                         db:AsyncSession = Depends(get_db)):
@@ -22,28 +24,35 @@ async def create_comment(comment: CommentCreate,
     return await comment_repo.create_comment(user.id, comment.photo_id, comment.content)
 
 
-@router.get("/user/", response_model=list[CommentResponse], dependencies= FORALL)
+@router.get("/user/",
+            response_model=list[CommentResponse],
+            dependencies= FORALL)
 async def get_user_comments(user: User = Depends(get_current_user),
                         db: AsyncSession = Depends(get_db)):
     comment_repo = CommentsRepository(db)
     return await comment_repo.get_comments_by_user(user.id)
 
-@router.get("/photo/{photo_id}/", response_model=list[CommentResponse], dependencies= FORALL)
+@router.get("/photo/{photo_id}/",
+            response_model=list[CommentResponse],
+            dependencies= FORALL)
 async def get_photo_comments( photo_id: int, user: User = Depends(get_current_user),
                             db: AsyncSession = Depends(get_db)):
     comment_repo = CommentsRepository(db)
     return await comment_repo.get_comments_by_photo(photo_id)
 
 
-@router.get("/user/{user_id}/comments", response_model=list[CommentResponse],
-                        dependencies= FORMODER)
+@router.get("/user/{user_id}/comments",
+            response_model=list[CommentResponse],
+            dependencies= FORMODER)
 async def get_comments_by_user(user_id: int,
                         db: AsyncSession = Depends(get_db)):
     comment_repo = CommentsRepository(db)
     return await comment_repo.get_comments_by_user(user_id)
 
 
-@router.put("/{comment_id}/", response_model=CommentResponse, dependencies= FORALL)
+@router.put("/{comment_id}/",
+            response_model=CommentResponse,
+            dependencies= FORALL)
 async def update_comment(
     comment_id: int,
     content: str,
@@ -51,10 +60,14 @@ async def update_comment(
     db: AsyncSession = Depends(get_db)
 ):
     comment_repo = CommentsRepository(db)
-    return await comment_repo.update_comment(comment_id=comment_id, user_id=user.id, content=content)
+    return await comment_repo.update_comment(comment_id=comment_id,
+                                             user_id=user.id,
+                                             content=content)
 
 
-@router.delete("/{comment_id}/", status_code=status.HTTP_204_NO_CONTENT,  dependencies= FORALL)
+@router.delete("/{comment_id}/",
+               status_code=status.HTTP_204_NO_CONTENT,
+               dependencies= FORALL)
 async def delete_own_comment(
     comment_id: int,
     user: User = Depends(get_current_user),
@@ -69,7 +82,8 @@ async def delete_own_comment(
     await comment_repo.delete_comment(comment_id)
 
 
-@router.delete("/admin/{comment_id}/", status_code=status.HTTP_204_NO_CONTENT,
+@router.delete("/admin/{comment_id}/",
+               status_code=status.HTTP_204_NO_CONTENT,
                dependencies=FORMODER)
 async def delete_any_comment(
     comment_id: int,
