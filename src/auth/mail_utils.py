@@ -11,8 +11,6 @@ Dependencies:
 Usage:
     Call `send_verification` with an email address and an email body to send a verification email.
 """
-from fastapi_mail import ConnectionConfig
-
 from config.general import settings
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content
@@ -31,16 +29,6 @@ This configuration object sets up the email service with the following parameter
 Note:
     The configuration values are loaded from the application settings.
 """
-mail_conf = ConnectionConfig(
-    MAIL_USERNAME=settings.mail_username,
-    MAIL_PASSWORD=settings.mail_password,
-    MAIL_FROM=settings.mail_from,
-    MAIL_PORT=settings.mail_port,
-    MAIL_SERVER=settings.mail_server,
-    MAIL_STARTTLS=False,
-    MAIL_SSL_TLS=False,
-    USE_CREDENTIALS=True,
-)
 
 
 def send_verification_grid(email: str, email_body: str):
