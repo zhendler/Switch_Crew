@@ -1,15 +1,13 @@
 """
 This module provides a set of endpoints for user authentication and account management,
-including user registration, email verification, login, token refresh, password reset, 
+including user registration, email verification, login, token refresh, password reset,
 and email resending functionalities. Each endpoint is designed to work asynchronously with FastAPI.
-
 Dependencies include:
 - FastAPI components for handling requests, forms, file uploads, and dependencies.
 - SQLAlchemy for async database interactions.
 - Jinja2 for rendering email templates.
 - Utilities for password hashing, token generation, and email sending.
 """
-
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status, File, Form, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -20,7 +18,7 @@ from src.models.models import User
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.auth.schemas import UserCreate, UserResponse, Token
-from src.auth.mail_utils import send_verification
+from src.auth.mail_utils import send_verification_grid
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
     create_access_token,
@@ -43,6 +41,7 @@ async def register(
     password: str = Form(...),
     avatar: UploadFile = File(None),
     db: AsyncSession = Depends(get_db),
+
 ):
     """
     Register a new user.
@@ -71,7 +70,7 @@ async def register(
     verification_link = (f"http://localhost:8000/auth/verify-email?token={verification_token}")
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return UserResponse(
         username=user.username,
         email=user.email,
@@ -131,7 +130,7 @@ async def resend_verifi_email(
     verification_link = f"http://localhost:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "A new verification email has been sent. Please check your inbox."}
 
 
@@ -169,15 +168,15 @@ async def refresh_token(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Refresh access and refresh tokens using a valid refresh token.
+        Refresh access and refresh tokens using a valid refresh token.
 
-    Args:
-        refresh_token (str): The user's current refresh token.
-        db (AsyncSession): Database session dependency.
+        Args:
+            refresh_token (str): The user's current refresh token.
+            db (AsyncSession): Database session dependency.
 
-    Returns:
-        Token: The new access and refresh tokens along with their type.
-    """
+        Returns:
+            Token: The new access and refresh tokens along with their type.
+        """
     token_data = decode_access_token(refresh_token)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(token_data.username)
@@ -220,7 +219,7 @@ async def forgot_password(
     reset_link = f"http://localhost:8000/auth/reset-password?token={reset_token}"
     template = env.get_template("reset_password_email.html")
     email_body = template.render(reset_link=reset_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "Password reset email sent"}
 
 
