@@ -22,6 +22,7 @@ bcrypt = "4.0.0"
 python-jose = "^3.3.0"
 pytest = "^8.3.4"
 pytest-cov = "^6.0.0"
+sendgrid = "^6.11.0"
 
 
 

@@ -7,12 +7,33 @@ from config.db import Base
 
 
 class Role(Base):
+    """
+    Role Model.
+
+    Represents a user role in the system (e.g., Admin, Moderator).
+
+    Attributes:
+        id (int): The unique identifier of the role.
+        name (str): The unique name of the role.
+        users (list[User]): A one-to-many relationship linking users
+        to this role.
+    """
     __tablename__ = "roles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     users: Mapped[list["User"]] = relationship("User", back_populates="role")
 
+
+"""
+photo_tags Table.
+
+Represents a many-to-many relationship between Photos and Tags.
+
+Columns:
+    photo_id (int): Foreign key referencing the ID of the Photo.
+    tag_id (int): Foreign key referencing the ID of the Tag.
+"""
 photo_tags = Table(
     "photo_tags",
     Base.metadata,
@@ -21,6 +42,30 @@ photo_tags = Table(
 )
 
 class User(Base):
+    """
+    User Model.
+
+    Represents a system user.
+
+    Attributes:
+        id (int): The unique identifier of the user.
+        username (str): A unique username for the user.
+        first_name (str | None): The first name of the user (optional).
+        last_name (str | None): The last name of the user (optional).
+        birth_date (date | None): The user's birth date (optional).
+        country (str | None): The country of the user (optional).
+        is_banned (bool): Indicates whether the user is banned.
+        email (str): A unique email address for the user.
+        hashed_password (str): The hashed password of the user.
+        is_active (bool): Indicates whether the user is active.
+        role_id (int): The role ID associated with the user.
+        avatar_url (str | None): The URL of the user's avatar (optional).
+        created_at (datetime): The creation timestamp of the user.
+        updated_at (datetime): The last update timestamp of the user.
+        role (Role): A many-to-one relationship with the Role model.
+        photos (list[Photo]): A one-to-many relationship with the Photo model.
+        comments (list[Comment]): A one-to-many relationship with the Comment model.
+    """
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -51,6 +96,24 @@ class User(Base):
 
 
 class Photo(Base):
+    """
+    Photo Model.
+
+    Represents a photo uploaded by a user.
+
+    Attributes:
+        id (int): The unique identifier of the photo.
+        url_link (str): The URL of the photo.
+        description (str | None): The description of the photo (optional).
+        rating (int | None): The rating of the photo (optional).
+        qr_core_url (str | None): The QR code URL for the photo (optional).
+        owner_id (int): The user ID of the photo's owner.
+        created_at (datetime): The timestamp when the photo was created.
+        owner (User): A many-to-one relationship with the User model.
+        comments (list[Comment]): A one-to-many relationship with the Comment model.
+        tags (list[Tag]): A many-to-many relationship with the Tag model via a helper table.
+        ratings (list[PhotoRating]): A one-to-many relationship with the PhotoRating model.
+    """
     __tablename__ = "photos"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -81,6 +144,21 @@ class Photo(Base):
 
 
 class Comment(Base):
+    """
+    Comment Model.
+
+    Represents a comment made by a user under a specific photo.
+
+    Attributes:
+        id (int): The unique identifier of the comment.
+        content (str): The content of the comment.
+        user_id (int): The ID of the user who made the comment.
+        photo_id (int): The ID of the photo under which the comment is made.
+        created_at (datetime): The timestamp when the comment was created.
+        updated_at (datetime): The timestamp when the comment was last updated.
+        user (User): A many-to-one relationship with the User model.
+        photo (Photo): A many-to-one relationship with the Photo model.
+    """
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -103,6 +181,16 @@ class Comment(Base):
 
 
 class Tag(Base):
+    """
+   Tag Model.
+
+   Represents a tag that can be associated with one or more photos.
+
+   Attributes:
+       id (int): The unique identifier of the tag.
+       name (str): The unique name of the tag.
+       photos (list[Photo]): A many-to-many relationship with the Photo model via the photo_tags table.
+   """
     __tablename__ = "tags"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -118,6 +206,19 @@ class Tag(Base):
 
 
 class PhotoRating(Base):
+    """
+   PhotoRating Model.
+
+   Represents a user's rating for a specific photo.
+
+   Attributes:
+       id (int): The unique identifier of the photo rating.
+       photo_id (int): The ID of the rated photo.
+       user_id (int): The ID of the user who gave the rating.
+       rating (int): The numerical rating given by the user.
+       photo (Photo): A many-to-one relationship with the Photo model.
+       user (User): A many-to-one relationship with the User model.
+   """
     __tablename__ = "photo_ratings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

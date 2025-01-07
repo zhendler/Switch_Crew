@@ -7,30 +7,28 @@ from jinja2 import Environment, FileSystemLoader
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.auth.schemas import UserCreate, UserResponse, Token
-from src.auth.mail_utils import send_verification
+from src.auth.mail_utils import send_verification_grid
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
     create_access_token,
     create_refresh_token,
     decode_access_token,
     create_verification_token,
-    decode_verification_token, get_current_user,
+    decode_verification_token,
 )
-from src.models.models import User
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED,)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(
-    background_tasks: BackgroundTasks,
-    username: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    avatar: UploadFile = File(None),
-    db: AsyncSession = Depends(get_db),
-
+        background_tasks: BackgroundTasks,
+        username: str = Form(...),
+        email: str = Form(...),
+        password: str = Form(...),
+        avatar: UploadFile = File(None),
+        db: AsyncSession = Depends(get_db),
 ):
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
@@ -41,17 +39,21 @@ async def register(
     if avatar:
         avatar_url = await user_repo.upload_to_cloudinary(avatar)
         await user_repo.update_avatar(user.email, avatar_url)
+
     verification_token = create_verification_token(user.email)
-    verification_link = (f"http://localhost:8000/auth/verify-email?token={verification_token}")
+    verification_link = f"http://localhost:8000/auth/verify-email?token={verification_token}"
+
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
+
     return UserResponse(
         username=user.username,
         email=user.email,
         id=user.id,
         avatar_url=user.avatar_url,
-        detail=f"Please verify your email address. A verification link has been sent to your email."
+        detail="Please verify your email address. A verification link has been sent to your email."
     )
 
 @router.get("/verify-email")
@@ -84,7 +86,7 @@ async def resend_verifi_email(
     verification_link = f"http://localhost:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "A new verification email has been sent. Please check your inbox."}
 
 
@@ -142,7 +144,7 @@ async def forgot_password(
     reset_link = f"http://localhost:8000/auth/reset-password?token={reset_token}"
     template = env.get_template("reset_password_email.html")
     email_body = template.render(reset_link=reset_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "Password reset email sent"}
 
 
