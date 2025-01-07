@@ -7,9 +7,7 @@ from src.photos.schemas import PhotoCreate, PhotoResponse
 from fastapi import HTTPException, UploadFile
 
 from src.tags.repos import TagRepository
-
 MAX_TAGS_COUNT = 5
-
 
 class PhotoRepository:
     def __init__(self, session: AsyncSession):
@@ -21,9 +19,7 @@ class PhotoRepository:
     """
         self.session = session
 
-    async def create_photo(
-        self, url_link: str, description: str, user: User, tags: list
-    ) -> Photo:
+    async def create_photo(self, url_link: str, description: str, user: User, tags: list) -> Photo:
         """
         Create a new photo with optional tags.
 
@@ -41,52 +37,43 @@ class PhotoRepository:
         """
         try:
 
-            new_photo = Photo(
-                url_link=url_link, description=description, owner_id=user.id
-            )
+            new_photo = Photo(url_link=url_link, description=description, owner_id=user.id)
             self.session.add(new_photo)
-            await self.session.commit()  # Get the photo ID
+            await self.session.commit()  # Отримуємо ID фото
             await self.session.refresh(new_photo)
-            if len(tags) > 5:
+            if len (tags) > 5:
+                print("You can add only 5 tags, tags 6 and above will be ignored")
 
-                raise HTTPException(
-                    status_code=400,
-                    detail="You can add only 5 tags, tags 6 and above will be ignored",
-                )
             tags = tags[:MAX_TAGS_COUNT]
             tag_repo = TagRepository(self.session)
             tag_ids = []
 
-            # Get or create tags
+
             for tag_name in tags:
-                # Get or create a tag, avoiding duplication
+
                 tag = await tag_repo.create_tag(tag_name)
                 tag_ids.append(tag.id)
 
-            # Add links between photos and tags
+
             if tag_ids:
                 for tag_id in tag_ids:
-                    # Check for an entry in the intermediate table
+
                     await self.session.refresh(new_photo)
                     existing_relation = await self.session.execute(
-                        select(photo_tags).filter_by(
-                            photo_id=new_photo.id, tag_id=tag_id
-                        )
+                        select(photo_tags).filter_by(photo_id=new_photo.id, tag_id=tag_id)
                     )
                     if not existing_relation.scalar():
-                        stmt = insert(photo_tags).values(
-                            photo_id=new_photo.id, tag_id=tag_id
-                        )
+                        stmt = insert(photo_tags).values(photo_id=new_photo.id, tag_id=tag_id)
                         await self.session.execute(stmt)
 
-            # Commit to change
+
             await self.session.commit()
             await self.session.refresh(new_photo)
             return new_photo
-        finally:
-            pass
 
-
+        except SQLAlchemyError as e:
+            await self.session.rollback()
+            raise e
 
     async def get_photo_by_id(self, photo_id: int) -> Photo:
         """
@@ -101,9 +88,10 @@ class PhotoRepository:
         result = await self.session.execute(select(Photo).filter(Photo.id == photo_id))
         return result.scalar_one_or_none()
 
-    async def update_photo_description(
-        self, photo_id: int, description: str, user_id: int
-    ) -> Photo:
+    async def update_photo_description(self,
+                                       photo_id: int,
+                                       description: str,
+                                       user_id: int) -> Photo:
         """
         Update the description of a photo.
 
@@ -120,13 +108,8 @@ class PhotoRepository:
         """
         photo = await self.session.get(Photo, photo_id)
 
-        if not photo:
-            raise HTTPException(status_code=404, detail="Photo not found")
-
-        if photo.owner_id != user_id:
-            raise HTTPException(
-                status_code=403, detail="You are not the owner of this photo"
-            )
+        if photo is None:
+            return None
         photo.description = description
         await self.session.commit()
         await self.session.refresh(photo)
@@ -159,16 +142,7 @@ class PhotoRepository:
             await self.session.rollback()
             raise e
 
-    async def get_users_all_photos(self, user):
-        """
-        Retrieve all photos uploaded by a specific user.
-
-        Args:
-            user (User): The user whose photos to retrieve.
-
-        Returns:
-            list[Photo]: A list of photos uploaded by the user.
-        """
+    async def get_users_all_photos(self, user) :
         query = select(Photo).where(Photo.owner_id == user.id)
         result = await self.session.execute(query)
         return result.scalars().all()
@@ -209,11 +183,10 @@ class PhotoRatingRepository:
         avg_rating = await self.session.scalar(
             select(func.avg(PhotoRating.rating)).where(PhotoRating.photo_id == photo_id)
         )
-        # Update the average_rating field in the photo
+
+        # Оновлюємо поле average_rating в фото
         if avg_rating is not None:
             avg_rating = round(float(avg_rating), 2)
-            print(avg_rating)
-            print ("________________________________________________________________________________")
             photo = await self.session.scalar(select(Photo).where(Photo.id == photo_id))
             photo.rating = avg_rating
             await self.session.commit()

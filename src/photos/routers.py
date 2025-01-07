@@ -13,6 +13,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
+
 from src.auth.utils import get_current_user, FORALL, FORMODER
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
@@ -39,43 +40,13 @@ from typing import List, Union
 photo_router = APIRouter()
 
 
-@photo_router.post(
-    "/",
-    response_model=PhotoResponse,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=FORALL,
-)
-async def create_photo(
-    tags: List[str] = Query(
-        [], title="Tegs", description="Photo tags, max 5", max_items=5
-    ),
-    description: str = Query(
-        None, title="Photo Description", description="Description of the photo"
-    ),
-    file: UploadFile = File(...),
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-) -> PhotoResponse:
-    """
-    Create a new photo.
 
-    This endpoint allows an authenticated user to upload a photo, add a description,
-    and associate tags with it. The photo will be stored in Cloudinary, and its metadata 
-    will be saved in the database.
-
-    Args:
-        tags (List[str]): A list of tags for the photo (max 5).
-        description (str): An optional description for the photo.
-        file (UploadFile): The uploaded photo file.
-        user (User): The authenticated user making the request.
-        db (AsyncSession): The database session.
-
-    Returns:
-        PhotoResponse: The newly created photo's details.
-
-    Raises:
-        HTTPException: If the upload fails or any other error occurs.
-    """
+@photo_router.post("/", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED, dependencies=FORALL)
+async def create_photo(tags: List[str] = Query([], title="Теги", description="Теги фотографії", max_items = 5),
+                       description: str = Query(None, title="Опис фотографії", description="Опис фотографії"),
+                       file: UploadFile = File(...),
+                       user: User = Depends(get_current_user),
+                       db: AsyncSession = Depends(get_db)) -> PhotoResponse:
     cloudinary_url = await upload_photo_to_cloudinary(file)
 
     photo_repo = PhotoRepository(db)
@@ -106,7 +77,7 @@ async def get_all_photos(
         HTTPException: If no photos are found for the user.
     """
     photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_all_user_photos(user)
+    photos = await photo_repo.get_users_all_photos(user)
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos
@@ -194,9 +165,7 @@ async def update_photo_description(
         PhotoResponse: The updated photo details.
     """
     photo_repo = PhotoRepository(db)
-    update_photo = await photo_repo.update_photo_description(
-        photo_id, photo.description, user.id
-    )
+    update_photo = await photo_repo.update_photo_description(photo_id, photo.description, user.id)
     return update_photo
 
 
@@ -489,7 +458,7 @@ async def delete_any_photo(
     photo_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    
+
     """
     Delete any photo by its ID (admin-only operation).
 

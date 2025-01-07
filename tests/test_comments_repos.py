@@ -201,7 +201,7 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         photo_id = 2
 
         # Act
-        result = await repo.get_comment_by_photo_id(photo_id)
+        result = await repo.get_comments_by_photo(photo_id)
 
         # Assert
         mock_session.execute.assert_awaited_once()
