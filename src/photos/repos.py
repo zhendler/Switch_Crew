@@ -20,6 +20,21 @@ class PhotoRepository:
         self.session = session
 
     async def create_photo(self, url_link: str, description: str, user: User, tags: list) -> Photo:
+        """
+        Create a new photo with optional tags.
+
+        Args:
+            url_link (str): The URL of the photo.
+            description (str): Description of the photo.
+            user (User): The user who owns the photo.
+            tags (list): List of tags for the photo.
+
+        Returns:
+            Photo: The created photo with its metadata.
+
+        Raises:
+            HTTPException: If more than 5 tags are provided or an SQL error occurs.
+        """
         try:
 
             new_photo = Photo(url_link=url_link, description=description, owner_id=user.id)
