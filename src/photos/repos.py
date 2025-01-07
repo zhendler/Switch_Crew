@@ -40,7 +40,7 @@ class PhotoRepository:
             HTTPException: If more than 5 tags are provided or an SQL error occurs.
         """
         try:
-            # Add a new photo
+
             new_photo = Photo(
                 url_link=url_link, description=description, owner_id=user.id
             )
@@ -83,6 +83,8 @@ class PhotoRepository:
             await self.session.commit()
             await self.session.refresh(new_photo)
             return new_photo
+        finally:
+            pass
 
 
 

@@ -8,7 +8,7 @@ from src.models.models import User
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.auth.schemas import UserCreate, UserResponse, Token
-from src.auth.mail_utils import send_verification
+from src.auth.mail_utils import send_verification_grid
 from src.auth.pass_utils import verify_password, get_password_hash
 from src.auth.utils import (
     create_access_token,
@@ -60,7 +60,7 @@ async def register(
     verification_link = (f"http://localhost:8000/auth/verify-email?token={verification_token}")
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return UserResponse(
         username=user.username,
         email=user.email,
@@ -120,7 +120,7 @@ async def resend_verifi_email(
     verification_link = f"http://localhost:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "A new verification email has been sent. Please check your inbox."}
 
 
@@ -209,7 +209,7 @@ async def forgot_password(
     reset_link = f"http://localhost:8000/auth/reset-password?token={reset_token}"
     template = env.get_template("reset_password_email.html")
     email_body = template.render(reset_link=reset_link)
-    background_tasks.add_task(send_verification, user.email, email_body)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
     return {"detail": "Password reset email sent"}
 
 
