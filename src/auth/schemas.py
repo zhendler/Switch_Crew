@@ -12,24 +12,19 @@ class UserBase(BaseModel):
     username: str
     email: EmailStr
     
-
 class UserCreate(UserBase):
     password: str
-
 
 class UserResponse(UserBase):
     id: int
     avatar_url: Optional[str] = None
     detail: str
 
-
     class Config:
         from_attributes = True
 
-
 class TokenData(BaseModel):
     username: str | None = None
-
 
 class Token(BaseModel):
     access_token: str
