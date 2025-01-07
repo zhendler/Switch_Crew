@@ -2,8 +2,8 @@ from config.db import get_db
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
-from src.auth.schemas import RoleEnum
-from src.auth.utils import RoleChecker, get_current_user
+
+from src.auth.utils import get_current_user, FORALL, FORMODER
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import PhotoResponse, PhotoUpdate, UrlPhotoResponse, PhotoRatingsListResponse, \
@@ -15,8 +15,7 @@ from typing import List, Union
 
 photo_router = APIRouter()
 
-FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
-FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
+
 
 
 @photo_router.post("/", response_model=PhotoResponse,
@@ -86,10 +85,11 @@ async def get_photo_by_id(photo_id: int,
 async def update_photo_description(
     photo_id: int,
     photo: PhotoUpdate,
+    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     ):
     photo_repo = PhotoRepository(db)
-    update_photo = await photo_repo.update_photo_description(photo_id, photo.description)
+    update_photo = await photo_repo.update_photo_description(photo_id, photo.description, user.id)
     return update_photo
 
 @photo_router.delete("/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORALL)
