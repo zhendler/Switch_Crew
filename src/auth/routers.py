@@ -1,3 +1,13 @@
+"""
+This module provides a set of endpoints for user authentication and account management,
+including user registration, email verification, login, token refresh, password reset,
+and email resending functionalities. Each endpoint is designed to work asynchronously with FastAPI.
+Dependencies include:
+- FastAPI components for handling requests, forms, file uploads, and dependencies.
+- SQLAlchemy for async database interactions.
+- Jinja2 for rendering email templates.
+- Utilities for password hashing, token generation, and email sending.
+"""
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile, status, File, Form, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -34,19 +44,19 @@ async def register(
 
 ):
     """
-        Register a new user.
+    Register a new user.
 
-        Args:
-            background_tasks (BackgroundTasks): Background task manager for sending verification email.
-            username (str): The username of the new user.
-            email (str): The email of the new user.
-            password (str): The password of the new user.
-            avatar (UploadFile, optional): The avatar file for the new user.
-            db (AsyncSession): Database session dependency.
+    Args:
+        background_tasks (BackgroundTasks): Background task manager for sending verification email.
+        username (str): The username of the new user.
+        email (str): The email of the new user.
+        password (str): The password of the new user.
+        avatar (UploadFile, optional): The avatar file for the new user.
+        db (AsyncSession): Database session dependency.
 
-        Returns:
-            UserResponse: Details of the newly created user along with a verification message.
-        """
+    Returns:
+        UserResponse: Details of the newly created user along with a verification message.
+    """
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
     if user:

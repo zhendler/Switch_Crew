@@ -44,6 +44,19 @@ mail_conf = ConnectionConfig(
 
 
 def send_verification_grid(email: str, email_body: str):
+    """
+    Sends a verification email to the specified email address using SendGrid.
+
+    Args:
+        email (str): The recipient's email address.
+        email_body (str): The HTML content of the email to be sent.
+
+    Raises:
+        Exception: If an error occurs while sending the email, the exception details are logged.
+
+    Returns:
+        None
+    """
     sg = sendgrid.SendGridAPIClient(settings.sendgrid_api)
     from_email = Email("krutsvitya@gmail.com")
     to_email = To(email)
