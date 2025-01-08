@@ -31,7 +31,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
-def truncatechars(value: str, length: int):
+def truncatechars(value: str = '1', length: int = 35):
     if len(value) > length:
         return value[:length] + "..."
     return value

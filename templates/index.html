@@ -12,7 +12,9 @@
                     <a href="/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                     <div class="card-content">
                         <a href="/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                        {% if photo.description %}
                         <p class="description">{{ photo.description|truncatechars(38) }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
