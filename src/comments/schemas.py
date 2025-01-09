@@ -3,7 +3,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-
 class Comment(BaseModel):
     photo_id: int
     content: str
@@ -12,6 +11,7 @@ class Comment(BaseModel):
 class CommentCreate(BaseModel):
     photo_id: int
     content: str
+
 
 class CommentResponse(BaseModel):
     id: int

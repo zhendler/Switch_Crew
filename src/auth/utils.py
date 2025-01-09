@@ -20,8 +20,6 @@ from src.models.models import User
 from config.general import settings
 from config.db import get_db
 
-
-# Constants for token configurations
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
@@ -123,9 +121,8 @@ def decode_access_token(token: str) -> TokenData | None:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db)
-)-> User:
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+) -> User:
     """
     Retrieves the current user based on the access token.
 
@@ -167,9 +164,10 @@ async def check_user_active(current_user: User = Depends(get_current_user)) -> N
     if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is not active. Please activate your account first."
+            detail="Your account is not active. Please activate your account first.",
         )
-    
+
+
 async def check_user_banned(user: User = Depends(get_current_user)) -> None:
     """
     Checks if the current user's account is banned.
@@ -183,9 +181,8 @@ async def check_user_banned(user: User = Depends(get_current_user)) -> None:
     if user.is_banned:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account has been banned. Please contact the administrator."
+            detail="Your account has been banned. Please contact the administrator.",
         )
-
 
 
 class RoleChecker:
@@ -200,8 +197,7 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     async def __call__(
-            self, token: str = Depends(oauth2_scheme),
-            db: AsyncSession = Depends(get_db)
+        self, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
     ) -> User:
         """
         Checks if the user has the required role to access a resource.
@@ -217,19 +213,21 @@ class RoleChecker:
             HTTPException: If the user does not have the required role.
         """
         user = await get_current_user(token, db)
-        is_admin_or_moderator = user.role.name in [RoleEnum.ADMIN.value, RoleEnum.MODERATOR.value]
+        is_admin_or_moderator = user.role.name in [
+            RoleEnum.ADMIN.value,
+            RoleEnum.MODERATOR.value,
+        ]
         if user.role.name not in [role.value for role in self.allowed_roles]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to perform this action"
+                detail="You do not have permission to perform this action",
             )
         return user, is_admin_or_moderator
 
-# Predefined role dependencies    
+
 FORADMIN = [Depends(RoleChecker([RoleEnum.ADMIN]))]
 FORMODER = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR]))]
 FORALL = [Depends(RoleChecker([RoleEnum.ADMIN, RoleEnum.MODERATOR, RoleEnum.USER]))]
 ACTIVATE = [Depends(check_user_active)]
 BANNED_CHECK = [Depends(check_user_banned)]
 ACTIV_AND_BANNED = [Depends(check_user_active), Depends(check_user_banned)]
-

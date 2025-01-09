@@ -19,7 +19,6 @@ Usage:
 
 from passlib.context import CryptContext
 
-
 """
 CryptContext for Password Hashing
 
@@ -33,7 +32,6 @@ Attributes:
 Note:
     The `pwd_context` object is used to hash passwords and verify them.
 """
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

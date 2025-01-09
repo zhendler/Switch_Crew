@@ -1,7 +1,7 @@
+from typing import List, Optional
 
 from fastapi import Query
 from pydantic import BaseModel, Field
-from typing import List, Optional
 
 
 class PhotoBase(BaseModel):
@@ -9,10 +9,12 @@ class PhotoBase(BaseModel):
     url_link: str
 
 
-
 class PhotoCreate(BaseModel):
-    description: Optional[str] = Field(None, max_length=255, description= "Description of the photo")
+    description: Optional[str] = Field(
+        None, max_length=255, description="Description of the photo"
+    )
     tags: List[str] = Query([], title="Теги")
+
 
 class TagResponse(BaseModel):
     id: int
@@ -46,12 +48,14 @@ class UrlPhotoResponse(BaseModel):
 class GetPhoto(BaseModel):
     photo_id: int
 
+
 class PhotoRatingResponse(BaseModel):
     user_id: int
     rating: int
 
     class Config:
         from_attributes = True
+
 
 # Схема для списку всіх оцінок фото
 class PhotoRatingsListResponse(BaseModel):
@@ -61,6 +65,7 @@ class PhotoRatingsListResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 # Схема для списку всіх оцінок користувача
 class UserRatingsListResponse(BaseModel):
     user_id: int
@@ -68,7 +73,6 @@ class UserRatingsListResponse(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 
 class AverageRatingResponse(BaseModel):

@@ -1,11 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import desc
 
 from src.auth.repos import UserRepository
 from src.auth.utils import decode_access_token
-from src.comments.repos import CommentsRepository
 from src.models.models import Photo, User
-from sqlalchemy import desc
 from src.models.models import Comment
 from src.tags.repos import TagRepository
 
@@ -34,7 +33,6 @@ class TagWebRepository:
     async def get_all_commets(self):
         commets = await self.db.execute(select(Comment))
         return commets.scalars().all()
-
 
     async def get_current_user_cookies(self, request):
         token = request.cookies.get("access_token")

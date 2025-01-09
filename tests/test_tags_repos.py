@@ -5,6 +5,7 @@ from src.tags.repos import TagRepository
 from src.models.models import Tag, Photo
 from fastapi import HTTPException, status
 
+
 class TestTagRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_create_tag_when_tag_does_not_exist(self):
@@ -24,7 +25,6 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
         mock_db.add(new_tag)
         mock_db.commit.assert_called_once_with()
         mock_db.refresh.assert_called_once_with(new_tag)
-
 
     async def test_create_tag_when_tag_exists(self):
         mock_db = AsyncMock(AsyncSession)
@@ -75,9 +75,7 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
 
         tag_repo = TagRepository(mock_db)
 
-
         tag_name = "non-existent_tag"
-
 
         with self.assertRaises(HTTPException) as context:
             await tag_repo.get_tag_by_name(tag_name)
@@ -92,7 +90,10 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
         mock_db = AsyncMock(AsyncSession)
 
         mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [mock_existing_tag, mock_existing_tag2]
+        mock_result.scalars.return_value.all.return_value = [
+            mock_existing_tag,
+            mock_existing_tag2,
+        ]
         mock_db.execute.return_value = mock_result
 
         tag_repo = TagRepository(mock_db)
@@ -148,15 +149,15 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
 
         tag_repo = TagRepository(mock_db)
 
-        updated_tag = await tag_repo.update_tag_name(mock_existing_tag.name, 'existing_tag2')
+        updated_tag = await tag_repo.update_tag_name(
+            mock_existing_tag.name, "existing_tag2"
+        )
 
         self.assertEqual(updated_tag.name, "existing_tag2")
         self.assertEqual(updated_tag.id, 1)
 
         mock_db.commit.assert_called_once()
         mock_db.refresh.assert_called_once_with(mock_existing_tag)
-
-
 
     async def test_update_tag_name_when_tag_does_not_exist(self):
         mock_db = AsyncMock(AsyncSession)
@@ -170,7 +171,7 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
         tag_name = "non-existent_tag"
 
         with self.assertRaises(HTTPException) as context:
-            await tag_repo.update_tag_name(tag_name, 'non-existent_tag2')
+            await tag_repo.update_tag_name(tag_name, "non-existent_tag2")
 
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(context.exception.detail, "Tag not found!")
@@ -180,14 +181,24 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_photos_by_tag_when_tag_exist(self):
         mock_db = AsyncMock(AsyncSession)
-        existent_tag1 = Tag(name='existent_tag')
-        existent_tag2 = Tag(name='existent_tag2')
+        existent_tag1 = Tag(name="existent_tag")
+        existent_tag2 = Tag(name="existent_tag2")
 
-        mock_existing_photo1 = Photo(id=1, url_link="existing_photo1", owner_id=1, tags=[existent_tag1])
-        mock_existing_photo2 = Photo(id=2, url_link="existing_photo2", owner_id=2, tags=[existent_tag1, existent_tag2])
+        mock_existing_photo1 = Photo(
+            id=1, url_link="existing_photo1", owner_id=1, tags=[existent_tag1]
+        )
+        mock_existing_photo2 = Photo(
+            id=2,
+            url_link="existing_photo2",
+            owner_id=2,
+            tags=[existent_tag1, existent_tag2],
+        )
 
         mock_result = Mock()
-        mock_result.scalars.return_value.unique.return_value.all.return_value = [mock_existing_photo1, mock_existing_photo2]
+        mock_result.scalars.return_value.unique.return_value.all.return_value = [
+            mock_existing_photo1,
+            mock_existing_photo2,
+        ]
         mock_db.execute.return_value = mock_result
 
         tag_repo = TagRepository(mock_db)
@@ -200,6 +211,5 @@ class TestTagRepository(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(photos, [mock_existing_photo1, mock_existing_photo2])
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

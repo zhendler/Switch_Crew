@@ -1,23 +1,25 @@
 from typing import Sequence
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..models.models import Tag, Photo
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+
+from ..models.models import Tag, Photo
 
 
 class TagRepository:
     """
-   Repository for managing tags in the database.
-   Provides methods to retrieve, create, update, and delete tags, as well as retrieve photos associated with a specific tag.
-   """
+    Repository for managing tags in the database.
+    Provides methods to retrieve, create, update, and delete tags, as well as retrieve photos associated with a specific tag.
+    """
 
     def __init__(self, db: AsyncSession):
         """
-       Initializes the TagRepository with an asynchronous database session.
+        Initializes the TagRepository with an asynchronous database session.
 
-       :param db: An instance of AsyncSession for interacting with the database.
-       """
+        :param db: An instance of AsyncSession for interacting with the database.
+        """
         self.db = db
 
     async def get_tag_by_name(self, tag_name: str) -> Tag:
@@ -32,12 +34,14 @@ class TagRepository:
         :raises HTTPException: If no tag with the specified name is found.
         """
         result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
-        print('Hello')
+        print("Hello")
         tag = result.scalar_one_or_none()
         if tag:
             return tag
         else:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!"
+            )
 
     async def create_tag(self, tag_name: str) -> Tag:
         """
@@ -60,7 +64,7 @@ class TagRepository:
         await self.db.refresh(new_tag)
         return new_tag
 
-    async def get_all_tags(self)-> Sequence[Tag]:
+    async def get_all_tags(self) -> Sequence[Tag]:
         """
         Retrieves all tags from the database.
 
@@ -87,7 +91,6 @@ class TagRepository:
         await self.db.commit()
         return "Successfully deleted!"
 
-
     async def update_tag_name(self, tag_name: str, tag_new_name: str) -> Tag:
         """
         Updates the name of an existing tag.
@@ -106,7 +109,6 @@ class TagRepository:
         await self.db.refresh(tag)
         return tag
 
-
     async def get_photos_by_tag(self, tag_name: str) -> Sequence[Photo]:
         """
         Retrieves all photos associated with a specific tag.
@@ -122,7 +124,9 @@ class TagRepository:
             raise HTTPException(status_code=404, detail="Tag not found!")
 
         result = await self.db.execute(
-            select(Photo).options(joinedload(Photo.tags)).where(Photo.id.in_([photo.id for photo in tag.photos]))
+            select(Photo)
+            .options(joinedload(Photo.tags))
+            .where(Photo.id.in_([photo.id for photo in tag.photos]))
         )
         photos = result.scalars().unique().all()
         if photos:

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 client = TestClient(app)
 
-class TestTagsRouter(unittest.TestCase):
 
+class TestTagsRouter(unittest.TestCase):
 
     # @patch('src.tags.repos.TagRepository.get_all_tags', return_value=[Tag(id=1, name='tag1'), Tag(id=2, name='tag2')])
     # def test_get_all_tags(self, mock_get_all_tags):
@@ -23,7 +23,7 @@ class TestTagsRouter(unittest.TestCase):
     #
     #     mock_get_all_tags.assert_called_once()
 
-    @patch('src.tags.repos.TagRepository')
+    @patch("src.tags.repos.TagRepository")
     @patch("config.db.get_db", new_callable=AsyncMock)
     async def test_create_tag(self, mock_get_db, MockTagRepository):
         # Мокируем базу данных
@@ -34,7 +34,6 @@ class TestTagsRouter(unittest.TestCase):
         tag_repo = MockTagRepository(mock_db)
         tag_repo.create_tag = AsyncMock()
         tag_repo.get_tag_by_name = AsyncMock(return_value=None)
-
 
         with TestClient(app) as client:
             # Авторизация и получение токена
@@ -57,11 +56,10 @@ class TestTagsRouter(unittest.TestCase):
             assert response_data["name"] == "New Tag"
             mock_db.add.assert_not_called()
             mock_db.commit.assert_not_called()
-            print('1111111111111111111111111111111111111111')
+            print("1111111111111111111111111111111111111111")
             mock_db.refresh.assert_not_called()
 
-
-    @patch('src.tags.repos.TagRepository')
+    @patch("src.tags.repos.TagRepository")
     @patch("config.db.get_db", new_callable=AsyncMock)
     async def test_create_tag2(self, mock_get_db, MockTagRepository):
         mock_db = AsyncMock(spec=AsyncSession)
@@ -80,10 +78,10 @@ class TestTagsRouter(unittest.TestCase):
         mock_db.commit.assert_not_called()
         mock_db.refresh.assert_not_called()
 
-
-
-
-    @patch('src.tags.repos.TagRepository.get_tag_by_name', return_value=Tag(id=1, name='tag1'))
+    @patch(
+        "src.tags.repos.TagRepository.get_tag_by_name",
+        return_value=Tag(id=1, name="tag1"),
+    )
     async def test_get_tag_by_name(self, mock_get_tag_by_name):
         response = client.get(f"/tags/tag1")
 
@@ -95,9 +93,23 @@ class TestTagsRouter(unittest.TestCase):
 
         mock_get_tag_by_name.assert_called_once()
 
-    @patch('src.tags.repos.TagRepository.get_photos_by_tag',
-           return_value=[Photo(id=1, url_link="existing_photo1", owner_id=1, tags=[Tag(id=1, name='existent_tag')]),
-                         Photo(id=2, url_link="existing_photo2", owner_id=2, tags=[Tag(id=1, name='existent_tag'), Tag(id=2, name='existent_tag2')])])
+    @patch(
+        "src.tags.repos.TagRepository.get_photos_by_tag",
+        return_value=[
+            Photo(
+                id=1,
+                url_link="existing_photo1",
+                owner_id=1,
+                tags=[Tag(id=1, name="existent_tag")],
+            ),
+            Photo(
+                id=2,
+                url_link="existing_photo2",
+                owner_id=2,
+                tags=[Tag(id=1, name="existent_tag"), Tag(id=2, name="existent_tag2")],
+            ),
+        ],
+    )
     async def test_get_photos_by_tag(self, mock_get_photos_by_tag):
         response = client.get("/tags/existent_tag/photos/")
         response_data = response.json()

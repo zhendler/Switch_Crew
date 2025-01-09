@@ -2,24 +2,27 @@ from sqlalchemy import insert, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from src.models.models import Photo, photo_tags, User, PhotoRating
-from src.photos.schemas import PhotoCreate, PhotoResponse
-from fastapi import HTTPException, UploadFile
+from fastapi import HTTPException
 
+from src.models.models import Photo, photo_tags, User, PhotoRating
 from src.tags.repos import TagRepository
+
 MAX_TAGS_COUNT = 5
+
 
 class PhotoRepository:
     def __init__(self, session: AsyncSession):
         """
-    Initialize the PhotoRepository.
+        Initialize the PhotoRepository.
 
-    Args:
-        session (AsyncSession): The database session.
-    """
+        Args:
+            session (AsyncSession): The database session.
+        """
         self.session = session
 
-    async def create_photo(self, url_link: str, description: str, user: User, tags: list) -> Photo:
+    async def create_photo(
+        self, url_link: str, description: str, user: User, tags: list
+    ) -> Photo:
         """
         Create a new photo with optional tags.
 
@@ -37,35 +40,38 @@ class PhotoRepository:
         """
         try:
 
-            new_photo = Photo(url_link=url_link, description=description, owner_id=user.id)
+            new_photo = Photo(
+                url_link=url_link, description=description, owner_id=user.id
+            )
             self.session.add(new_photo)
             await self.session.commit()  # Отримуємо ID фото
             await self.session.refresh(new_photo)
-            if len (tags) > 5:
+            if len(tags) > 5:
                 print("You can add only 5 tags, tags 6 and above will be ignored")
 
             tags = tags[:MAX_TAGS_COUNT]
             tag_repo = TagRepository(self.session)
             tag_ids = []
 
-
             for tag_name in tags:
 
                 tag = await tag_repo.create_tag(tag_name)
                 tag_ids.append(tag.id)
-
 
             if tag_ids:
                 for tag_id in tag_ids:
 
                     await self.session.refresh(new_photo)
                     existing_relation = await self.session.execute(
-                        select(photo_tags).filter_by(photo_id=new_photo.id, tag_id=tag_id)
+                        select(photo_tags).filter_by(
+                            photo_id=new_photo.id, tag_id=tag_id
+                        )
                     )
                     if not existing_relation.scalar():
-                        stmt = insert(photo_tags).values(photo_id=new_photo.id, tag_id=tag_id)
+                        stmt = insert(photo_tags).values(
+                            photo_id=new_photo.id, tag_id=tag_id
+                        )
                         await self.session.execute(stmt)
-
 
             await self.session.commit()
             await self.session.refresh(new_photo)
@@ -88,10 +94,9 @@ class PhotoRepository:
         result = await self.session.execute(select(Photo).filter(Photo.id == photo_id))
         return result.scalar_one_or_none()
 
-    async def update_photo_description(self,
-                                       photo_id: int,
-                                       description: str,
-                                       user_id: int) -> Photo:
+    async def update_photo_description(
+        self, photo_id: int, description: str, user_id: int
+    ) -> Photo:
         """
         Update the description of a photo.
 
@@ -142,12 +147,12 @@ class PhotoRepository:
             await self.session.rollback()
             raise e
 
-    async def get_users_all_photos(self, user) :
+    async def get_users_all_photos(self, user: User):
         query = select(Photo).where(Photo.owner_id == user.id)
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def get_all_photos(self, user):
+    async def get_all_photos(self):
         """
         Retrieve all photos in the database.
 
@@ -220,7 +225,7 @@ class PhotoRatingRepository:
         await self.session.commit()
         await self.update_average_rating(photo_id)
 
-    async def get_rating(self, photo_id, user_id):
+    async def get_rating(self, photo_id: int, user_id: int):
         """
         Retrieve a specific user's rating for a photo.
 
@@ -257,7 +262,6 @@ class PhotoRatingRepository:
         )
         if not rating:
             raise HTTPException(status_code=404, detail="Rating not found")
-
 
         await self.session.delete(rating)
         await self.session.commit()

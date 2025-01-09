@@ -71,8 +71,8 @@ class UserProfileRepository:
         await self.session.commit()
         await self.session.refresh(user)
         return user
-    
-    async def get_user(self, username: int) -> User:
+
+    async def get_user(self, username: str) -> User:
         """
         Retrieves a user by their username.
 
@@ -85,7 +85,7 @@ class UserProfileRepository:
         query = select(User).where(User.username == username)
         result = await self.session.execute(query)
         return result.scalar()
-    
+
     async def ban_user(self, username: str) -> User:
         """
         Bans a user by setting their `is_banned` flag to True.
@@ -106,7 +106,7 @@ class UserProfileRepository:
         await self.session.commit()
         await self.session.refresh(user)
         return user
-    
+
     async def unban_user(self, username: str) -> User:
         """
         Unbans a user by setting their `is_banned` flag to False.

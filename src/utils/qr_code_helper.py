@@ -1,4 +1,3 @@
-import asyncio
 from io import BytesIO
 import qrcode
 
@@ -19,5 +18,5 @@ def generate_qr_code(image_url: str):
     img_io = BytesIO()
     img.save(img_io, "PNG")
     img_io.seek(0)
-    uploaded_image_url = cloudinary.uploader.upload(img_io, folder = "qr_codes/")
+    uploaded_image_url = cloudinary.uploader.upload(img_io, folder="qr_codes/")
     return uploaded_image_url["secure_url"]

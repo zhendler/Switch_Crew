@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from .repos import TagRepository
-from config.db import get_db
 from fastapi import Depends, APIRouter, Form, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
+
+from .repos import TagRepository
+from config.db import get_db
 from .schemas import TagResponse
 from ..auth.utils import FORALL, FORMODER
 from ..photos.schemas import PhotoResponse
@@ -40,7 +41,7 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
 
 
 @tag_router.get(
-    '/',
+    "/",
     summary="Get all tags",
     description="""
     Retrieves all tags stored in the database. 
@@ -62,7 +63,7 @@ async def get_all_tags(db: AsyncSession = Depends(get_db)):
 
 
 @tag_router.get(
-    '/{tag_name}/',
+    "/{tag_name}/",
     summary="Get a tag by name",
     description="""
     Retrieves a specific tag by its name. 
@@ -86,7 +87,7 @@ async def get_tag_by_name(tag_name: str, db: AsyncSession = Depends(get_db)):
 
 
 @tag_router.delete(
-    '/admin/delete/',
+    "/admin/delete/",
     summary="Delete a tag by name",
     description="""
     Deletes a tag from the database by its name. 
@@ -94,7 +95,9 @@ async def get_tag_by_name(tag_name: str, db: AsyncSession = Depends(get_db)):
     """,
     dependencies=FORMODER,
 )
-async def delete_tag_by_name(tag_name: str = Form(...), db: AsyncSession = Depends(get_db)):
+async def delete_tag_by_name(
+    tag_name: str = Form(...), db: AsyncSession = Depends(get_db)
+):
     """
     Endpoint to delete a tag by its name.
 
@@ -111,7 +114,7 @@ async def delete_tag_by_name(tag_name: str = Form(...), db: AsyncSession = Depen
 
 
 @tag_router.put(
-    '/admin/update/{tag_name}-{tag_new_name}/',
+    "/admin/update/{tag_name}-{tag_new_name}/",
     summary="Update an existing tag's name",
     description="""
     Updates the name of an existing tag. 
@@ -120,7 +123,9 @@ async def delete_tag_by_name(tag_name: str = Form(...), db: AsyncSession = Depen
     response_model=TagResponse,
     dependencies=FORMODER,
 )
-async def update_tag_name(tag_name: str, tag_new_name: str, db: AsyncSession = Depends(get_db)):
+async def update_tag_name(
+    tag_name: str, tag_new_name: str, db: AsyncSession = Depends(get_db)
+):
     """
     Endpoint to update the name of an existing tag.
 
@@ -137,7 +142,7 @@ async def update_tag_name(tag_name: str, tag_new_name: str, db: AsyncSession = D
 
 
 @tag_router.get(
-    '/{tag_name}/photos/',
+    "/{tag_name}/photos/",
     summary="Get photos by tag",
     description="""
     Retrieves all photos associated with a specific tag. 

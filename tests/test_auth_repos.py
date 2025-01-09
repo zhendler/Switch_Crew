@@ -22,9 +22,7 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
     @patch("src.auth.repos.get_password_hash")
     async def test_create_user(self, mock_get_password_hash, mock_get_role_by_name):
         user_create = UserCreate(
-            username="newuser", 
-            email="newuser@example.com", 
-            password="password123"
+            username="newuser", email="newuser@example.com", password="password123"
         )
         mock_get_password_hash.return_value = "hashed_password"
         mock_user_role = MagicMock()
@@ -44,14 +42,13 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         self.mock_session.refresh.assert_called_once_with(created_user)
         mock_get_role_by_name.assert_called_once_with(RoleEnum.ADMIN)
 
-    
     @patch("src.auth.repos.AsyncSession")
     async def test_get_user_by_email(self, MockSession):
         mock_user = User(
-            username="testuser", 
-            email="test@example.com", 
-            hashed_password="hashed_password", 
-            role_id=1, 
+            username="testuser",
+            email="test@example.com",
+            hashed_password="hashed_password",
+            role_id=1,
         )
         mock_execute_result = MagicMock()
         mock_execute_result.scalar_one_or_none.return_value = mock_user
@@ -95,13 +92,13 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         actual_query_str = str(self.mock_session.execute.call_args[0][0])
         expected_query_str = str(expected_query)
         self.assertEqual(actual_query_str, expected_query_str)
-        
+
     @patch("cloudinary.uploader.upload")
     async def test_upload_to_cloudinary_success(self, mock_upload):
         mock_result = {"secure_url": "https://cloudinary.com/sample_image.jpg"}
         mock_upload.return_value = mock_result
         file = UploadFile(filename="avatar.jpg", file=BytesIO(b"sample image content"))
-        user_repo = UserRepository(self.mock_session) 
+        user_repo = UserRepository(self.mock_session)
         result = await user_repo.upload_to_cloudinary(file)
         self.assertEqual(result, "https://cloudinary.com/sample_image.jpg")
         mock_upload.assert_called_once_with(file.file)
@@ -113,20 +110,24 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
         user_repo = UserRepository(self.mock_session)
         with self.assertRaises(HTTPException) as context:
             await user_repo.upload_to_cloudinary(file)
-        self.assertEqual(context.exception.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(
+            context.exception.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
         self.assertIn("Failed to upload avatar", str(context.exception))
         mock_upload.assert_called_once_with(file.file)
 
     @patch("src.auth.repos.UserRepository.get_user_by_email")
     async def test_update_avatar(self, MockGetUserByEmail):
         mock_user = User(
-            username="testuser", 
-            email="test@example.com", 
+            username="testuser",
+            email="test@example.com",
             avatar_url="old_avatar_url",
         )
         MockGetUserByEmail.return_value = mock_user
         new_avatar_url = "new_avatar_url"
-        updated_user = await self.user_repo.update_avatar("test@example.com", new_avatar_url)
+        updated_user = await self.user_repo.update_avatar(
+            "test@example.com", new_avatar_url
+        )
         self.assertEqual(updated_user.avatar_url, new_avatar_url)
         self.mock_session.commit.assert_called_once()
         self.mock_session.add.assert_called_once_with(updated_user)
@@ -143,7 +144,11 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
     @patch("src.auth.repos.UserRepository.get_user_by_email")
     async def test_update_user_password(self, MockGetUserByEmail):
-        mock_user = User(username="testuser", email="test@example.com", hashed_password="old_hashed_password")
+        mock_user = User(
+            username="testuser",
+            email="test@example.com",
+            hashed_password="old_hashed_password",
+        )
         MockGetUserByEmail.return_value = mock_user
         new_hashed_password = "new_hashed_password"
         await self.user_repo.update_user_password(mock_user, new_hashed_password)
@@ -154,22 +159,26 @@ class TestUserRepository(unittest.IsolatedAsyncioTestCase):
 
 class TestRoleRepository(unittest.IsolatedAsyncioTestCase):
 
-    @patch("src.auth.repos.AsyncSession")  
+    @patch("src.auth.repos.AsyncSession")
     async def test_get_role_by_name(self, MockSession):
         mock_session_instance = MockSession.return_value.__aenter__.return_value
         mock_session_instance.execute = AsyncMock()
         mock_role = Role(name=RoleEnum.ADMIN)
-        mock_session_instance.execute.return_value.scalar_one_or_none = MagicMock(return_value = mock_role)
+        mock_session_instance.execute.return_value.scalar_one_or_none = MagicMock(
+            return_value=mock_role
+        )
         role_repo = RoleRepository(session=mock_session_instance)
         result = await role_repo.get_role_by_name(RoleEnum.ADMIN)
         self.assertEqual(result, mock_role)
         mock_session_instance.execute.assert_called_once()
 
-    @patch("src.auth.repos.AsyncSession") 
+    @patch("src.auth.repos.AsyncSession")
     async def test_get_role_by_name_not_found(self, MockSession):
         mock_session_instance = MockSession.return_value.__aenter__.return_value
         mock_session_instance.execute = AsyncMock()
-        mock_session_instance.execute.return_value.scalar_one_or_none = MagicMock(return_value=None)
+        mock_session_instance.execute.return_value.scalar_one_or_none = MagicMock(
+            return_value=None
+        )
         role_repo = RoleRepository(session=mock_session_instance)
         result = await role_repo.get_role_by_name(RoleEnum.ADMIN)
         self.assertIsNone(result)

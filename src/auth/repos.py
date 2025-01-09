@@ -55,9 +55,13 @@ class UserRepository:
         result = await self.session.execute(select(User.id).limit(1))
         first_user = result.scalars().first()
         if not first_user:
-            user_role = await RoleRepository(self.session).get_role_by_name(RoleEnum.ADMIN)
+            user_role = await RoleRepository(self.session).get_role_by_name(
+                RoleEnum.ADMIN
+            )
         else:
-            user_role = await RoleRepository(self.session).get_role_by_name(RoleEnum.USER)
+            user_role = await RoleRepository(self.session).get_role_by_name(
+                RoleEnum.USER
+            )
         new_user = User(
             username=user_create.username,
             hashed_password=hashed_password,
@@ -70,7 +74,7 @@ class UserRepository:
         await self.session.refresh(new_user)
         return new_user
 
-    async def get_user_by_email(self, email):
+    async def get_user_by_email(self, email: str):
         """
         Retrieves a user by their email address.
 
@@ -111,7 +115,7 @@ class UserRepository:
         query = select(User).where(User.id == user_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def upload_to_cloudinary(self, file: UploadFile) -> str:
         """
         Uploads a file to Cloudinary and returns the secure URL.
@@ -129,7 +133,7 @@ class UserRepository:
             cloud_name=settings.cloudinary_cloud_name,
             api_key=settings.cloudinary_api_key,
             api_secret=settings.cloudinary_api_secret,
-            secure=True
+            secure=True,
         )
         try:
             result = cloudinary.uploader.upload(file.file)
@@ -137,10 +141,10 @@ class UserRepository:
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to upload avatar: {str(e)}"
+                detail=f"Failed to upload avatar: {str(e)}",
             )
-    
-    async def update_avatar(self, email, url: str) -> User:
+
+    async def update_avatar(self, email: str, url: str) -> User:
         """
         Updates a user's avatar URL.
 
@@ -188,7 +192,7 @@ class UserRepository:
         await self.session.commit()
 
 
-class RoleRepository():
+class RoleRepository:
     """
     Repository class for managing `Role` data.
 

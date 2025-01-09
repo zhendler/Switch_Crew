@@ -1,16 +1,25 @@
 FROM python:3.12-slim
+
 LABEL authors="Switch_Crew"
-# Встановлюємо Poetry
+
+# Устанавливаем Poetry
 RUN pip install --upgrade pip && pip install poetry
-# Копіюємо файли залежностей і налаштування
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
-COPY poetry.lock pyproject.toml README.md ./
-# Налаштовуємо Poetry і встановлюємо залежності
-RUN poetry config virtualenvs.create false \
+
+# Копируем только файлы зависимостей для установки
+COPY poetry.lock pyproject.toml ./
+
+# Конфигурируем Poetry для использования виртуального окружения внутри контейнера
+RUN poetry config virtualenvs.in-project true \
     && poetry install --no-root
-# Копіюємо решту проєкту
+
+# Копируем остальной проект
 COPY . .
-# Відкриваємо порт
+
+# Открываем порт
 EXPOSE 8000
-# Запускаємо додаток
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Запускаем приложение
+CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

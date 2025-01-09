@@ -11,24 +11,11 @@ Dependencies:
 Usage:
     Call `send_verification` with an email address and an email body to send a verification email.
 """
+
 from config.general import settings
+
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content
-
-"""
-Configuration for FastAPI Mail
-This configuration object sets up the email service with the following parameters:
-    - MAIL_USERNAME: SMTP username for authentication.
-    - MAIL_PASSWORD: SMTP password for authentication.
-    - MAIL_FROM: Sender email address.
-    - MAIL_PORT: Port for the SMTP server.
-    - MAIL_SERVER: Address of the SMTP server.
-    - MAIL_STARTTLS: Whether STARTTLS should be used (disabled in this configuration).
-    - MAIL_SSL_TLS: Whether SSL/TLS should be used (disabled in this configuration).
-    - USE_CREDENTIALS: Indicates whether to use credentials for authentication.
-Note:
-    The configuration values are loaded from the application settings.
-"""
 
 
 def send_verification_grid(email: str, email_body: str):

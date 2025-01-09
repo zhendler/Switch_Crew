@@ -34,7 +34,9 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         # Assert
         # Перевіряємо, чи викликали add з будь-яким об'єктом Comment
         mock_session.add.assert_called_once()
-        self.assertIsInstance(mock_session.add.call_args[0][0], Comment)  # Перевіряємо тип об'єкта
+        self.assertIsInstance(
+            mock_session.add.call_args[0][0], Comment
+        )  # Перевіряємо тип об'єкта
 
         mock_session.commit.assert_awaited_once()
         mock_session.refresh.assert_awaited_once()
@@ -49,7 +51,9 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         # Arrange
         mock_session = MagicMock()
         mock_session.add = MagicMock()
-        mock_session.commit = AsyncMock(side_effect=SQLAlchemyError("DB error"))  # Симуляція помилки
+        mock_session.commit = AsyncMock(
+            side_effect=SQLAlchemyError("DB error")
+        )  # Симуляція помилки
 
         repo = CommentsRepository(mock_session)
         user_id = 1
@@ -72,7 +76,7 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         mock_execute = Mock()
         mock_execute.scalars.return_value.all.return_value = [
             Comment(user_id=1, photo_id=2, content="Test comment 1"),
-            Comment(user_id=1, photo_id=3, content="Test comment 2")
+            Comment(user_id=1, photo_id=3, content="Test comment 2"),
         ]
 
         mock_session.execute.return_value = mock_execute
@@ -100,7 +104,7 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         # Створюємо моки для результату виконання запиту
         mock_execute.scalars.return_value.all.return_value = [
             Comment(user_id=1, photo_id=2, content="Test comment 1"),
-            Comment(user_id=2, photo_id=2, content="Test comment 2")
+            Comment(user_id=2, photo_id=2, content="Test comment 2"),
         ]
 
         # Мокаємо метод execute
@@ -125,7 +129,9 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
     async def test_update_comment_success(self):
         # Arrange
         mock_session = AsyncMock()
-        comment = Comment(id=1, user_id=1, photo_id=2, content="Old content", updated_at=None)
+        comment = Comment(
+            id=1, user_id=1, photo_id=2, content="Old content", updated_at=None
+        )
         mock_session.get.return_value = comment
 
         repo = CommentsRepository(mock_session)
@@ -193,7 +199,7 @@ class TestCommentsRepository(unittest.IsolatedAsyncioTestCase):
         mock_execute = Mock()
         mock_execute.scalars.return_value.all.return_value = [
             Comment(user_id=1, photo_id=2, content="Test comment 1"),
-            Comment(user_id=2, photo_id=2, content="Test comment 2")
+            Comment(user_id=2, photo_id=2, content="Test comment 2"),
         ]
         mock_session.execute.return_value = mock_execute
 

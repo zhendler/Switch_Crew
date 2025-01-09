@@ -1,12 +1,11 @@
-from config.db import get_db
+from typing import List, Union
+
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
     UploadFile,
     File,
-    Form,
-    Request,
     status,
     Query,
     Path,
@@ -14,6 +13,7 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
 
+from config.db import get_db
 from src.auth.utils import get_current_user, FORALL, FORMODER
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
@@ -26,27 +26,32 @@ from src.photos.schemas import (
     PhotoRatingResponse,
     AverageRatingResponse,
 )
-
-from src.tags.repos import TagRepository
-
 from src.utils.cloudinary_helper import (
     upload_photo_to_cloudinary,
     get_cloudinary_image_id,
 )
-
 from src.utils.qr_code_helper import generate_qr_code
-from typing import List, Union
 
 photo_router = APIRouter()
 
 
-
-@photo_router.post("/", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED, dependencies=FORALL)
-async def create_photo(tags: List[str] = Query([], title="Теги", description="Теги фотографії", max_items = 5),
-                       description: str = Query(None, title="Опис фотографії", description="Опис фотографії"),
-                       file: UploadFile = File(...),
-                       user: User = Depends(get_current_user),
-                       db: AsyncSession = Depends(get_db)) -> PhotoResponse:
+@photo_router.post(
+    "/",
+    response_model=PhotoResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=FORALL,
+)
+async def create_photo(
+    tags: List[str] = Query(
+        [], title="Теги", description="Теги фотографії", max_items=5
+    ),
+    description: str = Query(
+        None, title="Опис фотографії", description="Опис фотографії"
+    ),
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PhotoResponse:
     cloudinary_url = await upload_photo_to_cloudinary(file)
 
     photo_repo = PhotoRepository(db)
@@ -78,6 +83,34 @@ async def get_all_photos(
     """
     photo_repo = PhotoRepository(db)
     photos = await photo_repo.get_users_all_photos(user)
+    if not photos:
+        raise HTTPException(status_code=404, detail="Photos not found")
+    return photos
+
+
+@photo_router.get(
+    "/users_all_photos", response_model=list[PhotoResponse], dependencies=FORALL
+)
+async def all_photos(
+    user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieve all photos .
+
+    This endpoint fetches all photos .
+
+    Args:
+        user (User): The authenticated user making the request.
+        db (AsyncSession): The database session.
+
+    Returns:
+        list[PhotoResponse]: A list of all photos.
+
+    Raises:
+        HTTPException: If no photos are found .
+    """
+    photo_repo = PhotoRepository(db)
+    photos = await photo_repo.get_all_photos()
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     return photos
@@ -165,7 +198,9 @@ async def update_photo_description(
         PhotoResponse: The updated photo details.
     """
     photo_repo = PhotoRepository(db)
-    update_photo = await photo_repo.update_photo_description(photo_id, photo.description, user.id)
+    update_photo = await photo_repo.update_photo_description(
+        photo_id, photo.description, user.id
+    )
     return update_photo
 
 
@@ -217,7 +252,9 @@ async def transform_photo(
     width: int = Query(None, description="Width of the transformed photo"),
     height: int = Query(None, description="Height of the transformed photo"),
     crop: str = Query(None, description="Crop mode (e.g., 'fill', 'fit')"),
-    effect: str = Query(None, description="Effect to apply (e.g., 'sepia', 'grayscale')"),
+    effect: str = Query(
+        None, description="Effect to apply (e.g., 'sepia', 'grayscale')"
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -270,7 +307,6 @@ async def transform_photo(
     }
 
 
-@photo_router.post("/rate/{photo_id}", dependencies=FORALL)
 @photo_router.post("/rate/{photo_id}", dependencies=FORALL)
 async def rate_photo(
     photo_id: int = Path(..., description="ID of the photo"),
@@ -340,7 +376,6 @@ async def get_current_photo_ratings(
     return AverageRatingResponse(rating=rating)
 
 
-@photo_router.delete("/admin/del_rate", dependencies=FORMODER)
 @photo_router.delete("/admin/del_rate", dependencies=FORMODER)
 async def delete_photo_rating(
     photo_id: int = Query(
@@ -458,7 +493,6 @@ async def delete_any_photo(
     photo_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-
     """
     Delete any photo by its ID (admin-only operation).
 
@@ -473,28 +507,3 @@ async def delete_any_photo(
 
     await photo_repo.delete_photo(photo_id)
     return {"detail": "Photo deleted successfully"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @photo_router.get('/photos/')
-# async def get_all_photos_html(request: Request, db: AsyncSession = Depends(get_db)):
-#     token = request.cookies.get("access_token")
-#     user = decode_access_token(token)
-#     tag_repo = TagRepository(db)
-#     photos = await tag_repo.get_all_photos_html()
-#     if photos:
-#         return templates.TemplateResponse("photos_by_tag.html",
-#                                           {"request": request, "title": 'Photos', "photos": photos,"user": user})
-#     else:
-#         return templates.TemplateResponse("index.html", {"request": request, "title": "Home Page","user": user})
