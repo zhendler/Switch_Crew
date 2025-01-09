@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/upload_photo.css">
+<main class="content">
+    <div class="upload-container">
+        <h2>Photo uploading</h2>
+<form action="/photos/upload_photo" method="POST" enctype="multipart/form-data" class="upload-form">            <div class="form-group">
+                <label for="file">Select photo</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="2" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="tags">Tags</label>
+                <input type="text" id="tags" name="tags" placeholder="Enter tags separated by commas (max 5 tags)" required>
+                <small>Tags can be separated by commas, for example: nature, travel, recreation.</small>
+            </div>
+            <button type="submit" class="submit-btn">Upload photo</button>
+        </form>
+    </div>
+</main>
+{% endblock %}

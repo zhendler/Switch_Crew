@@ -1,0 +1,308 @@
+.photo-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+.photo-section {
+    flex: 3; /* 75% ширины */
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.photo-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.photo-details {
+    position: relative; /* Добавим относительное позиционирование для корректной работы абсолютного позиционирования кнопки */
+    margin-top: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+.username {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+}
+
+.description {
+    font-size: 14px;
+    color: #555;
+    margin: 10px 0;
+     word-wrap: break-word; /* Переносит длинные слова на новую строку */
+    overflow-wrap: break-word; /* Для совместимости с другими браузерами */
+    white-space: normal; /* Текст будет перенесен на новую строку */
+    word-break: break-word; /* Разрывает длинные слова на новую строку */
+    width: 100%; /* Контейнер будет занимать всю доступную ширину */
+    box-sizing: border-box; /* Учитывает padding и border в ширине */
+    line-height: 1.6; /* Увеличивает расстояние между строками */
+}
+
+.tags {
+    margin-top: 10px;
+}
+
+.tag {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 12px;
+    color: #007bff;
+    text-decoration: none;
+    background-color: #f1f1f1;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.tag:hover {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.comment-section {
+    border: 1px solid #ccc; /* Добавляем серую рамку */
+    border-radius: 8px; /* Скругляем углы */
+    padding: 15px; /* Внутренний отступ */
+    background-color: #f9f9f9; /* Светло-серый фон */
+    margin-top: 20px; /* Отступ сверху */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Легкая тень для глубины */
+    max-height: 600px; /* Фиксированная высота для отображения примерно 5 комментариев */
+    overflow-y: auto; /* Включаем вертикальный скролл */
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Расстояние между элементами */
+}
+
+.comment {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.comment-section {
+    width: 25%; /* Фиксированная ширина */
+    max-width: 300px; /* Ограничение на максимальную ширину */
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Расстояние между элементами */
+}
+
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.comment-input {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none; /* Отключить изменение размера */
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.post-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.post-button:hover {
+    background-color: #61dafb;
+}
+
+.no-comments {
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+}
+
+.comment {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.comment:last-child {
+    border-bottom: none; /* Убрать линию у последнего комментария */
+}
+
+.comment-card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 15px; /* Уменьшенный отступ сверху */
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.comment-card:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between; /* Разделяем имя и кнопку по краям */
+    align-items: center; /* Выравниваем по вертикали */
+    margin-bottom: 8px; /* Отступ между заголовком и текстом комментария */
+}
+
+.comment-author {
+    font-weight: bold;
+    font-size: 14px;
+    margin: 0; /* Убираем стандартный отступ */
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.delete-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.delete-button:hover {
+    transform: scale(1.1);
+}
+
+.trash-icon {
+    width: 15px; /* Размер иконки */
+    height: 15px;
+    object-fit: contain; /* Сохраняет пропорции PNG */
+    filter: grayscale(50%); /* Лёгкий стиль для ненажатого состояния */
+    transition: filter 0.3s;
+}
+
+.delete-button:hover .trash-icon {
+    filter: none; /* Убираем фильтр при наведении */
+}
+
+.comment-author {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Выравнивание по шапке */
+.content {
+    margin-top: 20px;
+    padding: 0 20px;
+}
+
+@media (max-width: 768px) {
+    .photo-container {
+        flex-direction: column;
+    }
+
+    .comments-section {
+        margin-top: 20px;
+    }
+}
+
+.comment-author-container {
+    display: flex;
+    align-items: center; /* Выравнивание по вертикали */
+    gap: 10px; /* Расстояние между аватаркой и ником */
+}
+
+.comment-avatar {
+    width: 30px; /* Ширина аватарки */
+    height: 30px; /* Высота аватарки */
+    border-radius: 50%; /* Округлая форма */
+    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
+    border: 2px solid #ccc; /* Рамка вокруг аватарки */
+}
+
+.delete-button-container {
+    display: flex;
+    justify-content: flex-end; /* Выравниваем кнопку удаления по правому краю */
+    margin-top: 10px; /* Расстояние от фотографии */
+}
+
+.delete-button-photo {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+    transition: color 0.3s ease;
+}
+
+.delete-text {
+    margin: 0;
+}
+
+.delete-button-photo:hover .delete-text {
+    color: #d9534f; /* Красный цвет при наведении */
+}
+
+.trash-icon-photo {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+    transition: filter 0.3s ease;
+}
+
+.delete-button-photo:hover .trash-icon-photo {
+    filter: none; /* Убираем фильтр при наведении */
+}

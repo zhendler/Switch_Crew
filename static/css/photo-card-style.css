@@ -1,0 +1,157 @@
+.center-horizontal {
+  display: flex;
+  flex-direction: column; /* Элементы располагаются вертикально */
+  align-items: center;    /* Центрирование по горизонтали */
+  margin: 0 auto;         /* Центрирование самого div, если это необходимо */
+  text-align: center;     /* Текст внутри элементов центрируется */
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  object-fit: cover;
+  border: 2px solid #ccc;
+}
+
+.card-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Максимум 5 карточек в строке */
+    gap: 20px; /* Расстояние между карточками */
+    max-width: 1200px; /* Ограничение ширины */
+    margin: 20px auto; /* Центрирование контейнера по горизонтали */
+    padding: 0 20px; /* Отступы от краев экрана */
+    box-sizing: border-box;
+    justify-content: center;
+}
+
+.card-container-wrapper {
+    margin-top: 20px; /* Отступ сверху от шапки */
+}
+
+/* Стили карточки */
+.card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 2px solid #ddd; /* Края */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    width: 250px; /* Фиксированная ширина карточки */
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-10px); /* Эффект при наведении */
+    border-color: #61dafb; /* Изменение цвета края при наведении */
+}
+
+/* Изображение карточки */
+.card-img {
+    width: 100%; /* Ширина по ширине карточки */
+    height: 200px; /* Фиксированная высота */
+    object-fit: cover; /* Центрирование и обрезка изображения */
+    border-bottom: 2px solid #f1f1f1;
+}
+
+/* Содержимое карточки */
+.card-content {
+    padding: 10px; /* Уменьшаем общий отступ */
+}
+
+.author {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 5px; /* Добавляем небольшой отступ сверху */
+    margin-bottom: 5px; /* Уменьшаем отступ снизу */
+}
+
+.description {
+    font-size: 15px;
+    color: #666;
+    line-height: 0.5;
+}
+
+
+@media (max-width: 768px) {
+    .card-container {
+        grid-template-columns: 1fr;
+    }
+}
+/* Секция с комментариями */
+.comments-section {
+    margin-top: 20px; /* Отступ сверху */
+    border-top: 1px solid rgba(0, 0, 0, 0.2); /* Полупрозрачная линия */
+    width: 90%; /* Линия не на всю ширину карточки */
+    margin-left: auto; /* Центрируем линию по горизонтали */
+    margin-right: auto;
+    padding: 0; /* Убираем возможные отступы внутри контейнера */
+}
+
+/* Стили для каждого комментария */
+.comment {
+    margin-top: 5px; /* Небольшой отступ сверху */
+    display: flex; /* Используем flex для равномерного выравнивания */
+    align-items: flex-start; /* Выравнивание по верху */
+    gap: 5px; /* Небольшой промежуток между автором и текстом */
+}
+/* Ник пользователя, который написал комментарий */
+.comment-author {
+    font-size: 12px; /* Размер шрифта для ника */
+    font-weight: bold;
+    color: #007bff;
+    text-decoration: none;
+    margin-right: 5px; /* Отступ между ником и текстом комментария */
+}
+
+.comment-author:hover {
+    text-decoration: underline; /* Подчеркивание при наведении */
+}
+
+/* Текст комментария */
+.comment-text {
+    font-size: 12px; /* Размер текста комментария */
+    color: #444;
+    margin: 0; /* Убираем отступы вокруг текста */
+    line-height: 1.2; /* Межстрочный интервал */
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+    .comment-author {
+        font-size: 11px; /* Для мобильных устройств уменьшение шрифта никнейма */
+    }
+
+    .comment-text {
+        font-size: 11px; /* Уменьшаем текст комментария для мобильных устройств */
+    }
+}
+
+@media (max-width: 768px) {
+    .card-container {
+        grid-template-columns: repeat(2, 1fr); /* Максимум 2 карточки на строке */
+    }
+}
+
+@media (max-width: 480px) {
+    .card-container {
+        grid-template-columns: 1fr; /* Одна карточка на строке */
+    }
+}
+
+h1 {
+
+}
+
+.centered-title {
+    font-size: 36px; /* Увеличенный размер шрифта */
+    font-weight: bold; /* Жирный текст */
+    color: #20232a; /* Тёмный цвет для текста */
+    text-align: center; /* Центрирование по горизонтали */
+
+}
+
+.card-tags {
+    margin-bottom: 5px; /* Уменьшаем отступ снизу */
+}
