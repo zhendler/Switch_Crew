@@ -13,9 +13,13 @@ Admin Tools: Moderation tools for managing user-generated content.
 ---
 
 **Technologies**
+
 Backend: FastAPI
+
 Database: PostgreSQL with SQLAlchemy
+
 Environment Management: Poetry
+
 Containerization: Docker and Docker Compose
 
 ---
