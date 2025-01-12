@@ -89,7 +89,7 @@ async def get_all_photos(
 
 
 @photo_router.get(
-    "/users_all_photos", response_model=list[PhotoResponse], dependencies=FORALL
+    "/all_photos", response_model=list[PhotoResponse], dependencies=FORALL
 )
 async def all_photos(
     user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)

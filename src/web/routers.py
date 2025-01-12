@@ -12,8 +12,9 @@ from fastapi import (
     UploadFile,
     File,
     status,
+    BackgroundTasks
 )
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import selectinload
@@ -22,12 +23,14 @@ from sqlalchemy import insert
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.utils.cloudinary_helper import upload_photo_to_cloudinary
+from src.auth.mail_utils import send_verification_grid
+from src.auth.routers import env
+from src.auth.schemas import UserResponse, UserCreate
 from src.utils.qr_code_helper import generate_qr_code
 from src.web.repos import TagWebRepository
 from src.auth.pass_utils import verify_password
 from src.auth.repos import UserRepository
-from src.auth.utils import create_access_token, create_refresh_token
+from src.auth.utils import create_access_token, create_refresh_token, create_verification_token
 from src.comments.repos import CommentsRepository
 from src.models.models import Photo, photo_tags
 from src.photos.repos import PhotoRepository
@@ -56,7 +59,7 @@ async def read_root(
 
     tag_web_repo = TagWebRepository(db)
     user = await tag_web_repo.get_current_user_cookies(request)
-    users, photos, popular_tags, popular_users, recent_comments = (
+    popular_users, photos, popular_tags, recent_comments = (
         await tag_web_repo.get_data_for_main_page()
     )
     return templates.TemplateResponse(
@@ -82,7 +85,7 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
 
     tag_repo = TagRepository(db)
     await tag_repo.create_tag(name=tag_name)
-    return RedirectResponse("/web/tags/", status_code=302)
+    return RedirectResponse("/tags/", status_code=302)
 
 
 @router.get(
@@ -121,15 +124,15 @@ async def delete_tag_by_name(
     tag_web_repo = TagWebRepository(db)
     user = await tag_web_repo.get_current_user_cookies(request)
     if user.role_id not in [1, 2]:
-        return RedirectResponse(url="/web/tags/?error=no_permission", status_code=302)
+        return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
 
     tag_repo = TagRepository(db)
     await tag_repo.delete_tag_by_name(tag_name)
 
-    return RedirectResponse("/web/tags/", status_code=302)
+    return RedirectResponse("/tags/", status_code=302)
 
 
-@router.get("/tags/{tag_name}/photos/")
+@router.get("/tag/{tag_name}/photos/")
 async def get_photos_by_tag(
     request: Request, tag_name: str, db: AsyncSession = Depends(get_db)
 ):
@@ -220,7 +223,7 @@ async def upload_photo(
     user = await tag_web_repo.get_current_user_cookies(request)
 
     if user is None:
-        return RedirectResponse(url="/web/tags/?error=no_permission", status_code=302)
+        return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
 
     if tags:
         tags = [tag.strip() for tag in tags.split(",")]
@@ -232,7 +235,8 @@ async def upload_photo(
         with NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(file.file.read())
             tmp_file_path = tmp_file.name
-            cloudinary_url = await upload_photo_to_cloudinary(file)
+            cloudinary_url = await tag_web_repo.upload_photo_to_cloudinary(file)
+
     except Exception as e:
         if os.path.exists(tmp_file_path):
             os.remove(tmp_file_path)
@@ -278,7 +282,7 @@ async def upload_photo(
     if os.path.exists(tmp_file_path):
         os.remove(tmp_file_path)
 
-    return RedirectResponse(f"/web/page/{user.username}", status_code=302)
+    return RedirectResponse(f"/page/{user.username}", status_code=302)
 
 
 @router.post("/photos/delete/{photo_id}")
@@ -294,10 +298,10 @@ async def delete_photo_by_id(
     if photo:
         if user.id == photo.owner.id or user.role_id not in [1, 2]:
             await photo_repo.delete_photo(photo_id)
-            return RedirectResponse(url=f"/web/page/{username}", status_code=302)
+            return RedirectResponse(url=f"/page/{username}", status_code=302)
         else:
             return RedirectResponse(
-                url="/web/tags/?error=no_permission", status_code=302
+                url="/tags/?error=no_permission", status_code=302
             )
 
 
@@ -313,13 +317,13 @@ async def create_comment_html(
     if user:
         comment_repo = CommentsRepository(db)
         await comment_repo.create_comment(user.id, photo_id, comment_content)
-        return RedirectResponse(url=f"/web/photo/{photo_id}", status_code=302)
+        return RedirectResponse(url=f"/photo/{photo_id}", status_code=302)
     else:
-        return RedirectResponse(url="/web/tags/?error=no_permission", status_code=302)
+        return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
 
 
-@router.post("/comments/delete/{comment_id}/")
-async def delete_own_comment_html(
+@router.post("/comment/delete/{comment_id}/")
+async def delete_comment_html(
     request: Request, comment_id: int, db: AsyncSession = Depends(get_db)
 ):
     tag_web_repo = TagWebRepository(db)
@@ -331,14 +335,19 @@ async def delete_own_comment_html(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found"
         )
-    if comment.user_id != user.id or user.role not in [1, 2]:
+    print('1111111111111111111')
+    print(comment.user_id)
+    print(user.id)
+    if (comment.user_id is user.id) or (user.role_id in [1, 2]) or (comment.photo.owner_id is user.id):
+        await comment_repo.delete_comment(comment_id)
+
+        return RedirectResponse(url=f"/photo/{comment.photo_id}", status_code=302)
+    else:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You cannot delete this comment",
         )
-    await comment_repo.delete_comment(comment_id)
 
-    return RedirectResponse(url=f"/web/photo/{comment.photo_id}", status_code=302)
 
 
 @router.post("/login/login")
@@ -357,7 +366,7 @@ async def login(
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
 
-    response = RedirectResponse(url="/web", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
@@ -366,7 +375,7 @@ async def login(
 
 @router.get("/logout")
 async def logout():
-    response = RedirectResponse(url="/web", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token", httponly=True)
     response.delete_cookie(key="refresh_token", httponly=True)
     return response
@@ -412,3 +421,108 @@ async def get_photos(
             "user": user,
         },
     )
+@router.get(
+    "/register_page",
+    status_code=status.HTTP_200_OK,
+)
+async def register_page(request: Request, db: AsyncSession = Depends(get_db)):
+    tag_web_repo = TagWebRepository(db)
+    user = await tag_web_repo.get_current_user_cookies(request)
+    if user is None:
+        return templates.TemplateResponse(
+            "register.html", {"request": request, "user": user}
+        )
+    else:
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "user": user}
+        )
+
+
+
+
+@router.post(
+    "/registration",
+    status_code=status.HTTP_201_CREATED,
+)
+async def registration(
+    background_tasks: BackgroundTasks,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    avatar: UploadFile = File(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Register a new user.
+
+    Args:
+        background_tasks (BackgroundTasks): Background task manager for sending verification email.
+        username (str): The username of the new user.
+        email (str): The email of the new user.
+        password (str): The password of the new user.
+        avatar (UploadFile, optional): The avatar file for the new user.
+        db (AsyncSession): Database session dependency.
+
+    Returns:
+        UserResponse: Details of the newly created user along with a verification message.
+    """
+    user_repo = UserRepository(db)
+    user = await user_repo.get_user_by_email(email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Account already register"
+        )
+    user_create = UserCreate(
+        username=username, email=email, password=password, avatar=avatar
+    )
+    user = await user_repo.create_user(user_create)
+    if avatar:
+        avatar_url = await user_repo.upload_to_cloudinary(avatar)
+        await user_repo.update_avatar(user.email, avatar_url)
+    verification_token = create_verification_token(user.email)
+    verification_link = f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    template = env.get_template("email.html")
+    email_body = template.render(verification_link=verification_link)
+    background_tasks.add_task(send_verification_grid, user.email, email_body)
+
+    access_token = create_access_token(data={"sub": user.username})
+    refresh_token = create_refresh_token(data={"sub": user.username})
+
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    return response
+
+
+@router.post('/comment/edit/{comment_id}/')
+async def edit_comment(request: Request, comment_id, db: AsyncSession = Depends(get_db)):
+    tag_web_repo = TagWebRepository(db)
+    com_repo = CommentsRepository(db)
+    comment = await com_repo.get_comment_by_id(int(comment_id))
+    user = await tag_web_repo.get_current_user_cookies(request)
+    if comment.user.id == user.id or user.role_id in [1, 2]:
+        form_data = await request.form()
+        comment_content = form_data.get('comment_content')
+        if comment_content:
+            comment.content = comment_content
+            await db.commit()
+            return JSONResponse(content={"message": "Комментарий обновлен"}, status_code=200)
+        return 'Invalid content', 400
+    return 'Forbidden', 403
+
+@router.post("/photos/edit-description/{photo_id}/")
+async def edit_photo_description(request: Request, photo_id: int, description: str = Form(...), db: AsyncSession = Depends(get_db)):
+    photo = await db.get(Photo, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    tag_web_repo = TagWebRepository(db)
+    user = await tag_web_repo.get_current_user_cookies(request)
+
+    if photo.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this photo")
+
+    photo.description = description
+    await db.commit()
+
+    return {"message": "Description updated successfully"}

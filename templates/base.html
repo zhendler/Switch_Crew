@@ -13,35 +13,35 @@
     <header class="header">
     <div class="container">
         <div class="logo">
-            <a href="/web">Switch Crew</a>
+            <a href="/">Switch Crew</a>
         </div>
         <nav class="nav">
             <ul>
-                <li><a href="/web">Main</a></li>
-                <li><a href="/web/photos/photos/">Photos</a></li>
-                <li><a href="/web/tags/">Tags</a></li>
+                <li><a href="/">Main</a></li>
+                <li><a href="/photos/photos/">Photos</a></li>
+                <li><a href="/tags/tags/">Tags</a></li>
             </ul>
         </nav>
 
         {% if user %}
         <div class="user-profile-header">
-            <a href="/web/photos/upload_photo/">
+            <a href="/photos/upload_photo/">
                 <button class="add-button">
                     <span class="plus-icon">+</span>
                 </button>
             </a>
-            <a href="/web/page/{{ user.username }}">
+            <a href="/page/{{ user.username }}">
                 <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar-header">
             </a>
-            <a href="/web/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
+            <a href="/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
         </div>
         <div class="user-actions">
-            <a href="/web/logout" class="register">Log out</a>
+            <a href="/logout" class="register">Log out</a>
         </div>
         {% else %}
         <div class="user-actions">
-            <a href="/web/login/" class="login">Login</a>
-            <a href="#" class="register">Sign up</a>
+            <a href="/login/" class="login">Login</a>
+            <a href="/register_page" class="register">Sign up</a>
         </div>
         {% endif %}
     </div>

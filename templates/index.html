@@ -9,9 +9,9 @@
             <div class="card-container">
                 {% for photo in photos %}
                 <div class="card">
-                    <a href="/web/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                    <a href="/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                     <div class="card-content">
-                        <a href="/web/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                        <a href="/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
                         {% if photo.description %}
                         <p class="description">{{ photo.description|truncatechars(38) }}</p>
                         {% endif %}
@@ -40,7 +40,7 @@
             <h3>Popular tags</h3>
             <div class="tag-list">
                 {% for tag in popular_tags[:3] %}
-                <a href="/tags/{{ tag.name }}/photos/" class="tag-tile">
+                <a href="/tag/{{ tag.name }}/photos/" class="tag-tile">
                     <p class="tag-name">#{{ tag.name }}</p>
                 </a>
                 {% endfor %}

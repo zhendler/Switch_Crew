@@ -1,13 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends, APIRouter, Form, status
+from fastapi import Depends, APIRouter, Form, status, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 
-from .repos import TagRepository
+from repos import TagRepository
 from config.db import get_db
-from .schemas import TagResponse
-from ..auth.utils import FORALL, FORMODER
-from ..photos.schemas import PhotoResponse
+from schemas import TagResponse
+from src.auth.utils import FORALL, FORMODER
+from src.photos.schemas import PhotoResponse
+from src.utils.front_end_utils import get_response_format
+from src.web.repos import TagWebRepository
 
 tag_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -41,7 +43,7 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
 
 
 @tag_router.get(
-    "/",
+    "/tags/",
     summary="Get all tags",
     description="""
     Retrieves all tags stored in the database. 
@@ -49,17 +51,38 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
     """,
     response_model=list[TagResponse],
 )
-async def get_all_tags(db: AsyncSession = Depends(get_db)):
+async def get_all_tags(
+        request: Request,
+        db: AsyncSession = Depends(get_db),
+        response_format: str = Depends(get_response_format)
+):
+    # request: Request Додаємо якщо будете повертати темплейт.
+    # Додаемо response_format: str = Depends(get_response_format) таким чином роут розуміє запит зі сваггера чи з фронту.
+    # Необхідні імпорти:
+    # from src.utils.front_end_utils import get_response_format
+    # from src.web.repos import TagWebRepository
     """
     Endpoint to fetch all tags.
 
     This endpoint retrieves a list of all tags stored in the database.
 
+    :param request: Basic param for html templates
     :param db: Database session dependency.
+    :param response_format: Swagger format or HTML.
     :return: A list of `TagResponse` objects representing all tags.
     """
+    tag_web_repo = TagWebRepository(db)
+    user = await tag_web_repo.get_current_user_cookies(request)# "отримування поточного юзера" Обов'язковий
+    # параметр щоб тримати юзера авторизованим. !!! Додаємо до кожного роута який повертає темплейт.
     tag_repo = TagRepository(db)
-    return await tag_repo.get_all_tags()
+    tags = await tag_repo.get_all_tags()
+    if response_format == "json": # Умова якщо запит зі сваггера.
+        return tags # Повертаємо як завжди дані у сваггер.
+    else: # Якщо запит не зі сваггера, тоді він з фронту.
+        return templates.TemplateResponse( # Повертаємо темплейт. Обов'язковими для усіх темплейтів є request та user,
+            # а далі вже залежно від логіки сторінки
+            "tags.html", {"request": request, "title": "Tags", "tags": tags, "user": user}
+        )
 
 
 @tag_router.get(

@@ -194,8 +194,15 @@
 }
 
 .comment-text {
-    font-size: 14px;
+    font-size: 16px;
+    margin: 0;
     line-height: 1.5;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center; /* Выравнивание кнопок по вертикали */
+    gap: 5px; /* Расстояние между кнопками */
 }
 
 .delete-button {
@@ -203,17 +210,30 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    width: 24px;
-    height: 24px;
     display: flex;
-    align-items: center;
+    align-items: center; /* Центрирование иконки внутри кнопки */
     justify-content: center;
-    transition: transform 0.2s;
+    width: 24px; /* Размер кнопки */
+    height: 24px;
+    transition: transform 0.2s ease-in-out;
 }
 
 .delete-button:hover {
-    transform: scale(1.1);
+    transform: scale(1.1); /* Увеличение кнопки при наведении */
 }
+
+.action-icon {
+    width: 15px; /* Размер иконки */
+    height: 15px;
+    object-fit: contain;
+    filter: grayscale(50%);
+    transition: filter 0.3s;
+}
+
+.delete-button:hover .action-icon {
+    filter: none; /* Убираем фильтр при наведении */
+}
+
 
 .trash-icon {
     width: 15px; /* Размер иконки */
@@ -305,4 +325,140 @@
 
 .delete-button-photo:hover .trash-icon-photo {
     filter: none; /* Убираем фильтр при наведении */
+}
+
+.edit-comment-input {
+    width: 100%;
+    height: 50px;
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.save-button {
+    display: block;
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.save-button:hover {
+    background-color: #45a049;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out;;
+}
+
+.edit-button-comment {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out;;
+}
+
+.edit-button:hover {
+    transform: scale(1.1); /* Увеличение кнопки при наведении */
+}
+
+/* Улучшенное поле для изменения комментария */
+.edit-comment-input {
+    width: 100%;
+    height: 60px;
+    padding: 8px;
+    font-size: 16px; /* Увеличим размер шрифта для улучшения читаемости */
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: none;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    margin: 8px 0;
+}
+
+/* Добавляем эффект при наведении на поле */
+.edit-comment-input:focus {
+    outline: none;
+    border-color: #61dafb; /* Цвет рамки при фокусе */
+    box-shadow: 0 0 8px rgba(97, 218, 251, 0.6); /* Легкий эффект подсветки */
+}
+
+/* Кнопка для сохранения */
+.save-button {
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    padding: 5px 15px;  /* Уменьшаем размер кнопки */
+    font-size: 14px;  /* Меньший шрифт */
+    font-weight: 600;  /* Легкий жирный шрифт */
+    cursor: pointer;
+    border-radius: 4px;  /* Скругляем углы */
+    transition: background-color 0.3s;
+}
+
+/* Эффект наведения на кнопку */
+.save-button:hover {
+    background-color: #4fa3d1;
+    transform: translateY(-2px); /* Легкий эффект поднятия кнопки */
+}
+
+/* Добавляем эффект при нажатии */
+.save-button:active {
+    transform: translateY(0); /* Снимаем эффект поднятия */
+}
+
+/* Шрифт для текста комментариев и кнопок */
+.comment-text, .save-button, .edit-comment-input {
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.save-button:focus {
+    outline: none; /* Убираем обводку при фокусе */
+}
+
+@media (max-width: 768px) {
+    .photo-container {
+        flex-direction: column;
+    }
+    .comment-section {
+        max-width: 100%;
+        width: 100%;
+    }
+}
+
+.edit-description-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+#edit-description-input {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    resize: none;
 }
