@@ -132,4 +132,5 @@ class TagRepository:
         if photos:
             return photos
         else:
-            raise HTTPException(status_code=404, detail="Photos not found!")
+            return "Photos not found!"
+            # raise HTTPException(status_code=404, detail="Photos not found!")

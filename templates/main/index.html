@@ -53,7 +53,7 @@
                 {% for comment in recent_comments[:3] %}
                 <a href="/photo/{{ comment.photo_id }}" class="comment-tile">
                     <p class="comment-author">{{ comment.user.username }}</p>
-                    <p class="comment-text">{{ comment.content | truncate(50) }}</p>
+                    <p class="comment-text">{{ comment.content|truncatechars(12) }}</p>
                 </a>
                 {% endfor %}
             </div>

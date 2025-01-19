@@ -10,7 +10,7 @@ Dependencies:
 - Cloudinary for handling file uploads.
 """
 
-from fastapi import APIRouter, UploadFile, HTTPException, status, Depends, File
+from fastapi import APIRouter, UploadFile, HTTPException, status, Depends, File, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 import cloudinary
@@ -27,7 +27,7 @@ from src.user_profile.schemas import (
 )
 from src.user_profile.repos import UserProfileRepository
 from src.auth.repos import UserRepository, RoleRepository
-from src.auth.utils import FORADMIN, ACTIVATE, get_current_user
+from src.auth.utils import FORADMIN, ACTIVATE, get_current_user, get_current_user_cookies
 from src.auth.schemas import RoleEnum
 
 
@@ -40,9 +40,9 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
 )
 async def update_own_profile(
+    request: Request,
     user_update: UserProfileUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
     Update the current user's profile with the provided information.
@@ -55,6 +55,7 @@ async def update_own_profile(
     Returns:
         UserProfileResponse: Updated profile information.
     """
+    current_user = await get_current_user_cookies(request, db)
     user_repo = UserProfileRepository(db)
     updated_user = await user_repo.update_user(current_user.id, user_update)
     if not updated_user:

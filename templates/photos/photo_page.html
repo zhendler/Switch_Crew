@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/photo-page-style.css?v=1.0.1">
+<main class="content">
+    <div class="photo-container">
+        <div class="photo-section">
+            <img src="{{ photo.url_link }}" alt="{{ photo.title }}" class="photo-img">
+            <div class="photo-details">
+                {% if photo.owner.username == user.username %}
+                    <div class="delete-button-container">
+                        <form action="/photos/delete/{{ photo.id }}" method="post">
+                            <button type="submit" class="delete-button-photo">
+                                <p class="delete-text">Delete photo <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="trash-icon-photo"></p>
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+                <div class="user-info">
+                    <a href="/page/{{ photo.owner.username }}">
+                        <img src="{{ photo.owner.avatar_url }}" alt="{{ photo.owner.username }}" class="avatar">
+                    </a>
+                    <a href="/page/{{ photo.owner.username }}">
+                        <p class="username">{{ photo.owner.username }}</p>
+                    </a>
+                </div>
+
+                {% if photo.owner.username == user.username %}
+                    <div class="edit-description-container">
+                        <button class="edit-button" id="edit-description-button">
+                            <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
+                        </button>
+                    </div>
+                {% endif %}
+                <div id="description-container">
+                    <p class="description" id="photo-description" data-photo-id="{{ photo.id }}">{{ photo.description }}</p>
+                    <form id="edit-description-form" action="/photos/edit-description/{{ photo.id }}" method="post" style="display: none;">
+                        <textarea name="description" id="edit-description-input" class="edit-comment-input">{{ photo.description }}</textarea>
+                        <button type="submit" class="save-button">Save</button>
+                    </form>
+                </div>
+                <div class="tags">
+                    {% for tag in photo.tags %}
+                        <a href="/tag/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="comment-section">
+            <h3>Comments</h3>
+            <form class="comment-form" action="/comments/create/{{ photo.id }}/" method="post">
+                <textarea class="comment-input" name="comment_content" placeholder="Add your comment..."></textarea>
+                <button type="submit" class="post-button">Post</button>
+            </form>
+            {% if photo.comments %}
+            <div class="comments">
+                {% for comment in photo.comments %}
+                <div class="comment-card">
+                    <div class="comment-header">
+                        <div class="comment-author-container">
+                            <a href="/page/{{ comment.user.username }}">
+                                <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="comment-avatar">
+                            </a>
+                            <a href="/page/{{ comment.user.username }}">
+                                <p class="username">{{ comment.user.username }}</p>
+                            </a>
+                        </div>
+                        {% if comment.user.username == user.username %}
+                        <div class="action-buttons">
+                                <button class="edit-button-comment" data-comment-id="{{ comment.id }}" data-comment-text="{{ comment.content }}">
+                                    <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
+                                </button>
+                            <form class="delete-form" data-comment-id="{{ comment.id }}">
+                                <button type="button" class="delete-button">
+                                    <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
+                                </button>
+                            </form>
+                        </div>
+                        {% elif user.role_id == 1 %}
+                        <form class="delete-form" data-comment-id="{{ comment.id }}">
+                            <button type="button" class="delete-button">
+                                <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
+                            </button>
+                        </form>
+                        {% elif photo.owner_id == user.id %}
+                        <form class="delete-form" data-comment-id="{{ comment.id }}">
+                            <button type="button" class="delete-button">
+                                <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    <p class="comment-text" id="comment-text-{{ comment.id }}">{{ comment.content }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="no-comments">No comments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    <script src="/static/scripts/comments-scripts.js?v=1.0.1"  defer></script>
+    <script src="/static/scripts/change-description-script.js?v=1.0.1"></script>
+</main>
+{% endblock %}
