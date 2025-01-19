@@ -66,15 +66,18 @@ async def register(
     Register a new user.
 
     Args:
+        request (Request): The HTTP request object.
         background_tasks (BackgroundTasks): Background task manager for sending verification email.
         username (str): The username of the new user.
         email (str): The email of the new user.
         password (str): The password of the new user.
         avatar (UploadFile, optional): The avatar file for the new user.
         db (AsyncSession): Database session dependency.
+        response_format (str): The format of the response (JSON or HTML).
 
     Returns:
-        UserResponse: Details of the newly created user along with a verification message.
+        UserResponse: A JSON response containing the new user's details if `response_format` is "json".
+        TemplateResponse: An HTML template response with the verification link if `response_format` is "html".
     """
     tag_web_repo = TagWebRepository(db)
     user = await tag_web_repo.get_current_user_cookies(request)
