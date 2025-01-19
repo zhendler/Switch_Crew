@@ -15,11 +15,13 @@ from fastapi import (
     HTTPException,
     UploadFile,
     status,
+    Request,
     File,
     Form,
     Depends,
 )
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
@@ -36,9 +38,13 @@ from src.auth.utils import (
     create_verification_token,
     decode_verification_token,
 )
+from src.utils.front_end_utils import get_response_format
+from src.web.repos import TagWebRepository
+
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
+templates = Jinja2Templates(directory="templates")
 
 
 @router.post(
@@ -47,12 +53,14 @@ env = Environment(loader=FileSystemLoader("src/templates"))
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
+    request: Request,
     background_tasks: BackgroundTasks,
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
     avatar: UploadFile = File(None),
     db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format),
 ):
     """
     Register a new user.
@@ -68,6 +76,8 @@ async def register(
     Returns:
         UserResponse: Details of the newly created user along with a verification message.
     """
+    tag_web_repo = TagWebRepository(db)
+    user = await tag_web_repo.get_current_user_cookies(request)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
     if user:
@@ -81,18 +91,34 @@ async def register(
     if avatar:
         avatar_url = await user_repo.upload_to_cloudinary(avatar)
         await user_repo.update_avatar(user.email, avatar_url)
+    else:
+        avatar_url = None
     verification_token = create_verification_token(user.email)
-    verification_link = f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    verification_link = (
+        f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    )
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
-    return UserResponse(
-        username=user.username,
-        email=user.email,
-        id=user.id,
-        avatar_url=user.avatar_url,
-        detail=f"Please verify your email address. A verification link has been sent to your email.",
-    )
+    if response_format == "json":
+        return UserResponse(
+            username=user.username,
+            email=user.email,
+            id=user.id,
+            avatar_url=user.avatar_url,
+            detail=f"Please verify your email address. A verification link has been sent to your email.",
+        )
+    else:
+        return templates.TemplateResponse(
+            "email.html",
+            {
+                "request": request,
+                "username": user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
+                "verification_link": verification_link,
+            },
+        )
 
 
 @router.get("/verify-email")
@@ -143,7 +169,9 @@ async def resend_verifi_email(
             detail="User with this email does not exist.",
         )
     verification_token = create_verification_token(user.email)
-    verification_link = f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    verification_link = (
+        f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    )
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
