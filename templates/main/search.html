@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/search-page.css">
+<div class="container">
+    <div class="sections">
+        <div class="section-header">
+            <h2>Users</h2>
+        </div>
+        <div class="user-container">
+            {% if searched_users %}
+                {% for user in searched_users[:12] %}
+                    <div class="user-profile">
+                        <a href="/page/{{user.username}}" class="user-link">
+                            {% if user.avatar_url %}
+                            <div class="avatar">
+                                <img src="{{ user.avatar_url }}" alt="{{ user.username }}'s Avatar">
+                            </div>
+                            {% endif %}
+                            <p><strong>{{ user.username[:22] }}</strong></p>
+                            {% if user.first_name and user.last_name %}
+                                <p class="fullname">{{ user.first_name[:22] }} {{ user.last_name[:22] }}</p>
+                            {% endif %}
+                            <div class="photos">
+                                {% if user.photos %}
+                                    {% for photo in user.photos[:3] %}
+                                    <a href="/photo/{{photo.id}}" class="photo-link">
+                                        <div class="photo">
+                                            <img src="{{ photo.url_link }}" alt="Photo by {{ user.username }}">
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                {% else %}
+                                    <p>No photos available</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <h3>Any users with {{ query }}</h3>
+            {% endif %}
+        </div>
+
+        <div class="section-header">
+            <h2>#Tags</h2>
+        </div>
+        <div class="tags-container">
+            {% if tags %}
+                {% for tag in tags[:6] %}
+                <a href="/tag/{{tag.name}}/photos/" class="photo-link">
+                <div class="tag-section">
+                    <h4>#{{ tag.name }}</h4>
+                    <div class="tag-photos">
+                        {% if tag.photos %}
+                            {% for photo in tag.photos[:3] %}
+                            <a href="/photo/{{ photo.id }}" class="photo-link">
+                                <div class="photo">
+                                    <img src="{{ photo.url_link }}" alt="Photo tagged with {{ tag.name }}">
+                                </div>
+                            </a>
+                            {% endfor %}
+                        {% else %}
+                            <p class="no-photos">No photos with tag #{{ tag.name }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                </a>
+                {% endfor %}
+            {% else %}
+                <h3>Any tags with {{ query }}</h3>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,15 +3,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const commentInput = document.querySelector('.comment-input');
     const commentsContainer = document.querySelector('.comments');
 
-    if (!commentForm || !commentInput || !commentsContainer) {
+    if (!commentForm) {
         console.error('The required element was not found on the page');
         return;
     }
-
+    if (!commentInput) {
+        console.error('Input element not found');
+        return;
+    }
+    if (!commentsContainer) {
+        console.error('Comments container not found');
+        return;
+    }
     commentForm.addEventListener('submit', async function(event) {
         event.preventDefault();
 
-        const photoId = window.location.pathname.split('/').pop();
+        const photoId = window.location.pathname.match(/\/photo\/(\d+)/)?.[1];
+        if (!photoId) {
+            console.error('Photo ID not found in URL');
+            return;
+        }
         const commentContent = commentInput.value;
 
         const formData = new FormData();

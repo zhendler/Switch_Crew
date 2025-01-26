@@ -127,9 +127,6 @@ async def get_photos_by_tag(
         )
 
 
-@router.get("/login", response_class=HTMLResponse)
-async def login(request: Request):
-    return templates.TemplateResponse("/authentication/login.html", {"request": request})
 
 
 @router.get("/page/{username}")
@@ -333,6 +330,10 @@ async def delete_comment_html(
         )
 
 
+@router.get("/login", response_class=HTMLResponse)
+async def login(request: Request):
+    return templates.TemplateResponse("/authentication/login.html", {"request": request})
+
 
 @router.post("/login/login")
 async def login(
@@ -404,6 +405,7 @@ async def get_photos(
             "user": user,
         },
     )
+
 @router.get(
     "/register_page",
     status_code=status.HTTP_200_OK,

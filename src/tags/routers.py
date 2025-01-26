@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from .repos import TagRepository
 from config.db import get_db
 from .schemas import TagResponse
-from src.auth.utils import FORALL, FORMODER
+from src.auth.utils import FORALL, FORMODER, get_current_user_cookies
 from src.photos.schemas import PhotoResponse
 from src.utils.front_end_utils import get_response_format
 from src.web.repos import TagWebRepository
@@ -42,11 +42,12 @@ async def create_tag(
     :return: The newly created or existing tag as a `TagResponse` model.
     """
     tag_repo = TagRepository(db)
-    await tag_repo.create_tag(tag_name=tag_name)
+
+    tag = await tag_repo.create_tag(tag_name=tag_name)
     if response_format == 'json':
-        return await tag_repo.get_tag_by_name(tag_name)
+        return tag
     else:
-        return RedirectResponse("/tags/", status_code=302)
+        return RedirectResponse("/tags/tags", status_code=302)
 
 @tag_router.get(
     "/tags/",
@@ -77,8 +78,8 @@ async def get_all_tags(
     :param response_format: Swagger format or HTML.
     :return: A list of `TagResponse` objects representing all tags.
     """
-    tag_web_repo = TagWebRepository(db)
-    user = await tag_web_repo.get_current_user_cookies(request)# "отримування поточного юзера" Обов'язковий
+
+    user = await get_current_user_cookies(request, db)# "отримування поточного юзера" Обов'язковий
     # параметр щоб тримати юзера авторизованим. !!! Додаємо до кожного роута який повертає темплейт.
     tag_repo = TagRepository(db)
     tags = await tag_repo.get_all_tags()
