@@ -57,7 +57,10 @@ async def register(
     """
     Register a new user.
 
-    Args:
+    Args:@router.get("/login", response_class=HTMLResponse)
+async def login(request: Request):
+    return templates.TemplateResponse("/authentication/login.html", {"request": request})
+
         background_tasks (BackgroundTasks): Background task manager for sending verification email.
         username (str): The username of the new user.
         email (str): The email of the new user.

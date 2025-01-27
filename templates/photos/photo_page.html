@@ -48,8 +48,8 @@
         </div>
         <div class="comment-section">
             <h3>Comments</h3>
-            <form class="comment-form" action="/comments/create/{{ photo.id }}/" method="post">
-                <textarea class="comment-input" name="comment_content" placeholder="Add your comment..."></textarea>
+            <form class="comment-form">
+                <textarea class="comment-input" placeholder="Add your comment..."></textarea>
                 <button type="submit" class="post-button">Post</button>
             </form>
             {% if photo.comments %}
@@ -99,7 +99,7 @@
             {% endif %}
         </div>
     </div>
-    <script src="/static/scripts/comments-scripts.js?v=1.0.1"  defer></script>
-    <script src="/static/scripts/change-description-script.js?v=1.0.1"></script>
 </main>
+<script src="/static/scripts/comments-scripts.js?v=1.0.1"  defer></script>
+<script src="/static/scripts/change-description-script.js?v=1.0.1"></script>
 {% endblock %}

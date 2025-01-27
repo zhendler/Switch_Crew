@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
 
 from ..models.models import Tag, Photo
 
@@ -55,7 +56,7 @@ class TagRepository:
         """
         result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
         existing_tag = result.scalar_one_or_none()
-        if type(existing_tag) is Tag:
+        if existing_tag:
             return existing_tag
 
         new_tag = Tag(name=tag_name)
@@ -134,3 +135,26 @@ class TagRepository:
         else:
             return "Photos not found!"
             # raise HTTPException(status_code=404, detail="Photos not found!")
+
+    async def search_tags(self, text: str) -> list[Tag]:
+        """
+        Searches for users whose username starts with the given string
+        or contains the string.
+
+        Args:
+            text (str): The string to search for in usernames.
+
+        Returns:
+            list[User]: A list of users matching the criteria.
+        """
+        query = select(Tag).where(
+            or_(
+                Tag.name.like(f"{text}%"),
+                Tag.name.like(f"%{text}%")
+            )
+        )
+        result = await self.db.execute(query)
+        tags = result.scalars().all()
+
+        tags_sorted = sorted(tags, key=lambda tag: not tag.name.startswith(text))
+        return tags_sorted

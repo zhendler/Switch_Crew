@@ -154,3 +154,6 @@ input:focus {
     gap: 16px; /* Расстояние между карточками */
     justify-content: center; /* Центрируем карточки по горизонтали */
 }
+.alarm-message {
+    color: red;
+}

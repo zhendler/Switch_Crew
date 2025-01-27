@@ -24,6 +24,15 @@
                 <li><a href="/tags/tags/">Tags</a></li>
             </ul>
         </nav>
+        <div class="search-bar">
+            <form action="/search/" method="get">
+                <input type="text" name="query" placeholder="Search...">
+                <button type="submit" class="search-button">
+                    <img src="/static/images/search-icon.png" alt="Search" class="search-icon">
+                </button>
+            </form>
+        </div>
+
 
         {% if user %}
         <div class="user-profile-header">
