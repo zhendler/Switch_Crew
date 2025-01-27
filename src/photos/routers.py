@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
 from fastapi import (
     APIRouter,
@@ -8,13 +8,13 @@ from fastapi import (
     File,
     status,
     Query,
-    Path,
+    Path, Form,
 )
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
 from starlette.templating import Jinja2Templates
-
+from fastapi.responses import RedirectResponse
 from config.db import get_db
 from src.auth.utils import get_current_user, FORALL, FORMODER, get_current_user_cookies
 from src.models.models import User
@@ -73,37 +73,35 @@ async def read_root(
         },
     )
 
-
+@photo_router.get("/upload_photo/")
+async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_cookies(request, db)
+    return templates.TemplateResponse(
+        "/photos/upload_photo.html", {"request": request, "user": user}
+    )
 
 @photo_router.post(
-    "/",
+    "/create/",
     response_model= Union[PhotoResponse, str],
     status_code=status.HTTP_201_CREATED,
-    dependencies=FORALL,
-)
+    )
 async def create_photo(
     request: Request,
-    tags: List[str] = Query(
-        [], title="Теги", description="Теги фотографії", max_items=5
-    ),
-    description: str = Query(
-        None, title="Photo description", description="add photo description"
-    ),
+    description: str = Form(...),
+    tags: Optional[str] = Form(None), # TODO: виправити ТЕГИ з рядка в список, так щоб форма приймала список тегів
     file: UploadFile = File(...),
-    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     response_format: str = Depends(get_response_format)
 ):
     cloudinary_url = await upload_photo_to_cloudinary(file)
+    user = await get_current_user_cookies(request, db)
 
     photo_repo = PhotoRepository(db)
     new_photo = await photo_repo.create_photo(cloudinary_url, description, user, tags)
     if response_format == "json":
         return new_photo
     else:
-        return templates.TemplateResponse(
-            "/photos/photo_page.html", {"request": request, "photo": new_photo, "user": user}
-        )
+        return RedirectResponse(f"/photos/{new_photo.id}", status_code=302)
 
 
 # @photo_router.get(
@@ -282,6 +280,24 @@ async def update_photo_description(
     )
     return update_photo
 
+
+@photo_router.post("/delete/{photo_id}")
+async def delete_photo_by_id(
+    request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
+):
+    user = await get_current_user_cookies(request, db)
+
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+    username = photo.owner.username
+    if photo:
+        if user.id == photo.owner.id or user.role_id not in [1, 2]:
+            await photo_repo.delete_photo(photo_id)
+            return RedirectResponse(url=f"/page/{username}", status_code=302)
+        else:
+            return RedirectResponse(
+                url="/tags/?error=no_permission", status_code=302
+            )
 
 @photo_router.delete(
     "/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORALL

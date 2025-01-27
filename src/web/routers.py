@@ -174,12 +174,12 @@ async def photo_page(
     )
 
 
-@router.get("/photos/upload_photo/")
-async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
-    user = await get_current_user_cookies(request, db)
-    return templates.TemplateResponse(
-        "/photos/upload_photo.html", {"request": request, "user": user}
-    )
+# @router.get("/photos/upload_photo/")
+# async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
+#     user = await get_current_user_cookies(request, db)
+#     return templates.TemplateResponse(
+#         "/photos/upload_photo.html", {"request": request, "user": user}
+#     )
 
 
 @router.post("/upload_photo")
