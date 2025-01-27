@@ -31,7 +31,8 @@ from src.utils.qr_code_helper import generate_qr_code
 from src.web.repos import TagWebRepository
 from src.auth.pass_utils import verify_password
 from src.auth.repos import UserRepository
-from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, get_current_user_cookies
+from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, \
+    get_current_user_cookies
 from src.comments.repos import CommentsRepository
 from src.models.models import Photo, photo_tags
 from src.photos.repos import PhotoRepository
@@ -52,27 +53,28 @@ def truncatechars(value: str = "1", length: int = 35):
 templates.env.filters["truncatechars"] = truncatechars
 
 
-@router.get("/")
-async def read_root(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-):
-    tag_web_repo = TagWebRepository(db)
-    user = await get_current_user_cookies(request, db)
-    popular_users, photos, popular_tags, recent_comments = (
-        await tag_web_repo.get_data_for_main_page()
-    )
-    return templates.TemplateResponse(
-        "/main/index.html",
-        {
-            "request": request,
-            "user": user,
-            "photos": photos,
-            "popular_users": popular_users,
-            "popular_tags": popular_tags,
-            "recent_comments": recent_comments,
-        },
-    )
+# @router.get("/")
+# async def read_root(
+#     request: Request,
+#     db: AsyncSession = Depends(get_db),
+# ):
+#
+#     tag_web_repo = TagWebRepository(db)
+#     user = await tag_web_repo.get_current_user_cookies(request)
+#     popular_users, photos, popular_tags, recent_comments = (
+#         await tag_web_repo.get_data_for_main_page()
+#     )
+#     return templates.TemplateResponse(
+#         "/main/index.html",
+#         {
+#             "request": request,
+#             "user": user,
+#             "photos": photos,
+#             "popular_users": popular_users,
+#             "popular_tags": popular_tags,
+#             "recent_comments": recent_comments,
+#         },
+#     )
 
 
 @router.post(
@@ -156,25 +158,7 @@ async def page(request: Request, username: str, db: AsyncSession = Depends(get_d
     )
 
 
-@router.get("/photo/{photo_id}")
-async def photo_page(
-    request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
-):
-    photo_repo = PhotoRepository(db)
-    photo = await photo_repo.get_photo_by_id(photo_id)
 
-    if not photo:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Photo with id {photo_id} not found",
-        )
-
-    photo.created_at = photo.created_at.isoformat()
-
-    user = await get_current_user_cookies(request, db)
-    return templates.TemplateResponse(
-        "/photos/photo_page.html", {"request": request, "photo": photo, "user": user}
-    )
 
 
 @router.get("/photos/upload_photo/")
@@ -323,6 +307,9 @@ async def delete_comment_html(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found"
         )
+    print('1111111111111111111')
+    print(comment.user_id)
+    print(user.id)
     if (comment.user_id is user.id) or (user.role_id in [1, 2]) or (comment.photo.owner_id is user.id):
         await comment_repo.delete_comment(comment_id)
         return JSONResponse(content={"message": "Комментарий удален"}, status_code=200)
@@ -365,45 +352,45 @@ async def logout():
     return response
 
 
-@router.get("/photos/photos/")
-async def get_photos(
-    request: Request, page: int = 1, db: AsyncSession = Depends(get_db)
-):
-    user = await get_current_user_cookies(request, db)
-
-    photos_per_page = 20
-    offset = (page - 1) * photos_per_page
-
-    photos_query = (
-        select(Photo)
-        .options(
-            selectinload(Photo.owner),
-            selectinload(Photo.tags),
-            selectinload(Photo.comments),
-        )
-        .order_by(Photo.created_at.desc())
-        .offset(offset)
-        .limit(photos_per_page)
-    )
-    result = await db.execute(photos_query)
-    photos = result.scalars().all()
-
-    total_photos_query = select(func.count(Photo.id))
-    total_photos_result = await db.execute(total_photos_query)
-    total_photos = total_photos_result.scalar()
-
-    total_pages = (total_photos + photos_per_page - 1) // photos_per_page
-    return templates.TemplateResponse(
-        "/photos/all_photos.html",
-        {
-            "title": "Photos",
-            "request": request,
-            "photos": photos,
-            "current_page": page,
-            "total_pages": total_pages,
-            "user": user,
-        },
-    )
+# @router.get("/photos/photos/")
+# async def get_photos(
+#     request: Request, page: int = 1, db: AsyncSession = Depends(get_db)
+# ):
+#     user = await get_current_user_cookies(request, db)
+#
+#     photos_per_page = 20
+#     offset = (page - 1) * photos_per_page
+#
+#     photos_query = (
+#         select(Photo)
+#         .options(
+#             selectinload(Photo.owner),
+#             selectinload(Photo.tags),
+#             selectinload(Photo.comments),
+#         )
+#         .order_by(Photo.created_at.desc())
+#         .offset(offset)
+#         .limit(photos_per_page)
+#     )
+#     result = await db.execute(photos_query)
+#     photos = result.scalars().all()
+#
+#     total_photos_query = select(func.count(Photo.id))
+#     total_photos_result = await db.execute(total_photos_query)
+#     total_photos = total_photos_result.scalar()
+#
+#     total_pages = (total_photos + photos_per_page - 1) // photos_per_page
+#     return templates.TemplateResponse(
+#         "/photos/all_photos.html",
+#         {
+#             "title": "Photos",
+#             "request": request,
+#             "photos": photos,
+#             "current_page": page,
+#             "total_pages": total_pages,
+#             "user": user,
+#         },
+#     )
 @router.get(
     "/register_page",
     status_code=status.HTTP_200_OK,
@@ -478,6 +465,7 @@ async def registration(
 
 @router.post('/comment/edit/{comment_id}/')
 async def edit_comment(request: Request, comment_id, db: AsyncSession = Depends(get_db)):
+    tag_web_repo = TagWebRepository(db)
     com_repo = CommentsRepository(db)
 
     comment = await com_repo.get_comment_by_id(int(comment_id))
@@ -486,12 +474,10 @@ async def edit_comment(request: Request, comment_id, db: AsyncSession = Depends(
     if comment.user.id == user.id or user.role_id in [1, 2]:
         form_data = await request.form()
         comment_content = form_data.get('comment_content')
-
         if comment_content:
             comment.content = comment_content
             await db.commit()
-            return JSONResponse(content={"message": "Comment updated"}, status_code=200)
-
+            return JSONResponse(content={"message": "Комментарий обновлен"}, status_code=200)
         return 'Invalid content', 400
     return 'Forbidden', 403
 
