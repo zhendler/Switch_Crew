@@ -20,7 +20,7 @@ from fastapi import (
     Form,
     Depends,
 )
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,6 +45,23 @@ from src.web.repos import TagWebRepository
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
 templates = Jinja2Templates(directory="templates")
+
+
+@router.get(
+    "/register_page",
+    status_code=status.HTTP_200_OK,
+)
+async def register_page(request: Request, db: AsyncSession = Depends(get_db)):
+    tag_web_repo = TagWebRepository(db)
+    user = await tag_web_repo.get_current_user_cookies(request)
+    if user is None:
+        return templates.TemplateResponse(
+            "register.html", {"request": request, "user": user}
+        )
+    else:
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "user": user}
+        )
 
 
 @router.post(
@@ -103,6 +120,11 @@ async def register(
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
+    access_token = create_access_token(data={"sub": user.username})
+    refresh_token = create_refresh_token(data={"sub": user.username})
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     if response_format == "json":
         return UserResponse(
             username=user.username,
@@ -112,16 +134,7 @@ async def register(
             detail=f"Please verify your email address. A verification link has been sent to your email.",
         )
     else:
-        return templates.TemplateResponse(
-            "email.html",
-            {
-                "request": request,
-                "username": user.username,
-                "email": user.email,
-                "avatar_url": user.avatar_url,
-                "verification_link": verification_link,
-            },
-        )
+        return response
 
 
 @router.get("/verify-email")
