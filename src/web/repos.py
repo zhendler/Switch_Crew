@@ -6,6 +6,8 @@ from sqlalchemy import func
 import cloudinary
 from fastapi import UploadFile, HTTPException
 
+from src.auth.repos import UserRepository
+from src.auth.utils import decode_access_token
 from src.models.models import Photo, User, Tag, photo_tags
 from src.models.models import Comment
 
@@ -26,24 +28,26 @@ class TagWebRepository:
             select(Photo)
             .order_by(desc(Photo.created_at))
             .limit(9)
-            .options(joinedload(Photo.tags), joinedload(Photo.comments))
+            .options(joinedload(Photo.tags), joinedload(Photo.comments))  # Подгружаем теги и комментарии
         )
 
         photos = await self.db.execute(photos_query)
-        photos_result = photos.scalars().unique().all()
+        photos_result = photos.scalars().unique().all()  # Используем unique для устранения повторяющихся данных
+
+        # Получаем последние 3 комментария с пользователями
         comments_query = (
             select(Comment)
             .order_by(desc(Comment.created_at))
             .limit(3)
-            .options(joinedload(Comment.user))
+            .options(joinedload(Comment.user))  # Подгружаем пользователя для каждого комментария
         )
 
         comments = await self.db.execute(comments_query)
-        comments_result = comments.scalars().unique().all()
+        comments_result = comments.scalars().unique().all()  # Убираем повторяющиеся комментарии
 
         users_query = select(User).order_by(desc(User.created_at)).limit(3)
         users = await self.db.execute(users_query)
-        users_result = users.scalars().unique().all()
+        users_result = users.scalars().unique().all()  # Используем unique для пользователей
 
         tags_query = (
             select(Tag, func.count(photo_tags.c.photo_id).label("photo_count"))
@@ -62,6 +66,18 @@ class TagWebRepository:
         commets = await self.db.execute(select(Comment))
         return commets.scalars().all()
 
+    async def get_current_user_cookies(self, request):
+        token = request.cookies.get("access_token")
+        print(token)
+        if token:
+            user = decode_access_token(token)
+        else:
+            return None
+        if user is not None:
+            user_repo = UserRepository(self.db)
+            user = await user_repo.get_user_by_username(user.username)
+
+        return user
 
     async def upload_photo_to_cloudinary(self, file: UploadFile):
         file.file.seek(0)
@@ -69,9 +85,52 @@ class TagWebRepository:
 
         try:
             response = cloudinary.uploader.upload(
-                file=file_bytes,
+                file=file_bytes,  # Передаем байты файла
                 folder="user_photos/"
             )
             return response["secure_url"]
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Cloudinary error: {str(e)}")
+
+    async def get_limit_amount_of_photos(self, amount):
+        photos = await self.db.execute(
+            select(Photo)
+            .order_by(desc(Photo.created_at))
+            .limit(amount)
+        )
+        result = photos.scalars().all()
+        print(result)
+        print('111111111111111111111111111111111111111111111111111111111111111111')
+        return result
+
+    async def get_limit_amount_of_comment(self, amount):
+        data = await self.db.execute(
+            select(Comment)
+            .order_by(desc(Comment.created_at))
+            .limit(amount)
+        )
+        result = data.scalars().all()
+        print(result)
+        print('111111111111111111111111111111111111111111111111111111111111111111')
+        return result
+
+    async def get_limit_amount_of_users(self, amount):
+        data = await self.db.execute(
+            select(User)
+            .order_by(desc(User.created_at))
+            .limit(amount)
+        )
+        result = data.scalars().all()
+        print(result)
+        print('111111111111111111111111111111111111111111111111111111111111111111')
+        return result
+
+    async def get_limit_amount_of_tags(self, amount):
+        data = await self.db.execute(
+            select(Tag)
+            .limit(amount)
+        )
+        result = data.scalars().all()
+        print(result)
+        print('111111111111111111111111111111111111111111111111111111111111111111')
+        return result

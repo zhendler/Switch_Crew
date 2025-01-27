@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from config.db import get_db
 from src.auth.utils import get_current_user, FORALL, FORMODER
 from src.comments.repos import CommentsRepository
 from src.comments.schemas import CommentResponse, CommentCreate
 from src.models.models import User
+from src.utils.front_end_utils import get_response_format
 
 router = APIRouter()
 
@@ -49,12 +51,18 @@ async def get_user_comments(
 
 
 @router.get(
-    "/photo/{photo_id}/", response_model=list[CommentResponse], dependencies=FORALL
+    "/photo/{photo_id}/",
+    summary="Get comments by photo",
+    description="Retrieves all comments associated with a specific photo.",
+    response_model=list[CommentResponse],
+    dependencies=FORALL,
 )
 async def get_photo_comments(
     photo_id: int,
+    request: Request,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    responese_format: str = Depends(get_response_format),
 ):
     """
     Retrieves all comments associated with a specific photo.
