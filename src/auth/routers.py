@@ -21,8 +21,8 @@ from fastapi import (
     Depends,
 )
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
@@ -37,9 +37,9 @@ from src.auth.utils import (
     decode_access_token,
     create_verification_token,
     decode_verification_token,
+    get_current_user_cookies,
 )
 from src.utils.front_end_utils import get_response_format
-from src.web.repos import TagWebRepository
 
 
 router = APIRouter()
@@ -52,11 +52,10 @@ templates = Jinja2Templates(directory="templates")
     status_code=status.HTTP_200_OK,
 )
 async def register_page(request: Request, db: AsyncSession = Depends(get_db)):
-    tag_web_repo = TagWebRepository(db)
-    user = await tag_web_repo.get_current_user_cookies(request)
+    user = await get_current_user_cookies(request, db)
     if user is None:
         return templates.TemplateResponse(
-            "register.html", {"request": request, "user": user}
+            "/authentication/register.html", {"request": request, "user": user}
         )
     else:
         return templates.TemplateResponse(
@@ -96,8 +95,7 @@ async def register(
         UserResponse: A JSON response containing the new user's details if `response_format` is "json".
         TemplateResponse: An HTML template response with the verification link if `response_format` is "html".
     """
-    tag_web_repo = TagWebRepository(db)
-    user = await tag_web_repo.get_current_user_cookies(request)
+    user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
     if user:
@@ -196,9 +194,19 @@ async def resend_verifi_email(
     }
 
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+@router.get("/login_page", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(
+        "/authentication/login.html", {"request": request}
+    )
+
+
+@router.post("/login", response_model=Token)
+async def login(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format),
 ):
     """
     Authenticate a user and issue access and refresh tokens.
@@ -210,6 +218,7 @@ async def login_for_access_token(
     Returns:
         Token: The access and refresh tokens along with their type.
     """
+    user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -220,9 +229,23 @@ async def login_for_access_token(
         )
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
-    return Token(
-        access_token=access_token, refresh_token=refresh_token, token_type="bearer"
-    )
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    if response_format == "json":
+        return Token(
+            access_token=access_token, refresh_token=refresh_token, token_type="bearer"
+        )
+    else:
+        return response
+
+
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="access_token", httponly=True)
+    response.delete_cookie(key="refresh_token", httponly=True)
+    return response
 
 
 @router.post("/refresh_token", response_model=Token)
