@@ -115,9 +115,6 @@ async def register(
     verification_link = (
         f"https://localhost:8000/auth/verify-email?token={verification_token}"
     )
-    verification_link = (
-        f"https://localhost:8000/auth/verify-email?token={verification_token}"
-    )
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
@@ -186,9 +183,6 @@ async def resend_verifi_email(
             detail="User with this email does not exist.",
         )
     verification_token = create_verification_token(user.email)
-    verification_link = (
-        f"https://localhost:8000/auth/verify-email?token={verification_token}"
-    )
     verification_link = (
         f"https://localhost:8000/auth/verify-email?token={verification_token}"
     )
