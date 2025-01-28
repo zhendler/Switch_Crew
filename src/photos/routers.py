@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Optional
 
 from fastapi import (
     APIRouter,
@@ -8,13 +8,15 @@ from fastapi import (
     File,
     status,
     Query,
-    Path,
+    Path, Form,
 )
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from cloudinary.utils import cloudinary_url
-
+from starlette.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 from config.db import get_db
-from src.auth.utils import get_current_user, FORALL, FORMODER
+from src.auth.utils import get_current_user, FORALL, FORMODER, get_current_user_cookies
 from src.models.models import User
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import (
@@ -30,90 +32,139 @@ from src.utils.cloudinary_helper import (
     upload_photo_to_cloudinary,
     get_cloudinary_image_id,
 )
+from src.utils.front_end_utils import templates, get_response_format
 from src.utils.qr_code_helper import generate_qr_code
 
-photo_router = APIRouter()
 
+photo_router = APIRouter()
+mainrouter = APIRouter()
+
+templates = Jinja2Templates(directory="templates")
+
+
+def truncatechars(value: str = "1", length: int = 35):
+    if len(value) > length:
+        return value[:length] + "..."
+    return value
+
+templates.env.filters["truncatechars"] = truncatechars
+
+
+@mainrouter.get("/")
+async def read_root(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+
+    user = await get_current_user_cookies(request, db)
+    photo_repo = PhotoRepository(db)
+    popular_users, photos, popular_tags, recent_comments = (
+        await photo_repo.get_data_for_main_page()
+    )
+    return templates.TemplateResponse(
+        "/main/index.html",
+        {
+            "request": request,
+            "user": user,
+            "photos": photos,
+            "popular_users": popular_users,
+            "popular_tags": popular_tags,
+            "recent_comments": recent_comments,
+        },
+    )
+
+@photo_router.get("/upload_photo/")
+async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_cookies(request, db)
+    return templates.TemplateResponse(
+        "/photos/upload_photo.html", {"request": request, "user": user}
+    )
 
 @photo_router.post(
-    "/",
-    response_model=PhotoResponse,
+    "/create/",
+    response_model= Union[PhotoResponse, str],
     status_code=status.HTTP_201_CREATED,
-    dependencies=FORALL,
-)
+    )
 async def create_photo(
-    tags: List[str] = Query(
-        [], title="Теги", description="Теги фотографії", max_items=5
-    ),
-    description: str = Query(
-        None, title="Опис фотографії", description="Опис фотографії"
-    ),
+    request: Request,
+    description: str = Form(...),
+    tags: Optional[str] = Form(None), # TODO: виправити ТЕГИ з рядка в список, так щоб форма приймала список тегів
     file: UploadFile = File(...),
-    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> PhotoResponse:
+    response_format: str = Depends(get_response_format)
+):
     cloudinary_url = await upload_photo_to_cloudinary(file)
+    user = await get_current_user_cookies(request, db)
 
     photo_repo = PhotoRepository(db)
     new_photo = await photo_repo.create_photo(cloudinary_url, description, user, tags)
+    if response_format == "json":
+        return new_photo
+    else:
+        return RedirectResponse(f"/photos/{new_photo.id}", status_code=302)
 
-    return new_photo
+
+# @photo_router.get(
+#     "/users_all_photos", response_model=list[PhotoResponse], dependencies=FORALL
+# )
+# async def get_all_photos(
+#     request: Request,
+#     page: int = 1,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     """
+#     Retrieve all photos uploaded by the current user.
+#
+#     This endpoint fetches all photos uploaded by the authenticated user.
+#
+#     Args:
+#         db (AsyncSession): The database session.
+#
+#     Returns:
+#         list[PhotoResponse]: A list of the user's photos.
+#
+#     Raises:
+#         HTTPException: If no photos are found for the user.
+#     """
+#     user = await get_current_user_cookies(request, db)
+#     photo_repo = PhotoRepository(db)
+#     photos = await photo_repo.get_all_photos()
+#     if not photos:
+#         raise HTTPException(status_code=404, detail="Photos not found")
+#
+#     return photos
 
 
 @photo_router.get(
-    "/users_all_photos", response_model=list[PhotoResponse], dependencies=FORALL
-)
-async def get_all_photos(
-    user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
-):
-    """
-    Retrieve all photos uploaded by the current user.
-
-    This endpoint fetches all photos uploaded by the authenticated user.
-
-    Args:
-        user (User): The authenticated user making the request.
-        db (AsyncSession): The database session.
-
-    Returns:
-        list[PhotoResponse]: A list of the user's photos.
-
-    Raises:
-        HTTPException: If no photos are found for the user.
-    """
-    photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_users_all_photos(user)
-    if not photos:
-        raise HTTPException(status_code=404, detail="Photos not found")
-    return photos
-
-
-@photo_router.get(
-    "/all_photos", response_model=list[PhotoResponse], dependencies=FORALL
+    "/all_photos",
+    response_model=list[PhotoResponse]
 )
 async def all_photos(
-    user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    page: int = 1,
+    db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format)
 ):
-    """
-    Retrieve all photos .
-
-    This endpoint fetches all photos .
-
-    Args:
-        user (User): The authenticated user making the request.
-        db (AsyncSession): The database session.
-
-    Returns:
-        list[PhotoResponse]: A list of all photos.
-
-    Raises:
-        HTTPException: If no photos are found .
-    """
+    user = await get_current_user_cookies(request, db)
     photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_all_photos()
+    photos, total_pages = await photo_repo.get_all_photos(page)
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
-    return photos
+    if response_format == "json":
+        return photos
+    else:
+        return templates.TemplateResponse(
+        "/photos/all_photos.html",
+        {
+            "title": "Photos",
+            "request": request,
+            "photos": photos,
+            "current_page": page,
+            "total_pages": total_pages,
+            "user": user,
+        },
+    )
+
 
 
 @photo_router.get(
@@ -146,32 +197,58 @@ async def get_photo_url(
     return photo
 
 
-@photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
-async def get_photo_by_id(
-    photo_id: int = Path(..., description="ID of the photo"),
-    db: AsyncSession = Depends(get_db),
-) -> PhotoResponse:
-    """
-    Retrieve details of a photo by its ID.
-
-    This endpoint fetches details of a specific photo identified by its ID.
-
-    Args:
-        photo_id (int): The ID of the photo.
-        db (AsyncSession): The database session.
-
-    Returns:
-        PhotoResponse: The photo's details.
-
-    Raises:
-        HTTPException: If the photo does not exist.
-    """
+@photo_router.get("/{photo_id}")
+async def photo_page(
+        request: Request,
+        photo_id: int,
+        db: AsyncSession = Depends(get_db),
+        response_format: str = Depends(get_response_format)
+):
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
 
-    if photo is None:
-        raise HTTPException(status_code=404, detail="Photo not found")
-    return photo
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo with id {photo_id} not found",
+        )
+
+    photo.created_at = photo.created_at.isoformat()
+
+    user = await get_current_user_cookies(request, db)
+    if response_format == "json":
+        return photo
+    else:
+        return templates.TemplateResponse(
+        "/photos/photo_page.html", {"request": request, "photo": photo, "user": user}
+    )
+
+# @photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
+# async def get_photo_by_id(
+#     photo_id: int = Path(..., description="ID of the photo"),
+#     db: AsyncSession = Depends(get_db),
+# ) -> PhotoResponse:
+#     """
+#     Retrieve details of a photo by its ID.
+#
+#     This endpoint fetches details of a specific photo identified by its ID.
+#
+#     Args:
+#         photo_id (int): The ID of the photo.
+#         db (AsyncSession): The database session.
+#
+#     Returns:
+#         PhotoResponse: The photo's details.
+#
+#     Raises:
+#         HTTPException: If the photo does not exist.
+#     """
+#     photo_repo = PhotoRepository(db)
+#     photo = await photo_repo.get_photo_by_id(photo_id)
+#
+#     if photo is None:
+#         raise HTTPException(status_code=404, detail="Photo not found")
+#     return photo
 
 
 @photo_router.put(
@@ -203,6 +280,24 @@ async def update_photo_description(
     )
     return update_photo
 
+
+@photo_router.post("/delete/{photo_id}")
+async def delete_photo_by_id(
+    request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
+):
+    user = await get_current_user_cookies(request, db)
+
+    photo_repo = PhotoRepository(db)
+    photo = await photo_repo.get_photo_by_id(photo_id)
+    username = photo.owner.username
+    if photo:
+        if user.id == photo.owner.id or user.role_id not in [1, 2]:
+            await photo_repo.delete_photo(photo_id)
+            return RedirectResponse(url=f"/page/{username}", status_code=302)
+        else:
+            return RedirectResponse(
+                url="/tags/?error=no_permission", status_code=302
+            )
 
 @photo_router.delete(
     "/{photo_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=FORALL

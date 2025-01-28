@@ -1,12 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, APIRouter, Form, status, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
-from repos import TagRepository
+from .repos import TagRepository
 from config.db import get_db
-from schemas import TagResponse
-from src.auth.utils import FORALL, FORMODER
+from .schemas import TagResponse
+from src.auth.utils import FORALL, FORMODER, get_current_user_cookies
 from src.photos.schemas import PhotoResponse
 from src.utils.front_end_utils import get_response_format
 from src.web.repos import TagWebRepository
@@ -24,9 +24,12 @@ templates = Jinja2Templates(directory="templates")
     """,
     status_code=status.HTTP_201_CREATED,
     response_model=TagResponse,
-    dependencies=FORALL,
 )
-async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_db)):
+async def create_tag(
+    tag_name: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format)
+):
     """
     Endpoint to create a new tag.
 
@@ -35,12 +38,16 @@ async def create_tag(tag_name: str = Form(...), db: AsyncSession = Depends(get_d
 
     :param tag_name: The name of the tag to create (required).
     :param db: Database session dependency.
+    :param response_format: Swagger or HTML?
     :return: The newly created or existing tag as a `TagResponse` model.
     """
     tag_repo = TagRepository(db)
-    await tag_repo.create_tag(tag_name=tag_name)
-    return await tag_repo.get_tag_by_name(tag_name)
 
+    tag = await tag_repo.create_tag(tag_name=tag_name)
+    if response_format == 'json':
+        return tag
+    else:
+        return RedirectResponse("/tags/tags", status_code=302)
 
 @tag_router.get(
     "/tags/",
@@ -71,8 +78,8 @@ async def get_all_tags(
     :param response_format: Swagger format or HTML.
     :return: A list of `TagResponse` objects representing all tags.
     """
-    tag_web_repo = TagWebRepository(db)
-    user = await tag_web_repo.get_current_user_cookies(request)# "отримування поточного юзера" Обов'язковий
+
+    user = await get_current_user_cookies(request, db)# "отримування поточного юзера" Обов'язковий
     # параметр щоб тримати юзера авторизованим. !!! Додаємо до кожного роута який повертає темплейт.
     tag_repo = TagRepository(db)
     tags = await tag_repo.get_all_tags()
@@ -81,7 +88,7 @@ async def get_all_tags(
     else: # Якщо запит не зі сваггера, тоді він з фронту.
         return templates.TemplateResponse( # Повертаємо темплейт. Обов'язковими для усіх темплейтів є request та user,
             # а далі вже залежно від логіки сторінки
-            "tags.html", {"request": request, "title": "Tags", "tags": tags, "user": user}
+            "/tags/tags.html", {"request": request, "title": "Tags", "tags": tags, "user": user}
         )
 
 

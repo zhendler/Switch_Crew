@@ -234,3 +234,86 @@ html, body {
 .add-button:hover .plus-icon {
     color: #20232a;  /* Цвет плюса при наведении (темный цвет, как фон шапки) */
 }
+
+.logo img {
+    max-width: 45px; /* Максимальная ширина логотипа */
+    height: auto; /* Сохраняет пропорции изображения */
+    display: block; /* Убирает лишние пробелы вокруг изображения */
+    margin: 0 auto; /* Центрирует изображение, если нужно */
+}
+
+@media (max-width: 768px) {
+    .logo img {
+        max-width: 120px; /* Уменьшение размера логотипа на маленьких экранах */
+    }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        max-width: 100px; /* Еще меньше для мобильных устройств */
+    }
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+    max-width: 300px;
+    width: 100%;
+}
+
+.search-bar form {
+    display: flex; /* Горизонтальное выравнивание элементов внутри формы */
+    align-items: center; /* Центрирование по вертикали */
+    width: 100%; /* Форма растягивается на всю ширину */
+}
+
+.search-bar input[type="text"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #61dafb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.search-bar input[type="text"]:focus {
+    border-color: #ffffff;
+    outline: none;
+}
+
+.search-bar button {
+    height: 40px;
+    margin-left: 2px;
+    padding: 8px 12px;
+    background-color: transparent;
+    color: #61dafb;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.search-bar button:hover {
+    color: #20232a;
+    background-color: #61dafb;
+}
+
+@media (max-width: 768px) {
+    .search-bar {
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .search-bar button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+}

@@ -185,6 +185,19 @@ async def check_user_banned(user: User = Depends(get_current_user)) -> None:
         )
 
 
+async def get_current_user_cookies(request, db: AsyncSession):
+    token = request.cookies.get("access_token")
+    if token:
+        user = decode_access_token(token)
+    else:
+        return None
+    if user is not None:
+        user_repo = UserRepository(db)
+        user = await user_repo.get_user_by_username(user.username)
+
+    return user
+
+
 class RoleChecker:
     """
     Dependency for checking user roles.
@@ -223,6 +236,8 @@ class RoleChecker:
                 detail="You do not have permission to perform this action",
             )
         return user, is_admin_or_moderator
+
+
 
 
 FORADMIN = [Depends(RoleChecker([RoleEnum.ADMIN]))]
