@@ -8,7 +8,7 @@ It includes:
 - User status checks for active and banned accounts.
 """
 
-from fastapi import Depends, status, HTTPException
+from fastapi import Depends, status, HTTPException, Response
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession

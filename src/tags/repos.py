@@ -147,6 +147,7 @@ class TagRepository:
         Returns:
             list[User]: A list of users matching the criteria.
         """
+        text = text.lower()
         query = select(Tag).where(
             or_(
                 Tag.name.like(f"{text}%"),

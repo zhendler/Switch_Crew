@@ -12,7 +12,8 @@ from fastapi import (
     UploadFile,
     File,
     status,
-    BackgroundTasks
+    BackgroundTasks,
+    Response
 )
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -26,12 +27,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.mail_utils import send_verification_grid
 from src.auth.routers import env
 from src.auth.schemas import UserResponse, UserCreate
+from src.reactions.repos import ReactionRepository
+from src.reactions.routers import reaction_router
 from src.utils.cloudinary_helper import upload_photo_to_cloudinary
 from src.utils.qr_code_helper import generate_qr_code
 from src.web.repos import TagWebRepository
 from src.auth.pass_utils import verify_password
 from src.auth.repos import UserRepository
-from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, get_current_user_cookies
+from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, \
+    get_current_user_cookies
 from src.comments.repos import CommentsRepository
 from src.models.models import Photo, photo_tags
 from src.photos.repos import PhotoRepository
@@ -130,16 +134,23 @@ async def get_photos_by_tag(
 
 
 @router.get("/page/{username}")
-async def page(request: Request, username: str, db: AsyncSession = Depends(get_db)):
+async def page(request: Request,
+               username: str,
+               db: AsyncSession = Depends(get_db)):
     user_repo = UserRepository(db)
-    user_page = await user_repo.get_user_by_username(username)
-    date_obj = datetime.fromisoformat(str(user_page.created_at))
-    date_of_registration = date_obj.strftime("%d-%m-%Y")
     photo_repo = PhotoRepository(db)
+
+    user_page = await user_repo.get_user_by_username(username)
+    user = await get_current_user_cookies(request, db)
+
+    date_obj = datetime.fromisoformat(str(user_page.created_at))
+    date_of_registration = date_obj.strftime("%Y-%m-%d")
+
     photos = await photo_repo.get_users_all_photos(user_page)
     amount_of_photos = len(photos)
 
-    user = await get_current_user_cookies(request, db)
+    detail = request.query_params.get("detail")
+
     return templates.TemplateResponse(
         "/user/page.html",
         {
@@ -149,6 +160,7 @@ async def page(request: Request, username: str, db: AsyncSession = Depends(get_d
             "photos": photos,
             "Date_reg": date_of_registration,
             "amount_of_photos": amount_of_photos,
+            "detail": detail,
         },
     )
 
@@ -158,7 +170,14 @@ async def photo_page(
     request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
 ):
     photo_repo = PhotoRepository(db)
+    reaction_repo = ReactionRepository(db)
+
+    user = await get_current_user_cookies(request, db)
     photo = await photo_repo.get_photo_by_id(photo_id)
+    if user:
+        reaction_active = await reaction_repo.get_reaction_by_user_and_photo(photo_id, user.id)
+    else:
+        reaction_active = None
 
     if not photo:
         raise HTTPException(
@@ -167,10 +186,14 @@ async def photo_page(
         )
 
     photo.created_at = photo.created_at.isoformat()
+    reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
 
-    user = await get_current_user_cookies(request, db)
     return templates.TemplateResponse(
-        "/photos/photo_page.html", {"request": request, "photo": photo, "user": user}
+        "/photos/photo_page.html", {"request": request,
+                                    "photo": photo,
+                                    "user": user,
+                                    "reaction_active": reaction_active,
+                                    "reaction_counts": reaction_counts}
     )
 
 
@@ -512,3 +535,4 @@ async def edit_photo_description(request: Request, photo_id: int, description: s
     await db.commit()
 
     return {"message": "Description updated successfully"}
+

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import get_db
 from src.auth.repos import UserRepository
+from src.reactions.routers import reaction_router
 from src.tags.repos import TagRepository
 from src.tags.routers import tag_router
 from src.comments.routers import router as comment_router
@@ -49,6 +50,8 @@ app.include_router(
     tags=["user_profile"],
 )
 app.include_router(web_router, prefix="")
+app.include_router(reaction_router, prefix="/reaction", tags=["reactions"])
+
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
@@ -63,15 +66,19 @@ async def search(
     user_repo = UserProfileRepository(db)
     tag_repo = TagRepository(db)
 
+    query = query.strip()
+
     tags = await tag_repo.search_tags(query)
     searched_users = await user_repo.search_users(query)
 
     user = await get_current_user_cookies(request, db)
     return templates.TemplateResponse(
-            "/main/search.html",
-            {"request": request,
+        "/main/search.html",
+        {
+            "request": request,
             "user": user,
             'query': query,
             'searched_users': searched_users,
-             'tags': tags}
-        )
+            'tags': tags
+        }
+    )

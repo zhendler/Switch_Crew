@@ -19,7 +19,7 @@ from fastapi import (
     Form,
     Depends,
 )
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
@@ -118,7 +118,10 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     await user_repo.activate_user(user)
-    return {"detail": "Email verified successfully"}
+
+    detail = "Email verified successfully"
+    return RedirectResponse(f"/page/{user.username}?detail={detail}", status_code=302)
+
 
 
 @router.post("/resend-verifi-email", status_code=status.HTTP_200_OK)
@@ -146,13 +149,13 @@ async def resend_verifi_email(
             detail="User with this email does not exist.",
         )
     verification_token = create_verification_token(user.email)
-    verification_link = f"https://localhost:8000/auth/verify-email?token={verification_token}"
+    verification_link = f"http://127.0.0.1:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
-    return {
-        "detail": "A new verification email has been sent. Please check your inbox."
-    }
+
+    detail = "A new verification email has been sent. Please check your inbox."
+    return RedirectResponse(f"/page/{user.username}?detail={detail}", status_code=302)
 
 
 @router.post("/token", response_model=Token)

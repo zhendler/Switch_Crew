@@ -13,7 +13,7 @@ Dependencies:
     - src.auth.repos: Provides utility functions for user-related database operations.
 """
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import User
@@ -128,23 +128,28 @@ class UserProfileRepository:
 
     async def search_users(self, text: str) -> list[User]:
         """
-        Searches for users whose username starts with the given string
-        or contains the string.
+        Searches for users whose username matches the given string case-insensitively.
 
         Args:
-            text (str): The string to search for in usernames.
+            text (str): The search string
 
         Returns:
-            list[User]: A list of users matching the criteria.
+            list[User]: Matching users, sorted with prefix matches first
         """
+        text = text.lower()
+        print('2322222222222222222222222222222')
+        print(text)
         query = select(User).where(
             or_(
-                User.username.like(f"{text}%"),
-                User.username.like(f"%{text}%")
+                User.username.ilike(f"{text}%"),
+                User.username.ilike(f"%{text}%")
             )
+        ).order_by(
+            desc(User.username.ilike(f"{text}%"))
         )
+
         result = await self.session.execute(query)
         users = result.scalars().all()
-
-        users_sorted = sorted(users, key=lambda user: not user.username.startswith(text))
-        return users_sorted
+        print('2222222222222222222222222222222222222223')
+        print(users)
+        return users

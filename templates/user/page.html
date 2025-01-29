@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="/static/css/page-style.css">
 
 <div class="profile-container">
+    {% if detail %}
+        <h5 class="success-message">{{ detail }}</h5>
+    {% endif %}
     {% if user_page.id == user.id and  user.is_active == False %}
         <h5 class="alarm-message">Your account is not verified. Please verify account by email</h5>
     {% endif %}
@@ -14,6 +17,12 @@
             </div>
         {% endif %}
         <div class="user-info-section">
+            {% if user_page.id == user.id and  user.is_active == False %}
+                <form action="/auth/resend-verifi-email" method="post">
+                    <input type="hidden" name="email" value="{{ user.email }}">
+                    <button class="verify-email-button">Verify Email</button>
+                </form>
+            {% endif %}
             <h1 class="username">{{ user_page.username }}</h1>
             {% if user_page.first_name and user_page.last_name %}
             <p class="fullname"><strong>{{ user_page.first_name }} {{ user_page.last_name }}</strong></p>
@@ -43,9 +52,6 @@
 
                 <button type="button" id="save-profile-btn" class="save-button">Save Changes</button>
             </form>
-            {% endif %}
-            {% if user_page.id == user.id and  user.is_active == False %}
-                <button>Verify email</button>
             {% endif %}
         </div>
     </div>
