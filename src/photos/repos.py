@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
+from sqlalchemy.orm import selectinload, joinedload
 
 from src.models.models import Photo, photo_tags, User, PhotoRating
 from src.tags.repos import TagRepository
@@ -313,3 +314,5 @@ class PhotoRatingRepository:
             select(Photo.rating).where(Photo.id == photo_id)
         )
         return get_average_rating.scalar()
+
+
