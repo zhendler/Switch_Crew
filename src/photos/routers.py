@@ -104,17 +104,35 @@ async def create_photo(
         return RedirectResponse(f"/photos/{new_photo.id}", status_code=302)
 
 
-    Returns:
-        list[PhotoResponse]: A list of the user's photos.
-
-    Raises:
-        HTTPException: If no photos are found for the user.
-    """
-    photo_repo = PhotoRepository(db)
-    photos = await photo_repo.get_users_all_photos(user)
-    if not photos:
-        raise HTTPException(status_code=404, detail="Photos not found")
-    return photos
+# @photo_router.get(
+#     "/users_all_photos", response_model=list[PhotoResponse], dependencies=FORALL
+# )
+# async def get_all_photos(
+#     request: Request,
+#     page: int = 1,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     """
+#     Retrieve all photos uploaded by the current user.
+#
+#     This endpoint fetches all photos uploaded by the authenticated user.
+#
+#     Args:
+#         db (AsyncSession): The database session.
+#
+#     Returns:
+#         list[PhotoResponse]: A list of the user's photos.
+#
+#     Raises:
+#         HTTPException: If no photos are found for the user.
+#     """
+#     user = await get_current_user_cookies(request, db)
+#     photo_repo = PhotoRepository(db)
+#     photos = await photo_repo.get_all_photos()
+#     if not photos:
+#         raise HTTPException(status_code=404, detail="Photos not found")
+#
+#     return photos
 
 
 @photo_router.get(
