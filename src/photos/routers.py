@@ -34,7 +34,7 @@ from src.utils.cloudinary_helper import (
 )
 from src.utils.front_end_utils import templates, get_response_format
 from src.utils.qr_code_helper import generate_qr_code
-
+from src.web.repos import TagWebRepository
 
 photo_router = APIRouter()
 mainrouter = APIRouter()
@@ -57,9 +57,9 @@ async def read_root(
 ):
 
     user = await get_current_user_cookies(request, db)
-    photo_repo = PhotoRepository(db)
+    web_repo = TagWebRepository(db)
     popular_users, photos, popular_tags, recent_comments = (
-        await photo_repo.get_data_for_main_page()
+        await web_repo.get_data_for_main_page()
     )
     return templates.TemplateResponse(
         "/main/index.html",
@@ -136,7 +136,7 @@ async def create_photo(
 
 
 @photo_router.get(
-    "/all_photos",
+    "/all_photos/",
     response_model=list[PhotoResponse]
 )
 async def all_photos(
@@ -146,24 +146,25 @@ async def all_photos(
     response_format: str = Depends(get_response_format)
 ):
     user = await get_current_user_cookies(request, db)
-    photo_repo = PhotoRepository(db)
-    photos, total_pages = await photo_repo.get_all_photos(page)
+    web_repo = TagWebRepository(db)
+    photos, total_pages = await web_repo.get_all_photos(page)
+
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     if response_format == "json":
         return photos
     else:
         return templates.TemplateResponse(
-        "/photos/all_photos.html",
-        {
-            "title": "Photos",
-            "request": request,
-            "photos": photos,
-            "current_page": page,
-            "total_pages": total_pages,
-            "user": user,
-        },
-    )
+            "/photos/all_photos.html",
+            {
+                "title": "Photos",
+                "request": request,
+                "photos": photos,
+                "current_page": page,
+                "total_pages": total_pages,
+                "user": user,
+            },
+        )
 
 
 

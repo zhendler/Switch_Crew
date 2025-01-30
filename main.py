@@ -13,7 +13,7 @@ from src.tags.routers import tag_router
 from src.comments.routers import router as comment_router
 from src.auth.routers import router as auth_router
 from src.auth.utils import BANNED_CHECK, ACTIV_AND_BANNED, get_current_user_cookies
-from src.photos.routers import photo_router
+from src.photos.routers import photo_router, mainrouter
 from src.user_profile.repos import UserProfileRepository
 from src.user_profile.routers import router as user_router
 from src.web.routers import router as web_router
@@ -51,7 +51,7 @@ app.include_router(
 )
 app.include_router(web_router, prefix="")
 app.include_router(reaction_router, prefix="/reaction", tags=["reactions"])
-
+app.include_router(mainrouter, prefix="")
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
