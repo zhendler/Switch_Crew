@@ -256,7 +256,7 @@ async def login(
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
 
-    response = RedirectResponse(url="/photos/", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
 
@@ -265,7 +265,7 @@ async def login(
 
 @router.get("/logout")
 async def logout():
-    response = RedirectResponse(url="/photos/", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(key="access_token", httponly=True)
     response.delete_cookie(key="refresh_token", httponly=True)
     return response
@@ -335,7 +335,7 @@ async def registration(
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
 
-    response = RedirectResponse(url="/photos/", status_code=302)
+    response = RedirectResponse(url="/", status_code=302)
     response.set_cookie(key="access_token", value=access_token, httponly=True)
     response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     return response
