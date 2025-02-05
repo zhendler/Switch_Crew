@@ -9,13 +9,19 @@
             <div class="card-container">
                 {% for photo in photos %}
                 <div class="card">
-                    <a href="/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+                    <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img">
                     <div class="card-content">
-                        <a href="/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
-                        {% if photo.description %}
-                        <p class="description">{{ photo.description|truncatechars(38) }}</p>
-                        {% endif %}
+                        <a href="/page/{{ photo.owner.username }}">
+                            <img src="{{ photo.owner.avatar_url }}" alt="Avatar" class="comment-avatar">
+                        </a>
+                        <a href="/page/{{ photo.owner.username }}">
+                            <p class="author">{{ photo.owner.username }}</p>
+                        </a>
                     </div>
+                    {% if photo.description %}
+                        <p class="description">{{ photo.description|truncatechars(38) }}</p>
+                    {% endif %}
+                    </a>
                 </div>
                 {% endfor %}
             </div>
@@ -39,7 +45,7 @@
         <section class="sidebar-section popular-tags">
             <h3>Popular tags</h3>
             <div class="tag-list">
-                {% for tag in popular_tags[:3] %}
+                {% for tag in popular_tags[:6] %}
                 <a href="/tag/{{ tag.name }}/photos/" class="tag-tile">
                     <p class="tag-name">#{{ tag.name }}</p>
                 </a>
@@ -51,9 +57,10 @@
             <h3>Last comments</h3>
             <div class="comment-list">
                 {% for comment in recent_comments[:3] %}
-                <a href="/photo/{{ comment.photo_id }}" class="comment-tile">
-                    <p class="comment-author">{{ comment.user.username }}</p>
-                    <p class="comment-text">{{ comment.content|truncatechars(12) }}</p>
+                <a href="/photos/{{ comment.photo_id }}" class="user-tile">
+                    <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="comment-comment-avatar">
+                    <p class="author">{{ comment.user.username }}</p>
+                    <p class="comment-main-text">{{ comment.content|truncatechars(12) }}</p>
                 </a>
                 {% endfor %}
             </div>

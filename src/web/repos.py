@@ -73,7 +73,7 @@ class TagWebRepository:
             .join(photo_tags, Tag.id == photo_tags.c.tag_id)
             .group_by(Tag.id)
             .order_by(desc("photo_count"))
-            .limit(3)
+            .limit(6)
         )
 
         tags = await self.db.execute(tags_query)

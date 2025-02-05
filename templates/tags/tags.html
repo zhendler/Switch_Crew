@@ -2,42 +2,26 @@
 
 {% block content %}
 <link rel="stylesheet" href="/static/css/tags.css">
-<section class="page-container">
-  {% if user %}
-  <div class="left-section">
-      <h2>Add new tag</h2>
-      <form action="/tags/create/" method="post">
-        <input type="text" name="tag_name" placeholder="Name of new tag" required>
-        <button type="submit">Add</button>
-      </form>
-    {% if user.role_id != 3 %}
-      <form action="/tags/delete/" method="post">
-        <input type="text" name="tag_name" placeholder="Name of new tag" required>
-        <button type="submit">Delete</button>
-      </form>
-      <h2>Change tag name</h2>
-      <form action="/tags/create/" method="post">
-        <input type="text" name="tag_name" placeholder="Old tag's name" required>
-      </form>
-      <form action="/tags/delete/" method="post">
-        <input type="text" name="tag_name" placeholder="New tag's name" required>
-        <button type="submit">New tag's name</button>
-      </form>
-    {% endif %}
+<div class="container">
+  <div class="tags-page">
+      <div class="tags-container">
+          {% for tag in tags[:24] %}
+              {% if tag.photos %}
+              <div class="tag-card">
+                  <div class="photos">
+                      {% for photo in tag.photos[:3] %}
+                      <div class="photo-item">
+                        <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo tagged {{ tag.name }}"></a>
+                      </div>
+                      {% endfor %}
+                  </div>
+                  <a href="/tag/{{ tag.name }}/photos/" class="tag-name-overlay">
+                      <h2>#{{ tag.name }}</h2>
+                  </a>
+              </div>
+              {% endif %}
+          {% endfor %}
+      </div>
   </div>
-
-  {% endif %}
-
-  <div class="right-section">
-    <h2>Tags:</h2>
-    <div class="styled-row tags">
-      {% for tag in tags %}
-        <a href="/tag/{{ tag.name }}/photos/" class="tag-link">
-          <p>{{ tag.name }}</p>
-        </a>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-
+</div>
 {% endblock %}

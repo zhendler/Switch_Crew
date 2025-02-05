@@ -317,3 +317,35 @@ html, body {
     width: 20px;
     height: 20px;
 }
+
+.nav {
+    margin: 0;
+    padding: 1rem 0;
+    width: auto;  /* Изменил с фиксированной ширины */
+}
+
+.nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 1rem;
+}
+
+.nav a {
+    text-decoration: none;
+    color: #333;  /* Добавил базовый цвет */
+    padding: 0.5rem 1rem;
+    transition: color 0.3s ease;
+}
+
+/* Важно: убедитесь, что этот стиль находится в вашем CSS */
+.nav a.active {
+    color: #61dafb !important;  /* Добавил !important для приоритета */
+    font-weight: 500;
+}
+
+.nav a:hover {
+    color: #61dafb;
+    opacity: 0.8;
+}
