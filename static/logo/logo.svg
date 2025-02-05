@@ -1,0 +1,22 @@
+<svg viewBox="0 0 160 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Symmetric background shape -->
+  <rect x="10" y="10" width="140" height="40" rx="20" ry="20" fill="#61dafb"/>
+
+  <!-- Switch toggle -->
+  <rect x="20" y="22" width="30" height="16" rx="8" ry="8" fill="white" opacity="0.9"/>
+  <circle cx="41" cy="30" r="6" fill="#20232a"/>
+
+  <!-- Text "Switch" with custom font -->
+  <text x="95" y="36"
+        font-family="'Trebuchet MS', sans-serif"
+        font-size="26"
+        font-weight="900"
+        letter-spacing="1"
+        text-anchor="middle"
+        fill="white">
+    S<tspan fill="#20232a">w</tspan>itch
+  </text>
+
+  <!-- Dot integrated with 'i' -->
+  <circle cx="91" cy="19" r="2.5" fill="#20232a"/>
+</svg>
