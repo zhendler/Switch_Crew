@@ -12,7 +12,7 @@ from sqlalchemy import (
     Column,
     Text,
     Date,
-    DateTime
+    DateTime,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -59,10 +59,12 @@ photo_reactions = Table(
     "photo_reactions",
     Base.metadata,
     Column("photo_id", ForeignKey("photos.id", ondelete="CASCADE"), primary_key=True),
-    Column("reaction_id", ForeignKey("reactions.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "reaction_id", ForeignKey("reactions.id", ondelete="CASCADE"), primary_key=True
+    ),
     Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("created_at", DateTime, default=datetime.now())
-    )
+    Column("created_at", DateTime, default=datetime.now()),
+)
 
 
 class Reaction(Base):
@@ -77,6 +79,7 @@ class Reaction(Base):
     user: Mapped["User"] = relationship(
         "User", secondary=photo_reactions, back_populates="reactions", lazy="selectin"
     )
+
 
 class User(Base):
     """
@@ -140,6 +143,20 @@ class User(Base):
     )
     reactions: Mapped[list["Reaction"]] = relationship(
         "Reaction", secondary=photo_reactions, back_populates="user", lazy="selectin"
+    )
+    # Зв'язок з підписками, де користувач є підписником
+    subscriptions: Mapped[list["Subscription"]] = relationship(
+        "Subscription",
+        foreign_keys="[Subscription.subscriber_id]",
+        back_populates="subscriber",
+        lazy="selectin",
+    )
+    # Зв'язок з підписками, де користувач є тим, на кого підписуються
+    subscribed_by: Mapped[list["Subscription"]] = relationship(
+        "Subscription",
+        foreign_keys="[Subscription.subscribed_to_id]",
+        back_populates="subscribed_to",
+        lazy="selectin",
     )
 
 
@@ -285,3 +302,30 @@ class PhotoRating(Base):
     )
     # Відношення з User
     user: Mapped["User"] = relationship("User", lazy="selectin")
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    subscriber_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    subscribed_to_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+    subscriber: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[subscriber_id],
+        back_populates="subscriptions",
+        lazy="selectin",
+    )
+    subscribed_to: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[subscribed_to_id],
+        back_populates="subscribed_by",
+        lazy="selectin",
+    )

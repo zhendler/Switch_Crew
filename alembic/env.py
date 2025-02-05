@@ -10,7 +10,18 @@ from alembic import context
 from config.db import Base
 from config.general import settings
 
-from src.models.models import User, Role, Photo, Comment, Tag, photo_tags, PhotoRating
+from src.models.models import (
+    User,
+    Role,
+    Photo,
+    Comment,
+    Tag,
+    photo_tags,
+    photo_reactions,
+    PhotoRating,
+    Reaction,
+    Subscription,
+)
 
 
 # this is the Alembic Config object, which provides
