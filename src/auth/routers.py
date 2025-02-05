@@ -15,12 +15,14 @@ from fastapi import (
     HTTPException,
     UploadFile,
     status,
+    Request,
     File,
     Form,
     Depends,
 )
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
