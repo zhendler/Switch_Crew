@@ -308,10 +308,14 @@ class Subscription(Base):
     __tablename__ = "subscriptions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    subscriber_id: Mapped[int] = mapped_column(
+    
+    #особа котра підписується 
+    subscriber_id: Mapped[int] = mapped_column( 
         Integer, ForeignKey("users.id"), nullable=False
     )
-    subscribed_to_id: Mapped[int] = mapped_column(
+
+    #користувач на кого підписалися
+    subscribed_to_id: Mapped[int] = mapped_column( 
         Integer, ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
