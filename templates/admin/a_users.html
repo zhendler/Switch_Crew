@@ -1,0 +1,65 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/admin_users.css">
+<div class="admin-container">
+    <div class="user-list">
+        <h2>Users</h2>
+        <ul id="user-list"></ul>
+    </div>
+    <div class="user-details">
+        <h2>User Details</h2>
+        <div id="user-info">
+            <p>Select a user to see details</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const userList = document.getElementById("user-list");
+        const userInfo = document.getElementById("user-info");
+
+        function fetchUsers() {
+            fetch("/admin/users")
+                .then(response => response.json())
+                .then(users => {
+                    userList.innerHTML = "";
+                    users.forEach(user => {
+                        const li = document.createElement("li");
+                        li.textContent = user.username;
+                        li.dataset.userId = user.id;
+                        li.addEventListener("click", () => fetchUserDetails(user.id));
+                        userList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error("Error fetching users:", error));
+        }
+
+        function fetchUserDetails(userId) {
+            fetch(`/admin/${userId}`)
+                .then(response => response.json())
+                .then(user => {
+                    userInfo.innerHTML = `
+                        <div class = "user-info">
+
+                            <img src="${user.avatar_url}" alt="${user.username}'s avatar" style="width: 100px; height: 100px; border-radius: 50%;">
+                        </div>
+                        <h3 style = "text-align: center">${user.username}</h3>
+                        <p>Full name: ${user.first_name} ${user.last_name}</p>
+                        <p>Birth date: ${user.birth_date}</p>
+                        <p>Email: ${user.email}</p>
+                        <p>Country: ${user.country}</p>
+                        <p>Role: ${user.role_id}</p>
+                        <p>Joined on: ${user.created_at}</p>
+                        <p>Photo count: ${user.photos_count}</p>
+                        <p>Comments count: ${user.comments_count}</p>
+                    `;
+                })
+                .catch(error => console.error("Error fetching user details:", error));
+        }
+
+        fetchUsers();
+    });
+</script>
+{% endblock %}

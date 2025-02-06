@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from src.admin.routers import router as admin_router
 from src.tags.routers import tag_router
 from src.comments.routers import router as comment_router
 from src.auth.routers import router as auth_router
@@ -28,6 +29,8 @@ app = FastAPI()
 #     dependencies=BANNED_CHECK,
 # )
 # app.include_router(web_router, prefix="")
+
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
 app.include_router(mainrouter, prefix="")
 app.include_router(tag_router, prefix="/tags", tags=["tags"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])

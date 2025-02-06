@@ -1,0 +1,319 @@
+html, body {
+    height: 100%; /* Высота на 100% окна браузера */
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column; /* Колонка для размещения элементов */
+}
+
+.header {
+    background-color: #20232a;
+    color: white;
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.header .logo a {
+    font-size: 24px;
+    color: #61dafb;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.header .nav {
+    flex-grow: 1;
+    text-align: center; /* Центрируем элементы */
+}
+
+.header .nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center; /* Центрируем навигацию */
+    height: 100%; /* Высота контейнера, чтобы кнопки занимали всю высоту шапки */
+}
+
+.header .nav ul li {
+    position: relative;
+    height: 100%; /* Высота кнопки */
+}
+
+/* Стили для ссылок */
+.header .nav ul li a {
+    display: flex; /* Используем flex для растягивания по вертикали */
+    align-items: center; /* Центрируем текст по вертикали */
+    justify-content: center; /* Центрируем текст по горизонтали */
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 20px; /* Горизонтальные отступы */
+    height: 100%; /* Высота кнопки на всю высоту шапки */
+    background-color: transparent; /* Без фона, сливается с шапкой */
+    border: 2px solid transparent; /* Без границы */
+    border-radius: 4px; /* Скругленные углы */
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.3s; /* Плавные анимации */
+}
+
+/* Эффект при наведении */
+.header .nav ul li a:hover {
+    background-color: #61dafb; /* Цвет фона при наведении */
+    color: #20232a; /* Цвет текста при наведении */
+    border-color: #61dafb; /* Цвет рамки при наведении */
+    transform: scale(1.05); /* Легкое увеличение кнопки при наведении */
+}
+
+/* Эффект активной кнопки */
+.header .nav ul li a:active {
+    background-color: #20232a; /* Темный фон при клике */
+    color: #61dafb; /* Цвет текста при клике */
+    border-color: #20232a; /* Цвет рамки при клике */
+}
+
+/* Подчеркивание при наведении */
+.header .nav ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: #61dafb;
+    transition: width 0.3s;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+    .header .nav ul {
+        flex-direction: column; /* Кнопки будут располагаться вертикально на мобильных устройствах */
+        gap: 10px;
+    }
+
+    .header .nav ul li a {
+        padding: 15px 20px; /* Увеличиваем отступы для кнопок на мобильных устройствах */
+    }
+}
+
+/* Контейнер для аватара и имени пользователя */
+.user-profile-header {
+    display: flex;
+    align-items: center; /* Центрирование аватара и ника по вертикали */
+    gap: 10px;
+}
+
+/* Стили для аватара */
+.user-avatar-header {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
+}
+
+/* Стили для имени пользователя */
+.user-name-header {
+    font-size: 14px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.user-name-header:hover {
+    color: #61dafb; /* Цвет при наведении */
+}
+
+/* Блок с кнопкой Log out */
+.user-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Стили для кнопок входа и регистрации */
+.user-actions a {
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 5px 10px;
+    border: 1px solid #61dafb;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.user-actions a:hover {
+    background-color: #61dafb;
+    color: #20232a;
+}
+
+.user-actions .register {
+    margin-left: 15px;
+}
+
+.footer {
+    background-color: #20232a;
+    color: white;
+    padding: 20px 0;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-container p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.footer-nav {
+    display: flex;
+    gap: 15px;
+}
+
+.footer-nav a {
+    color: #61dafb;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+.footer-nav a:hover {
+    color: #ffffff; /* Белый цвет при наведении */
+}
+
+/* Контейнер для контента */
+.content {
+    flex: 1; /* Заполняет всё свободное пространство */
+}
+
+.add-button {
+    width: 40px;  /* Ширина кнопки */
+    height: 40px; /* Высота кнопки */
+    border-radius: 8px;  /* Слегка скругленные углы */
+    background-color: transparent;
+    border: 2px solid #61dafb;  /* Цвет границы кнопки (тот же, что и у логотипа) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.3s;  /* Плавное изменение фона */
+    margin-right: 6px;  /* Отступ от аватарки уменьшен в 1,5 раза */
+}
+
+/* Эффект при наведении */
+.add-button:hover {
+    background-color: #61dafb;  /* Цвет фона при наведении (цвет логотипа) */
+}
+
+/* Иконка плюса */
+.plus-icon {
+    font-size: 24px;
+    color: #61dafb;  /* Цвет плюса совпадает с цветом границы кнопки */
+    font-weight: bold;
+    transition: color 0.3s;  /* Плавное изменение цвета плюса */
+}
+
+/* Эффект при наведении на иконку */
+.add-button:hover .plus-icon {
+    color: #20232a;  /* Цвет плюса при наведении (темный цвет, как фон шапки) */
+}
+
+.logo img {
+    max-width: 45px; /* Максимальная ширина логотипа */
+    height: auto; /* Сохраняет пропорции изображения */
+    display: block; /* Убирает лишние пробелы вокруг изображения */
+    margin: 0 auto; /* Центрирует изображение, если нужно */
+}
+
+@media (max-width: 768px) {
+    .logo img {
+        max-width: 120px; /* Уменьшение размера логотипа на маленьких экранах */
+    }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        max-width: 100px; /* Еще меньше для мобильных устройств */
+    }
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+    max-width: 300px;
+    width: 100%;
+}
+
+.search-bar form {
+    display: flex; /* Горизонтальное выравнивание элементов внутри формы */
+    align-items: center; /* Центрирование по вертикали */
+    width: 100%; /* Форма растягивается на всю ширину */
+}
+
+.search-bar input[type="text"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #61dafb;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.search-bar input[type="text"]:focus {
+    border-color: #ffffff;
+    outline: none;
+}
+
+.search-bar button {
+    height: 40px;
+    margin-left: 2px;
+    padding: 8px 12px;
+    background-color: transparent;
+    color: #61dafb;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.search-bar button:hover {
+    color: #20232a;
+    background-color: #61dafb;
+}
+
+@media (max-width: 768px) {
+    .search-bar {
+        margin: 0;
+        max-width: 100%;
+    }
+
+    .search-bar button {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+}
