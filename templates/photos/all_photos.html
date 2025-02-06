@@ -8,7 +8,7 @@
     <div class="card-container">
         {% for photo in photos %}
         <div class="card">
-            <a href="/photo/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+            <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                 <div class="card-content">
                     <a href="/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
                     <p class="description">{{ photo.description }}</p>

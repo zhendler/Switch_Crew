@@ -23,7 +23,10 @@ pytest-cov = "^6.0.0"
 sendgrid = "^6.11.0"
 black = "^24.10.0"
 psycopg2-binary = "^2.9.10"
-requests = "^2.32.3"
+aiosqlite = "^0.20.0"
+pytest = "^8.3.4"
+httpx = "^0.28.1"
+pytest-asyncio = "^0.25.3"
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.25.1"
 [build-system]

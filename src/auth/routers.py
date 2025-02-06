@@ -15,12 +15,14 @@ from fastapi import (
     HTTPException,
     UploadFile,
     status,
+    Request,
     File,
     Form,
     Depends,
 )
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from jinja2 import Environment, FileSystemLoader
 
@@ -35,10 +37,30 @@ from src.auth.utils import (
     decode_access_token,
     create_verification_token,
     decode_verification_token,
+    get_current_user_cookies,
 )
+from src.utils.front_end_utils import get_response_format
+
 
 router = APIRouter()
 env = Environment(loader=FileSystemLoader("src/templates"))
+templates = Jinja2Templates(directory="templates")
+
+
+@router.get(
+    "/register_page",
+    status_code=status.HTTP_200_OK,
+)
+async def register_page(request: Request, db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_cookies(request, db)
+    if user is None:
+        return templates.TemplateResponse(
+            "/authentication/register.html", {"request": request, "user": user}
+        )
+    else:
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "user": user}
+        )
 
 
 @router.post(
@@ -47,30 +69,33 @@ env = Environment(loader=FileSystemLoader("src/templates"))
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
+    request: Request,
     background_tasks: BackgroundTasks,
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
     avatar: UploadFile = File(None),
     db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format),
 ):
     """
     Register a new user.
 
-    Args:@router.get("/login", response_class=HTMLResponse)
-async def login(request: Request):
-    return templates.TemplateResponse("/authentication/login.html", {"request": request})
-
+    Args:
+        request (Request): The HTTP request object.
         background_tasks (BackgroundTasks): Background task manager for sending verification email.
         username (str): The username of the new user.
         email (str): The email of the new user.
         password (str): The password of the new user.
         avatar (UploadFile, optional): The avatar file for the new user.
         db (AsyncSession): Database session dependency.
+        response_format (str): The format of the response (JSON or HTML).
 
     Returns:
-        UserResponse: Details of the newly created user along with a verification message.
+        UserResponse: A JSON response containing the new user's details if `response_format` is "json".
+        TemplateResponse: An HTML template response with the verification link if `response_format` is "html".
     """
+    user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_email(email)
     if user:
@@ -84,20 +109,28 @@ async def login(request: Request):
     if avatar:
         avatar_url = await user_repo.upload_to_cloudinary(avatar)
         await user_repo.update_avatar(user.email, avatar_url)
+    else:
+        avatar_url = None
     verification_token = create_verification_token(user.email)
-    verification_link = (
-        f"https://localhost:8000/auth/verify-email?token={verification_token}"
-    )
+    verification_link = f"https://localhost:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
-    return UserResponse(
-        username=user.username,
-        email=user.email,
-        id=user.id,
-        avatar_url=user.avatar_url,
-        detail=f"Please verify your email address. A verification link has been sent to your email.",
-    )
+    access_token = create_access_token(data={"sub": user.username})
+    refresh_token = create_refresh_token(data={"sub": user.username})
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    if response_format == "json":
+        return UserResponse(
+            username=user.username,
+            email=user.email,
+            id=user.id,
+            avatar_url=user.avatar_url,
+            detail=f"Please verify your email address. A verification link has been sent to your email.",
+        )
+    else:
+        return response
 
 
 @router.get("/verify-email")
@@ -120,7 +153,10 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
     await user_repo.activate_user(user)
-    return {"detail": "Email verified successfully"}
+
+    detail = "Email verified successfully"
+    return RedirectResponse(f"/page/{user.username}?detail={detail}", status_code=302)
+
 
 
 @router.post("/resend-verifi-email", status_code=status.HTTP_200_OK)
@@ -148,20 +184,28 @@ async def resend_verifi_email(
             detail="User with this email does not exist.",
         )
     verification_token = create_verification_token(user.email)
-    verification_link = (
-        f"https://localhost:8000/auth/verify-email?token={verification_token}"
-    )
+    verification_link = f"http://127.0.0.1:8000/auth/verify-email?token={verification_token}"
     template = env.get_template("email.html")
     email_body = template.render(verification_link=verification_link)
     background_tasks.add_task(send_verification_grid, user.email, email_body)
-    return {
-        "detail": "A new verification email has been sent. Please check your inbox."
-    }
+
+    detail = "A new verification email has been sent. Please check your inbox."
+    return RedirectResponse(f"/page/{user.username}?detail={detail}", status_code=302)
 
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+@router.get("/login_page", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(
+        "/authentication/login.html", {"request": request}
+    )
+
+
+@router.post("/login", response_model=Token)
+async def login(
+    request: Request,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+    response_format: str = Depends(get_response_format),
 ):
     """
     Authenticate a user and issue access and refresh tokens.
@@ -173,6 +217,7 @@ async def login_for_access_token(
     Returns:
         Token: The access and refresh tokens along with their type.
     """
+    user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_username(form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
@@ -183,9 +228,23 @@ async def login_for_access_token(
         )
     access_token = create_access_token(data={"sub": user.username})
     refresh_token = create_refresh_token(data={"sub": user.username})
-    return Token(
-        access_token=access_token, refresh_token=refresh_token, token_type="bearer"
-    )
+    response = RedirectResponse(url="/", status_code=302)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
+    if response_format == "json":
+        return Token(
+            access_token=access_token, refresh_token=refresh_token, token_type="bearer"
+        )
+    else:
+        return response
+
+
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/", status_code=302)
+    response.delete_cookie(key="access_token", httponly=True)
+    response.delete_cookie(key="refresh_token", httponly=True)
+    return response
 
 
 @router.post("/refresh_token", response_model=Token)

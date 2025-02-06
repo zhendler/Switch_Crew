@@ -1,0 +1,62 @@
+.reactions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.reaction-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    width: 100px; /* Фиксированная ширина для выравнивания */
+    justify-content: center;
+}
+
+.reaction-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 2px solid #20232a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.reaction-circle img {
+    width: 40px;
+    height: 40px;
+}
+
+.reaction-count {
+    font-size: 15px;
+    font-weight: 600;
+    color: #20232a;
+    min-width: 24px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.reaction-circle:hover {
+    background-color: #20232a;
+    transform: scale(1.05);
+}
+
+.reaction-circle:hover + .reaction-count {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.reaction-circle.active {
+    background-color: #20232a;
+}
+
+.reaction-circle.active + .reaction-count {
+    opacity: 1;
+}
+

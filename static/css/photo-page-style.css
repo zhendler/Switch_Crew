@@ -31,17 +31,32 @@
 
 
 .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    object-fit: cover;
+    width: 40px; /* Ширина аватарки */
+    height: 40px; /* Высота аватарки */
+    border-radius: 50%; /* Округлая форма */
+    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
+    border: 2px solid #ccc;
 }
 
-.username {
-    font-size: 16px;
+
+
+.owner-username {
+    font-size: 20px;
     font-weight: 600;
     color: #333;
     margin: 0;
+}
+
+.username {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.username:hover { /* Эффект увеличения при наведении */
+    color: #61dafb;
+    transform: scale(1.05);
 }
 
 .description {
@@ -65,7 +80,7 @@
     display: inline-block;
     margin-right: 5px;
     font-size: 12px;
-    color: #007bff;
+    color: #61dafb;
     text-decoration: none;
     background-color: #f1f1f1;
     padding: 5px 10px;
@@ -74,7 +89,8 @@
 }
 
 .tag:hover {
-    background-color: #007bff;
+    transform: scale(1.1);
+    background-color: #61dafb;
     color: #ffffff;
 }
 
@@ -283,6 +299,12 @@
     border: 2px solid #ccc; /* Рамка вокруг аватарки */
 }
 
+.comment-avatar:hover {
+    transform: scale(1.05);
+    border-color: #61dafb;
+}
+
+
 .delete-button-container {
     display: flex;
     justify-content: flex-end; /* Выравниваем кнопку удаления по правому краю */
@@ -461,4 +483,34 @@
 .hidden {
     display: none;
 }
+
+.user-info {
+    display: flex;
+    align-items: center; /* Центрируем элементы по вертикали */
+    gap: 10px; /* Добавляем пространство между аватаром и ником */
+}
+
+.user-info a {
+    transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.user-info a:hover {
+    transform: scale(1.05);
+    color: #61dafb; /* Цвет текста при наведении */
+}
+
+.user-info .owner-username {
+    font-weight: bold;
+}
+
+.user-info .owner-username:hover {
+    transform: scale(1.05);
+    color: #61dafb; /* Цвет текста для имени пользователя */
+}
+
+.avatar:hover { /* Эффект увеличения при наведении */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-color: #61dafb;
+}
+
 

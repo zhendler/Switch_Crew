@@ -1,7 +1,5 @@
-from tempfile import NamedTemporaryFile
-from typing import Optional, List
+from typing import List
 from datetime import datetime
-import os
 
 from fastapi import (
     Depends,
@@ -17,23 +15,17 @@ from fastapi import (
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import selectinload
-from sqlalchemy import func
-from sqlalchemy import insert
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.mail_utils import send_verification_grid
 from src.auth.routers import env
 from src.auth.schemas import UserResponse, UserCreate
-from src.utils.cloudinary_helper import upload_photo_to_cloudinary
-from src.utils.qr_code_helper import generate_qr_code
-from src.web.repos import TagWebRepository
 from src.auth.pass_utils import verify_password
 from src.auth.repos import UserRepository
-from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, get_current_user_cookies
+from src.auth.utils import create_access_token, create_refresh_token, create_verification_token, \
+    get_current_user_cookies
 from src.comments.repos import CommentsRepository
-from src.models.models import Photo, photo_tags
+from src.models.models import Photo
 from src.photos.repos import PhotoRepository
 from src.tags.repos import TagRepository
 from config.db import get_db
@@ -50,29 +42,6 @@ def truncatechars(value: str = "1", length: int = 35):
 
 
 templates.env.filters["truncatechars"] = truncatechars
-
-
-@router.get("/")
-async def read_root(
-    request: Request,
-    db: AsyncSession = Depends(get_db),
-):
-    tag_web_repo = TagWebRepository(db)
-    user = await get_current_user_cookies(request, db)
-    popular_users, photos, popular_tags, recent_comments = (
-        await tag_web_repo.get_data_for_main_page()
-    )
-    return templates.TemplateResponse(
-        "/main/index.html",
-        {
-            "request": request,
-            "user": user,
-            "photos": photos,
-            "popular_users": popular_users,
-            "popular_tags": popular_tags,
-            "recent_comments": recent_comments,
-        },
-    )
 
 
 @router.post(
@@ -127,19 +96,24 @@ async def get_photos_by_tag(
         )
 
 
-
-
 @router.get("/page/{username}")
-async def page(request: Request, username: str, db: AsyncSession = Depends(get_db)):
+async def page(request: Request,
+               username: str,
+               db: AsyncSession = Depends(get_db)):
     user_repo = UserRepository(db)
-    user_page = await user_repo.get_user_by_username(username)
-    date_obj = datetime.fromisoformat(str(user_page.created_at))
-    date_of_registration = date_obj.strftime("%d-%m-%Y")
     photo_repo = PhotoRepository(db)
+
+    user_page = await user_repo.get_user_by_username(username)
+    user = await get_current_user_cookies(request, db)
+
+    date_obj = datetime.fromisoformat(str(user_page.created_at))
+    date_of_registration = date_obj.strftime("%Y-%m-%d")
+
     photos = await photo_repo.get_users_all_photos(user_page)
     amount_of_photos = len(photos)
 
-    user = await get_current_user_cookies(request, db)
+    detail = request.query_params.get("detail")
+
     return templates.TemplateResponse(
         "/user/page.html",
         {
@@ -149,111 +123,41 @@ async def page(request: Request, username: str, db: AsyncSession = Depends(get_d
             "photos": photos,
             "Date_reg": date_of_registration,
             "amount_of_photos": amount_of_photos,
+            "detail": detail,
         },
     )
 
 
-@router.get("/photo/{photo_id}")
-async def photo_page(
-    request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
-):
-    photo_repo = PhotoRepository(db)
-    photo = await photo_repo.get_photo_by_id(photo_id)
-
-    if not photo:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Photo with id {photo_id} not found",
-        )
-
-    photo.created_at = photo.created_at.isoformat()
-
-    user = await get_current_user_cookies(request, db)
-    return templates.TemplateResponse(
-        "/photos/photo_page.html", {"request": request, "photo": photo, "user": user}
-    )
-
-
-# @router.get("/photos/upload_photo/")
-# async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
+# @router.get("/photo/{photo_id}")
+# async def photo_page(
+#     request: Request, photo_id: int, db: AsyncSession = Depends(get_db)
+# ):
+#     photo_repo = PhotoRepository(db)
+#     reaction_repo = ReactionRepository(db)
+#
 #     user = await get_current_user_cookies(request, db)
+#     photo = await photo_repo.get_photo_by_id(photo_id)
+#     if user:
+#         reaction_active = await reaction_repo.get_reaction_by_user_and_photo(photo_id, user.id)
+#     else:
+#         reaction_active = None
+#
+#     if not photo:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"Photo with id {photo_id} not found",
+#         )
+#
+#     photo.created_at = photo.created_at.isoformat()
+#     reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
+#
 #     return templates.TemplateResponse(
-#         "/photos/upload_photo.html", {"request": request, "user": user}
+#         "/photos/photo_page.html", {"request": request,
+#                                     "photo": photo,
+#                                     "user": user,
+#                                     "reaction_active": reaction_active,
+#                                     "reaction_counts": reaction_counts}
 #     )
-
-
-@router.post("/upload_photo")
-async def upload_photo(
-    request: Request,
-    description: str = Form(...),
-    tags: Optional[str] = Form(None),
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-):
-    web_repo = TagWebRepository(db)
-    user = await get_current_user_cookies(request, db)
-
-    if user is None:
-        return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
-
-    if tags:
-        tags = [tag.strip() for tag in tags.split(",")]
-
-    if len(tags) > 5:
-        raise HTTPException(status_code=400, detail="Maximum of 5 tags allowed")
-
-    try:
-        with NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(file.file.read())
-            tmp_file_path = tmp_file.name
-            cloudinary_url = await web_repo.upload_photo_to_cloudinary(file)
-
-    except Exception as e:
-        if os.path.exists(tmp_file_path):
-            os.remove(tmp_file_path)
-        raise HTTPException(
-            status_code=500, detail=f"Error uploading to Cloudinary: {str(e)}"
-        )
-    finally:
-        tmp_file.close()
-
-    qr_core_url = generate_qr_code(cloudinary_url)
-    new_photo = Photo(
-        url_link=cloudinary_url,
-        description=description,
-        owner_id=user.id,
-        qr_core_url=qr_core_url,
-    )
-
-    db.add(new_photo)
-    await db.commit()
-    await db.refresh(new_photo)
-
-    tag_repo = TagRepository(db)
-    if tags:
-        for tag in tags:
-            new_tag = await tag_repo.get_tag_by_name(tag)
-            if new_tag:
-                await db.refresh(new_photo)
-                await db.refresh(new_tag)
-                stmt = insert(photo_tags).values(
-                    photo_id=new_photo.id, tag_id=new_tag.id
-                )
-                await db.execute(stmt)
-            else:
-                tag = await tag_repo.create_tag(tag)
-                await db.refresh(new_photo)
-                await db.refresh(tag)
-                stmt = insert(photo_tags).values(photo_id=new_photo.id, tag_id=tag.id)
-                await db.execute(stmt)
-
-    await db.commit()
-    await db.refresh(new_photo)
-
-    if os.path.exists(tmp_file_path):
-        os.remove(tmp_file_path)
-
-    return RedirectResponse(f"/page/{user.username}", status_code=302)
 
 
 @router.post("/photos/delete/{photo_id}")
@@ -366,46 +270,6 @@ async def logout():
     return response
 
 
-@router.get("/photos/photos/")
-async def get_photos(
-    request: Request, page: int = 1, db: AsyncSession = Depends(get_db)
-):
-    user = await get_current_user_cookies(request, db)
-
-    photos_per_page = 20
-    offset = (page - 1) * photos_per_page
-
-    photos_query = (
-        select(Photo)
-        .options(
-            selectinload(Photo.owner),
-            selectinload(Photo.tags),
-            selectinload(Photo.comments),
-        )
-        .order_by(Photo.created_at.desc())
-        .offset(offset)
-        .limit(photos_per_page)
-    )
-    result = await db.execute(photos_query)
-    photos = result.scalars().all()
-
-    total_photos_query = select(func.count(Photo.id))
-    total_photos_result = await db.execute(total_photos_query)
-    total_photos = total_photos_result.scalar()
-
-    total_pages = (total_photos + photos_per_page - 1) // photos_per_page
-    return templates.TemplateResponse(
-        "/photos/all_photos.html",
-        {
-            "title": "Photos",
-            "request": request,
-            "photos": photos,
-            "current_page": page,
-            "total_pages": total_pages,
-            "user": user,
-        },
-    )
-
 @router.get(
     "/register_page",
     status_code=status.HTTP_200_OK,
@@ -420,8 +284,6 @@ async def register_page(request: Request, db: AsyncSession = Depends(get_db)):
         return templates.TemplateResponse(
             "/main/index.html", {"request": request, "user": user}
         )
-
-
 
 
 @router.post(
@@ -512,3 +374,4 @@ async def edit_photo_description(request: Request, photo_id: int, description: s
     await db.commit()
 
     return {"message": "Description updated successfully"}
+

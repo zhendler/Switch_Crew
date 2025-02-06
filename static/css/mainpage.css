@@ -25,8 +25,7 @@
 }
 
 /* Секция с фотографиями */
-.photo-section {
-    height: 810px; /* Фиксированная высота */
+.photo-section { /* Фиксированная высота */
     overflow: hidden; /* Обрезка содержимого */
 }
 
@@ -36,11 +35,11 @@
 
 /* Фиксированные секции боковой панели */
 .sidebar-section {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background-color: #fff; /* Фон белый, как у карточек */
+    border: 1px solid #ddd; /* Граница */
+    border-radius: 8px; /* Скругление углов */
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень для подсветки */
     height: 200px; /* Фиксированная высота для каждой боковой секции */
     overflow: hidden; /* Обрезка содержимого */
 }
@@ -59,16 +58,6 @@
 
 .sidebar-section li {
     margin-bottom: 8px;
-}
-
-/* Ссылки */
-.sidebar-section a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.sidebar-section a:hover {
-    text-decoration: underline;
 }
 
 /* Блок с пользователями как плиточки */
@@ -92,6 +81,7 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
+    border: 2px solid #ddd;
     object-fit: cover;
 }
 
@@ -109,13 +99,18 @@
     gap: 20px;
 }
 
+.card:hover {
+    transform: scale(1.05); /* Увеличение всей карточки при наведении */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Тень при наведении на карточку */
+}
+
 .card {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 1px solid #ddd;
-    height: 230px;
+    border: 2px solid #ddd;
+    height: 240px;
 }
 
 .card-img {
@@ -125,25 +120,72 @@
 }
 
 .card-content {
+    display: flex;
+    align-items: center; /* Центрируем элементы по вертикали */
+    gap: 10px; /* Добавляем пространство между аватаром и ником */
     padding: 10px;
+}
+
+.card-content a {
+    transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.card-content a:hover {
+    color: #61dafb; /* Цвет текста при наведении */
+}
+
+.card-content .author {
+    font-weight: bold;
+}
+
+.card-content .author:hover {
+    color: #61dafb; /* Цвет текста для имени пользователя */
+}
+
+/* Описание вынесено отдельно, чтобы быть под аватаром и ником */
+.description {
+    font-size: 14px;
+    color: black;
+    padding-left: 15px;
+    margin-top: 0px; /* Добавляем отступ сверху */
 }
 
 .author {
     font-weight: bold;
 }
 
-.description {
-    font-size: 14px;
-    color: #666;
+.tag-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 tags per row */
+    gap: 10px; /* Space between the tags */
+    width: 100%; /* Ensure the tag list takes full width */
 }
 
-.user-list, .tag-list, .comment-list {
+.user-list, .comment-list {
     display: flex;
     gap: 10px;
     height: 75%; /* Плитки занимают все пространство секции */
 }
 
-.user-tile, .tag-tile, .comment-tile {
+.tag-tile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-decoration: none;
+    color: #000; /* Set text color to black for the tags */
+    transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
+}
+
+.tag-tile a {
+    color: inherit; /* Ensure tag links inherit the color of their parent */
+    text-decoration: none;
+}
+
+.user-tile, .comment-tile {
     flex: 1; /* Равное распределение плиток */
     display: flex;
     flex-direction: column;
@@ -160,28 +202,77 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.user-tile:hover, .tag-tile:hover, .comment-tile:hover {
+.tag-tile:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    color: #61dafb; /* Light blue color on hover */
+    border-color: #61dafb;
+}
+
+.user-tile:hover {
+    transform: scale(1.05); /* Эффект увеличения */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Тень при наведении */
+    border-color: #61dafb; /* Цвет границы при наведении */
+    color: #61dafb; /* Цвет текста при наведении */
+}
+
+.user-tile:hover .user-avatar {
+    border-color: #61dafb; /* Цвет границы аватарки */
+}
+
+.user-tile:hover .user-name {
+    color: #61dafb; /* Цвет имени пользователя при наведении */
+}
+
+.comment-tile:hover {
     transform: scale(1.05); /* Эффект увеличения при наведении */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-color: #61dafb;
+    color: #61dafb;
 }
 
-.user-name, .tag-name, .comment-author {
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-.comment-text {
+.comment-main-text {
     font-size: 11.5px;
-    color: #666;
     margin-top: 5px;
     text-align: center;
 }
 
+.comment-tile:hover .comment-main-text {
+    color: #61dafb !important; /* Явное изменение цвета текста при наведении */
+}
+
+.tag-name {
+    font-weight: bold;
+}
+
+.user-name, .comment-author {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
 .sidebar-section a {
-    color: #007bff;
+    color: black;
     text-decoration: none;
 }
 
 .sidebar-section a:hover {
     text-decoration: none; /* Убираем подчеркивание при наведении */
 }
+
+.comment-avatar {
+    width: 32px; /* Ширина аватарки */
+    height: 32px; /* Высота аватарки */
+    border-radius: 50%; /* Округлая форма */
+    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
+    border: 1px solid #ddd; /* Рамка вокруг аватарки */
+}
+
+.comment-comment-avatar {
+    width: 32px; /* Ширина аватарки */
+    height: 32px; /* Высота аватарки */
+    border-radius: 50%; /* Округлая форма */
+    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
+    border: 2px solid #ccc; /* Рамка вокруг аватарки */
+}
+
+

@@ -51,11 +51,7 @@ async def get_user_comments(
 
 
 @router.get(
-    "/photo/{photo_id}/",
-    summary="Get comments by photo",
-    description="Retrieves all comments associated with a specific photo.",
-    response_model=list[CommentResponse],
-    dependencies=FORALL,
+    "/photo/{photo_id}/", response_model=list[CommentResponse], dependencies=FORALL
 )
 async def get_photo_comments(
     photo_id: int,

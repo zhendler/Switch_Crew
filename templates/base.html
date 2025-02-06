@@ -7,32 +7,28 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/header-style.css">
     <link rel="stylesheet" href="/static/css/photo-card-style.css">
-
 </head>
   <body>
     <header class="header">
     <div class="container">
-        <div class="logo">
             <a href="/">
-                <img src="/static/images/logo.png" alt="Logo" class="Logo">
+                <img src="/static/logo/logo.svg" width="180" height="65">
             </a>
-        </div>
         <nav class="nav">
             <ul>
-                <li><a href="/">Main</a></li>
-                <li><a href="/photos/all_photos/">Photos</a></li>
-                <li><a href="/tags/tags/">Tags</a></li>
+                <li><a href="/" class="{{ 'active' if request.path == '/' }}">Main</a></li>
+                <li><a href="/photos/all_photos/" class="{{ 'active' if request.path == '/photos/all_photos/' }}">Photos</a></li>
+                <li><a href="/tags/tags/" class="{{ 'active' if request.path == '/tags/tags/' }}">Tags</a></li>
             </ul>
         </nav>
         <div class="search-bar">
             <form action="/search/" method="get">
-                <input type="text" name="query" placeholder="Search...">
+                <input type="text" name="query" placeholder="Search for users or tags...">
                 <button type="submit" class="search-button">
                     <img src="/static/images/search-icon.png" alt="Search" class="search-icon">
                 </button>
             </form>
         </div>
-
 
         {% if user %}
         <div class="user-profile-header">
@@ -47,12 +43,12 @@
             <a href="/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
         </div>
         <div class="user-actions">
-            <a href="/logout" class="register">Log out</a>
+            <a href="/auth/logout" class="register">Log out</a>
         </div>
         {% else %}
         <div class="user-actions">
-            <a href="/login/" class="login">Login</a>
-            <a href="/register_page" class="register">Sign up</a>
+            <a href="/auth/login_page/" class="login">Login</a>
+            <a href="/auth/register_page" class="register">Sign up</a>
         </div>
         {% endif %}
     </div>
@@ -60,7 +56,6 @@
 
 <main class="content">
     {% block content %}
-
     {% endblock %}
 </main>
 
@@ -76,6 +71,4 @@
 </footer>
 
 </body>
-
-  </html>
-
+</html>

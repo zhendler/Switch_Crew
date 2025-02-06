@@ -1,54 +1,91 @@
-.page-container {
-    display: flex;
-    justify-content: flex-start; /* Выравниваем содержимое влево */
-    align-items: flex-start;
-    gap: 20px; /* Расстояние между секциями */
-    margin: 20px auto; /* Центрируем страницу горизонтально */
-    max-width: 1200px; /* Устанавливаем максимальную ширину страницы */
-}
-
-.left-section {
-    flex: 0 0 30%; /* Фиксированная ширина для левых секций */
-    border: 1px solid #ccc;
-    border-radius: 8px;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 20px;
-    background-color: #f9f9f9;
+    box-sizing: border-box;
+    color: #ffffff;
 }
 
-.right-section {
-    flex: 1; /* Правая секция занимает оставшееся пространство */
-    border: 1px solid #ccc;
-    border-radius: 8px;
+.tags-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 4 карточки в линии */
+    gap: 20px;
+    justify-content: center;
     padding: 20px;
-    background-color: #f9f9f9;
 }
 
-.left-section h2, .right-section h2 {
-    margin-bottom: 16px;
-}
-
-.left-section form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.left-section input {
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.left-section button {
+.tag-card {
+    border-radius: 12px;
+    border: 3px solid #555; /* Светлая граница */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     padding: 10px;
-    background-color: #2E3740;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+    max-width: 280px;
+    transition: transform 0.3s ease-in-out, border-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    background-color: #20232a; /* Светлый фон карточки */
 }
 
-.left-section button:hover {
-    background-color: #ED3B1C;
+.tag-card:hover {
+    transform: translateY(-5px);
+    border-color: #61dafb; /* Подсветка границы при наведении */
+    box-shadow: 0 4px 15px rgba(97, 218, 251, 0.5); /* Синяя тень при наведении */
+}
+
+.photos {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Зазор между фото */
+    padding: 10px;
+    max-width: 240px;
+    margin: 0 auto;
+}
+
+.photo-item {
+    flex: 1 1 70px;
+    max-width: 70px;
+}
+
+.photo-item img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #ddd; /* Очень светлая граница у фотографий */
+    transition: transform 0.2s ease-in-out, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.photo-item img:hover {
+    transform: scale(1.08);
+    border-color: #61dafb; /* Подсветка границы фото при наведении */
+}
+
+.tag-name-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(50, 50, 50, 0.9), rgba(50, 50, 50, 0.6)); /* Полупрозрачная лента */
+    padding: 10px;
+    text-align: center;
+    transition: background 0.3s ease-in-out;
+}
+
+.tag-name-overlay h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #a0a0a0; /* Серый цвет текста в обычном режиме */
+    transition: color 0.3s ease-in-out;
+}
+
+.tag-card:hover .tag-name-overlay {
+    background: linear-gradient(to top, rgba(97, 218, 251, 0.9), rgba(97, 218, 251, 0.6)); /* Синий градиент при наведении */
+}
+
+.tag-card:hover .tag-name-overlay h2 {
+    color: white; /* Цвет текста #61dafb при наведении */
 }

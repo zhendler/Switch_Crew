@@ -21,6 +21,8 @@
 .user-info-section {
     flex-grow: 1;
     text-align: left; /* Текст выравнивается по левому краю */
+    position: relative; /* Для позиционирования кнопки внутри этого контейнера */
+    padding-top: 20px; /* Увеличиваем верхний отступ для кнопки */
 }
 
 .user-avatar-section {
@@ -156,4 +158,31 @@ input:focus {
 }
 .alarm-message {
     color: red;
+}
+.success-message {
+    color: green;
+}
+
+.verify-email-button {
+    position: absolute; /* Для позиционирования в правом верхнем углу */
+    top: 10px;
+    right: 10px;
+    background-color: #28a745; /* Зелёный цвет */
+    color: white;
+    border: none;
+    padding: 8px 16px; /* Размер кнопки, аналогичный кнопке изменения профиля */
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.verify-email-button:hover {
+    background-color: #218838; /* Цвет при наведении */
+}
+
+.verify-email-button:focus {
+    outline: none;
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); /* Тень при фокусе */
 }

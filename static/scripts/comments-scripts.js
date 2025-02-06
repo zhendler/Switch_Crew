@@ -3,27 +3,91 @@ document.addEventListener('DOMContentLoaded', function() {
     const commentInput = document.querySelector('.comment-input');
     const commentsContainer = document.querySelector('.comments');
 
-    if (!commentForm) {
-        console.error('The required element was not found on the page');
-        return;
-    }
-    if (!commentInput) {
-        console.error('Input element not found');
-        return;
-    }
     if (!commentsContainer) {
-        console.error('Comments container not found');
-        return;
+        const noCommentsElement = document.querySelector('.no-comments');
+        if (noCommentsElement) {
+            noCommentsElement.remove();
+        }
+        const newCommentsContainer = document.createElement('div');
+        newCommentsContainer.className = 'comments';
+        commentForm.parentNode.insertBefore(newCommentsContainer, commentForm.nextSibling);
     }
-    commentForm.addEventListener('submit', async function(event) {
-        event.preventDefault();
 
-        const photoId = window.location.pathname.match(/\/photo\/(\d+)/)?.[1];
-        if (!photoId) {
-            console.error('Photo ID not found in URL');
+    async function handleCommentEdit(commentId, currentContent) {
+        const commentText = document.querySelector(`#comment-text-${commentId}`);
+        const originalContent = currentContent;
+
+        const editForm = document.createElement('div');
+        editForm.className = 'edit-form';
+        editForm.innerHTML = `
+            <textarea class="comment-input">${originalContent}</textarea>
+            <div class="edit-buttons">
+                <button type="button" class="save-button">Save</button>
+                <button type="button" class="cancel-button">Cancel</button>
+            </div>
+        `;
+
+        commentText.style.display = 'none';
+        commentText.parentNode.insertBefore(editForm, commentText);
+
+        const textarea = editForm.querySelector('textarea');
+        const saveButton = editForm.querySelector('.save-button');
+        const cancelButton = editForm.querySelector('.cancel-button');
+
+        cancelButton.addEventListener('click', () => {
+            editForm.remove();
+            commentText.style.display = 'block';
+        });
+
+        saveButton.addEventListener('click', async () => {
+            const newContent = textarea.value.trim();
+            if (!newContent) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('comment_content', newContent);
+
+                const response = await fetch(`/comment/edit/${commentId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                     document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                    },
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    commentText.textContent = newContent;
+                    const editButton = document.querySelector(`[data-comment-id="${commentId}"]`);
+                    if (editButton) {
+                        editButton.setAttribute('data-comment-text', newContent);
+                    }
+                    editForm.remove();
+                    commentText.style.display = 'block';
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Failed to update comment');
+                }
+            } catch (error) {
+                console.error('Error updating comment:', error);
+                alert('Failed to update comment. Please try again.');
+            }
+        });
+
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+
+    commentForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const photoId = window.location.pathname.split('/').pop();
+        const commentContent = commentInput.value.trim();
+
+        if (!commentContent) {
             return;
         }
-        const commentContent = commentInput.value;
 
         const formData = new FormData();
         formData.append('comment_content', commentContent);
@@ -31,15 +95,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const response = await fetch(`/comments/create/${photoId}/`, {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                },
                 body: formData,
+                credentials: 'include'
             });
 
-            if (response.ok) {
-                const data = await response.json();
+            const data = await response.json();
 
-                const newComment = document.createElement('div');
-                newComment.classList.add('comment-card');
-                newComment.innerHTML = `
+            if (response.ok) {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment-card';
+                commentElement.innerHTML = `
                     <div class="comment-header">
                         <div class="comment-author-container">
                             <a href="/page/${data.user.username}">
@@ -49,38 +118,56 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <p class="username">${data.user.username}</p>
                             </a>
                         </div>
-                        <div class="action-buttons">
-                            <button class="edit-button-comment" data-comment-id="${data.id}" data-comment-text="${data.content}">
-                                <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
-                            </button>
+                        ${data.permissions.can_edit ? `
+                            <div class="action-buttons">
+                                <button class="edit-button-comment" data-comment-id="${data.id}" data-comment-text="${data.content}">
+                                    <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
+                                </button>
+                                <form class="delete-form" data-comment-id="${data.id}">
+                                    <button type="button" class="delete-button">
+                                        <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
+                                    </button>
+                                </form>
+                            </div>
+                        ` : data.permissions.can_delete ? `
                             <form class="delete-form" data-comment-id="${data.id}">
                                 <button type="button" class="delete-button">
                                     <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
                                 </button>
                             </form>
-                        </div>
+                        ` : ''}
                     </div>
                     <p class="comment-text" id="comment-text-${data.id}">${data.content}</p>
                 `;
 
-                commentsContainer.prepend(newComment);
+                const commentsSection = document.querySelector('.comments');
+                if (commentsSection.children.length === 0) {
+                    commentsSection.appendChild(commentElement);
+                } else {
+                    commentsSection.insertBefore(commentElement, commentsSection.firstChild);
+                }
 
                 commentInput.value = '';
+
+                const noComments = document.querySelector('.no-comments');
+                if (noComments) {
+                    noComments.remove();
+                }
             } else {
-                const errorData = await response.json();
-                alert(errorData.error || 'Error sending comment');
+                throw new Error(data.error || 'Failed to post comment');
             }
         } catch (error) {
-            alert('Network error: ' + error.message);
+            console.error('Error details:', error);
+            alert('Failed to post comment. Please try again. Error: ' + error.message);
         }
     });
 
     commentsContainer.addEventListener('click', function(event) {
-        const button = event.target.closest('.edit-button-comment');
-        if (button) {
-            const commentId = button.dataset.commentId;
-            const commentText = button.dataset.commentText;
-            editComment(commentId, commentText);
+        const editButton = event.target.closest('.edit-button-comment');
+        if (editButton) {
+            const commentId = editButton.dataset.commentId;
+            const commentText = editButton.dataset.commentText;
+            handleCommentEdit(commentId, commentText);
         }
 
         const deleteButton = event.target.closest('.delete-button');
@@ -90,66 +177,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
             fetch(`/comment/delete/${commentId}/`, {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                },
+                credentials: 'include'
             })
-                .then(response => {
-                    if (response.ok) {
-                        commentCard.remove();
-                    } else {
-                        response.json().then(data => alert(data.error || 'Error deleting comment'));
+            .then(response => {
+                if (response.ok) {
+                    commentCard.remove();
+
+                    const commentsSection = document.querySelector('.comments');
+                    if (commentsSection && commentsSection.children.length === 0) {
+                        const noCommentsElement = document.createElement('p');
+                        noCommentsElement.className = 'no-comments';
+                        noCommentsElement.textContent = 'No comments yet.';
+                        commentsSection.parentNode.insertBefore(noCommentsElement, commentsSection);
+                        commentsSection.remove();
                     }
-                })
-                .catch(error => console.error('Network error:', error));
+                } else {
+                    response.json().then(data => alert(data.error || 'Error deleting comment'));
+                }
+            })
+            .catch(error => console.error('Network error:', error));
         }
     });
-
-    // Функция для редактирования комментария
-    function editComment(commentId, commentText) {
-        const commentElement = document.getElementById(`comment-text-${commentId}`);
-        if (!commentElement) {
-            console.error(`Элемент с ID comment-text-${commentId} не найден`);
-            return;
-        }
-
-        const existingEditField = commentElement.querySelector('.edit-comment-input');
-        if (existingEditField) {
-            commentElement.innerHTML = commentText;
-            return;
-        }
-
-        const editField = document.createElement('textarea');
-        editField.className = 'edit-comment-input';
-        editField.value = commentText;
-
-        const saveButton = document.createElement('button');
-        saveButton.className = 'save-button';
-        saveButton.textContent = 'Save';
-
-        commentElement.innerHTML = '';
-        commentElement.appendChild(editField);
-        commentElement.appendChild(saveButton);
-
-        saveButton.addEventListener('click', function() {
-            const newContent = editField.value;
-
-            fetch(`/comment/edit/${commentId}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `comment_content=${encodeURIComponent(newContent)}`
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message === "Comment updated") {
-                        commentElement.innerHTML = newContent;
-
-                        const newEditButton = createEditButton(commentId, newContent);
-                        commentElement.appendChild(newEditButton);
-                    } else {
-                        alert('Failed to update comment.');
-                    }
-                })
-                .catch(error => console.error('Error saving comment:', error));
-        });
-    }
 });

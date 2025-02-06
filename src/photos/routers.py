@@ -28,13 +28,14 @@ from src.photos.schemas import (
     PhotoRatingResponse,
     AverageRatingResponse,
 )
+from src.reactions.repos import ReactionRepository
 from src.utils.cloudinary_helper import (
     upload_photo_to_cloudinary,
     get_cloudinary_image_id,
 )
 from src.utils.front_end_utils import templates, get_response_format
 from src.utils.qr_code_helper import generate_qr_code
-
+from src.web.repos import TagWebRepository
 
 photo_router = APIRouter()
 mainrouter = APIRouter()
@@ -57,9 +58,9 @@ async def read_root(
 ):
 
     user = await get_current_user_cookies(request, db)
-    photo_repo = PhotoRepository(db)
+    web_repo = TagWebRepository(db)
     popular_users, photos, popular_tags, recent_comments = (
-        await photo_repo.get_data_for_main_page()
+        await web_repo.get_data_for_main_page()
     )
     return templates.TemplateResponse(
         "/main/index.html",
@@ -88,7 +89,7 @@ async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
 async def create_photo(
     request: Request,
     description: str = Form(...),
-    tags: Optional[str] = Form(None), # TODO: виправити ТЕГИ з рядка в список, так щоб форма приймала список тегів
+    tags: Optional[str] = Form(None),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     response_format: str = Depends(get_response_format)
@@ -97,6 +98,7 @@ async def create_photo(
     user = await get_current_user_cookies(request, db)
 
     photo_repo = PhotoRepository(db)
+    tags = tags.split(',')
     new_photo = await photo_repo.create_photo(cloudinary_url, description, user, tags)
     if response_format == "json":
         return new_photo
@@ -136,7 +138,7 @@ async def create_photo(
 
 
 @photo_router.get(
-    "/all_photos",
+    "/all_photos/",
     response_model=list[PhotoResponse]
 )
 async def all_photos(
@@ -146,24 +148,25 @@ async def all_photos(
     response_format: str = Depends(get_response_format)
 ):
     user = await get_current_user_cookies(request, db)
-    photo_repo = PhotoRepository(db)
-    photos, total_pages = await photo_repo.get_all_photos(page)
+    web_repo = TagWebRepository(db)
+    photos, total_pages = await web_repo.get_all_photos(page)
+
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
     if response_format == "json":
         return photos
     else:
         return templates.TemplateResponse(
-        "/photos/all_photos.html",
-        {
-            "title": "Photos",
-            "request": request,
-            "photos": photos,
-            "current_page": page,
-            "total_pages": total_pages,
-            "user": user,
-        },
-    )
+            "/photos/all_photos.html",
+            {
+                "title": "Photos",
+                "request": request,
+                "photos": photos,
+                "current_page": page,
+                "total_pages": total_pages,
+                "user": user,
+            },
+        )
 
 
 
@@ -206,22 +209,32 @@ async def photo_page(
 ):
     photo_repo = PhotoRepository(db)
     photo = await photo_repo.get_photo_by_id(photo_id)
+    reaction_repo = ReactionRepository(db)
 
+    user = await get_current_user_cookies(request, db)
     if not photo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Photo with id {photo_id} not found",
         )
 
-    photo.created_at = photo.created_at.isoformat()
+    if user:
+        reaction_active = await reaction_repo.get_reaction_by_user_and_photo(photo_id, user.id)
+    else:
+        reaction_active = None
 
-    user = await get_current_user_cookies(request, db)
+    photo.created_at = photo.created_at.isoformat()
+    reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
     if response_format == "json":
         return photo
     else:
         return templates.TemplateResponse(
-        "/photos/photo_page.html", {"request": request, "photo": photo, "user": user}
-    )
+            "/photos/photo_page.html", {"request": request,
+                                        "photo": photo,
+                                        "user": user,
+                                        "reaction_active": reaction_active,
+                                        "reaction_counts": reaction_counts}
+        )
 
 # @photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
 # async def get_photo_by_id(

@@ -76,6 +76,20 @@ class TagRepository:
         tags = await self.db.execute(select(Tag))
         return tags.scalars().all()
 
+    async def get_all_tags_with_photos(self) -> Sequence[Tag]:
+        """
+        Retrieves all tags from the database.
+
+        This method fetches all tags stored in the database and returns them as a list.
+
+        :return: A sequence of `Tag` objects representing all tags in the database.
+        """
+        result = await self.db.execute(select(Tag))
+        tags = result.scalars().all()
+        tags_with_photos = [tag for tag in tags if tag.photos]
+        return tags_with_photos
+
+
     async def delete_tag_by_name(self, tag_name: str) -> str:
         """
         Deletes a tag by its name.
@@ -147,6 +161,7 @@ class TagRepository:
         Returns:
             list[User]: A list of users matching the criteria.
         """
+        text = text.lower()
         query = select(Tag).where(
             or_(
                 Tag.name.like(f"{text}%"),
