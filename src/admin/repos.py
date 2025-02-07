@@ -44,6 +44,12 @@ class AdminRepository:
        result = await self.session.execute(query)
        return result.scalars().all()
 
+    async def get_all_users_comments(self, user_id: int):
+
+        query = select(Comment).where(Comment.user_id == user_id)
+        comments = await self.session.execute(query)
+        return comments.scalars().all()
+
 
 
 

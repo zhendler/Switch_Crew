@@ -31,3 +31,11 @@ class UserNameForAdmin(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserCommentsForAdmin(BaseModel):
+    id: int
+    content: str
+    user_id: int
+    photo_id: int
+    created_at: datetime
+    updated_at: datetime

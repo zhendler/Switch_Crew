@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import get_db
 from src.admin.repos import AdminRepository
-from src.admin.schemas import UserForAdmin, UserNameForAdmin, UserFullInformationAdmin
+from src.admin.schemas import UserForAdmin, UserNameForAdmin, UserFullInformationAdmin, UserCommentsForAdmin
 from src.auth.repos import UserRepository
 from src.auth.utils import get_current_user_cookies
 from src.photos.repos import PhotoRepository
@@ -48,7 +48,6 @@ async def a_get_usernames_list(
 @router.get("/{user_id}", response_model=UserFullInformationAdmin)
 async def a_get_user_by_id(
         user_id: int,
-        request: Request,
         db: AsyncSession = Depends(get_db),
         response_format: str = Depends(get_response_format),
 ):
@@ -57,6 +56,33 @@ async def a_get_user_by_id(
     if not user:
         raise HTTPException(status_code=404, detail="U21212ser not found")
     return user
+
+@router.get("/users_comments/", response_model=list[UserCommentsForAdmin])
+async def get_user_comments(
+        user_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+
+    admin_repo = AdminRepository(db)
+    return await admin_repo.get_all_users_comments(user_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

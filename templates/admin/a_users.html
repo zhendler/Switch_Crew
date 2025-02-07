@@ -13,12 +13,19 @@
             <p>Select a user to see details</p>
         </div>
     </div>
+        <div class="user-comments">
+        <h2>User Details</h2>
+        <div id="user-comments">
+            <p>Select a user to see details</p>
+        </div>
+    </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const userList = document.getElementById("user-list");
         const userInfo = document.getElementById("user-info");
+        const userComments = document.getElementById("user-comments");
 
         function fetchUsers() {
             fetch("/admin/users")
@@ -58,6 +65,44 @@
                 })
                 .catch(error => console.error("Error fetching user details:", error));
         }
+
+        function fetchUserComments(userId) {
+            fetch(`/admin/comments/${userId}`)
+                .then(response => response.json())
+                .then(comments => {
+                    userComments.innerHTML = "<h3>Latest Comments</h3>";
+
+                    if (comments.length === 0) {
+                        userComments.innerHTML += "<p>No comments found.</p>";
+                        return;
+                    }
+
+                    const commentList = document.createElement("div");
+                    commentList.classList.add("comment-list");
+
+                    comments.forEach(comment => {
+                        const commentCard = document.createElement("div");
+                        commentCard.classList.add("comment-card");
+                        commentCard.innerHTML = `
+                            <p class="comment-time">${new Date(comment.created_at).toLocaleString()}</p>
+                            <p class="comment-text">${comment.content}</p>
+                            <a href="/photo/${comment.photo_id}" target="_blank" class="comment-photo-link">
+                                <img src="${comment.photo_thumbnail}" alt="Photo" class="comment-photo">
+                            </a>
+                        `;
+
+                        commentCard.addEventListener("click", () => {
+                            window.open(`/photo/${comment.photo_id}`, "_blank");
+                        });
+
+                        commentList.appendChild(commentCard);
+                    });
+
+                    userComments.appendChild(commentList);
+                })
+                .catch(error => console.error("Error fetching user comments:", error));
+        }
+
 
         fetchUsers();
     });

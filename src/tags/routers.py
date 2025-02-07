@@ -10,7 +10,7 @@ from .schemas import TagResponse
 from src.auth.utils import FORALL, FORMODER, get_current_user_cookies
 from src.photos.schemas import PhotoResponse
 from src.utils.front_end_utils import get_response_format
-from src.web.repos import TagWebRepository
+
 from ..models.models import User
 
 tag_router = APIRouter()
