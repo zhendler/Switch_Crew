@@ -269,10 +269,5 @@ async def is_subscribed_by(
             detail="You can't check subscription status for yourself.",
         )
     sub_repo = SubscriptionRepository(db)
-<<<<<<< HEAD
     is_subscribed_by = await sub_repo.check_is_subscribed_by(user.id, current_user.id)
     return {"is_subscribed_by": is_subscribed_by}
-=======
-    is_subscribed = await sub_repo.check_is_subscribed_by(user.id, current_user.id)
-    return {"is_subscribed_by": is_subscribed}
->>>>>>> be12790643eb91372adac3cc5c755b108de44f6e
