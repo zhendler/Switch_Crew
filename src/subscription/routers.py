@@ -270,4 +270,4 @@ async def is_subscribed_by(
         )
     sub_repo = SubscriptionRepository(db)
     is_subscribed = await sub_repo.check_is_subscribed_by(user.id, current_user.id)
-    return {"is_subscribed": is_subscribed}
+    return {"is_subscribed_by": is_subscribed}
