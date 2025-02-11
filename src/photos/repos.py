@@ -1,11 +1,11 @@
-from sqlalchemy import insert, func
+from sqlalchemy import insert, func, desc
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload, joinedload
 
-from src.models.models import Photo, photo_tags, User, PhotoRating
+from src.models.models import Photo, photo_tags, User, PhotoRating, Comment, Tag
 from src.tags.repos import TagRepository
 
 MAX_TAGS_COUNT = 5
@@ -153,17 +153,80 @@ class PhotoRepository:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def get_all_photos(self):
-        """
-        Retrieve all photos in the database.
+    # async def get_all_photos(self):
+    #     """
+    #     Retrieve all photos in the database.
+    #
+    #     Returns:
+    #         list[Photo]: A list of all photos in the database.
+    #     """
+    #     query = select(Photo)
+    #     result = await self.session.execute(query)
+    #     return result.scalars().all()
 
-        Returns:
-            list[Photo]: A list of all photos in the database.
-        """
-        query = select(Photo)
-        result = await self.session.execute(query)
-        return result.scalars().all()
+    async def get_all_photos(self, page):
 
+        photos_per_page = 20
+        offset = (page - 1) * photos_per_page
+
+        photos_query = (
+            select(Photo)
+            .options(
+                selectinload(Photo.owner),
+                selectinload(Photo.tags),
+                selectinload(Photo.comments),
+            )
+            .order_by(Photo.created_at.desc())
+            .offset(offset)
+            .limit(photos_per_page)
+            .order_by(desc(Photo.created_at))
+        )
+        result = await self.session.execute(photos_query)
+        photos = result.scalars().all()
+        total_photos_query = select(func.count(Photo.id))
+        total_photos_result = await self.session.execute(total_photos_query)
+        total_photos = total_photos_result.scalar()
+
+        total_pages = (total_photos + photos_per_page - 1) // photos_per_page
+
+        return photos, total_pages
+
+    async def get_data_for_main_page(self):
+        photos_query = (
+            select(Photo)
+            .order_by(desc(Photo.created_at))
+            .limit(9)
+            .options(joinedload(Photo.tags), joinedload(Photo.comments))
+        )
+
+        photos = await self.session.execute(photos_query)
+        photos_result = photos.scalars().unique().all()
+        comments_query = (
+            select(Comment)
+            .order_by(desc(Comment.created_at))
+            .limit(3)
+            .options(joinedload(Comment.user))
+        )
+
+        comments = await self.session.execute(comments_query)
+        comments_result = comments.scalars().unique().all()
+
+        users_query = select(User).order_by(desc(User.created_at)).limit(3)
+        users = await self.session.execute(users_query)
+        users_result = users.scalars().unique().all()
+
+        tags_query = (
+            select(Tag, func.count(photo_tags.c.photo_id).label("photo_count"))
+            .join(photo_tags, Tag.id == photo_tags.c.tag_id)
+            .group_by(Tag.id)
+            .order_by(desc("photo_count"))
+            .limit(6)
+        )
+
+        tags = await self.session.execute(tags_query)
+        tags_result = tags.scalars().unique().all()
+
+        return users_result, photos_result, tags_result, comments_result
 
 class PhotoRatingRepository:
     def __init__(self, session: AsyncSession):

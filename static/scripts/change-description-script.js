@@ -1,20 +1,22 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const editDescriptionButton = document.querySelector('.edit-button');
+    const editDescriptionButton = document.querySelector('.edit-button-description');
     const descriptionElement = document.getElementById('photo-description');
-    let isEditing = false; // Флаг для отслеживания состояния редактирования
-    let originalDescription = ''; // Для хранения оригинального текста описания
+    const saveButton = document.getElementById('save-description-button'); // Кнопка сохранения
+    let isEditing = false;
+    let originalDescription = '';
 
     if (editDescriptionButton) {
         editDescriptionButton.addEventListener('click', () => {
             if (isEditing) {
                 // Если уже идет редактирование, отменяем его
-                descriptionElement.innerHTML = originalDescription; // Восстанавливаем исходное описание
-                isEditing = false; // Сбрасываем флаг редактирования
+                descriptionElement.innerHTML = originalDescription;
+                saveButton.style.display = 'none'; // Скрываем кнопку сохранения
+                isEditing = false;
                 return;
             }
 
-            isEditing = true; // Устанавливаем флаг редактирования
-            originalDescription = descriptionElement.innerHTML.trim(); // Сохраняем оригинальное описание
+            isEditing = true;
+            originalDescription = descriptionElement.innerHTML.trim();
 
             const currentDescription = descriptionElement.textContent.trim();
 
@@ -23,56 +25,70 @@ document.addEventListener('DOMContentLoaded', () => {
             editField.className = 'edit-description-input';
             editField.value = currentDescription;
 
-            // Добавляем кнопку сохранения
-            const saveButton = document.createElement('button');
-            saveButton.className = 'save-description-button';
-            saveButton.textContent = 'Save';
+            // Применяем стили к полю редактирования
+            editField.style.width = '60%';
+            editField.style.height = '60px';
+            editField.style.padding = '5px';
+            editField.style.fontSize = '16px';
+            editField.style.border = '2px solid #ccc';
+            editField.style.borderRadius = '8px';
+            editField.style.marginBottom = '10px';
+            editField.style.resize = 'vertical';
+            editField.style.backgroundColor = '#fafafa';
 
-            // Очищаем содержимое и добавляем поле ввода и кнопку
+            // Очищаем содержимое и добавляем поле ввода
             descriptionElement.innerHTML = '';
             descriptionElement.appendChild(editField);
-            descriptionElement.appendChild(saveButton);
+
+            // Добавляем кнопку сохранения под полем редактирования
+            const newSaveButton = document.createElement('button');
+            newSaveButton.className = 'save-description-button';
+            newSaveButton.textContent = 'Save';
+            descriptionElement.appendChild(newSaveButton);
+
+            // Показать кнопку сохранения
+            newSaveButton.style.display = 'block';
 
             // Обработчик нажатия на кнопку сохранения
-            saveButton.addEventListener('click', async () => {
+            newSaveButton.addEventListener('click', async () => {
                 const newDescription = editField.value.trim();
 
-                // Проверяем, если описание не изменилось
                 if (newDescription === currentDescription || newDescription === '') {
-                    descriptionElement.innerHTML = originalDescription; // Восстанавливаем оригинальное описание
-                    isEditing = false; // Сбрасываем флаг редактирования
+                    descriptionElement.innerHTML = originalDescription;
+                    newSaveButton.style.display = 'none'; // Скрыть кнопку сохранения
+                    isEditing = false;
                     return;
                 }
 
                 try {
-                    // Отправляем данные на сервер
                     const response = await fetch(`/photos/edit-description/${descriptionElement.dataset.photoId}/`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/x-www-form-urlencoded',
-                            'X-CSRFToken': getCsrfToken(), // Добавляем CSRF-токен
+                            'X-CSRFToken': getCsrfToken(),
                         },
                         body: `description=${encodeURIComponent(newDescription)}`
                     });
 
                     if (response.ok) {
-                        // Обновляем текст описания
                         descriptionElement.textContent = newDescription;
+                        newSaveButton.style.display = 'none'; // Скрыть кнопку сохранения после успешного сохранения
                     } else {
                         alert('Failed to update description.');
-                        descriptionElement.innerHTML = originalDescription; // Восстанавливаем старое описание
+                        descriptionElement.innerHTML = originalDescription;
+                        newSaveButton.style.display = 'none'; // Скрыть кнопку сохранения
                     }
                 } catch (error) {
                     alert('An error occurred.');
-                    descriptionElement.innerHTML = originalDescription; // Восстанавливаем старое описание
+                    descriptionElement.innerHTML = originalDescription;
+                    newSaveButton.style.display = 'none'; // Скрыть кнопку сохранения
                 } finally {
-                    isEditing = false; // Сбрасываем флаг редактирования
+                    isEditing = false;
                 }
             });
         });
     }
 
-    // Функция для получения CSRF-токена (если используется Django)
     function getCsrfToken() {
         const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
         return csrfCookie ? csrfCookie.split('=')[1] : '';

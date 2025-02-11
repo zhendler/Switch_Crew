@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, APIRouter, Form, status, Request
 from fastapi.templating import Jinja2Templates
@@ -188,6 +190,27 @@ async def delete_tag_by_name(
     return JSONResponse(content={"detail": f"Tag {tag_name} deleted"}, status_code=200)
 
 
+# @tag_router.post(
+#     "/tags/delete/",
+#     summary="Delete a tag by name",
+#     description="""This endpoint deletes a tag from the database by its name.
+#     If the tag is not found, an error message is returned.""",
+#     operation_id="delete_tag",
+#     include_in_schema=False,
+# )
+# async def delete_tag_by_name(
+#     request: Request, tag_name: str = Form(...), db: AsyncSession = Depends(get_db)
+# ):
+#     user = await get_current_user_cookies(request, db)
+#     if user.role_id not in [1, 2]:
+#         return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
+#
+#     tag_repo = TagRepository(db)
+#     await tag_repo.delete_tag_by_name(tag_name)
+#
+#     return RedirectResponse("/tags/", status_code=302)
+
+
 @tag_router.put(
     "/admin/update/{tag_name}-{tag_new_name}/",
     summary="Update an existing tag's name",
@@ -216,25 +239,32 @@ async def update_tag_name(
     return await tag_repo.update_tag_name(tag_name, tag_new_name)
 
 
-@tag_router.get(
-    "/{tag_name}/photos/",
-    summary="Get photos by tag",
-    description="""
-    Retrieves all photos associated with a specific tag. 
-    The tag name must be specified, and the associated photos will be returned as a list.
-    """,
-    response_model=list[PhotoResponse],
-)
-async def get_photos_by_tag(tag_name: str, db: AsyncSession = Depends(get_db)):
-    """
-    Endpoint to retrieve photos by tag name.
-
-    This endpoint fetches all photos associated with a specific tag in the database.
-
-    :param tag_name: The name of the tag whose photos are to be retrieved (required).
-    :param db: Database session dependency.
-    :return: A list of `PhotoResponse` objects representing the photos.
-    :raises HTTPException: If the tag or photos are not found.
-    """
+@tag_router.get("/{tag_name}/photos/")
+async def get_photos_by_tag(
+    request: Request, tag_name: str, db: AsyncSession = Depends(get_db)
+):
     tag_repo = TagRepository(db)
-    return await tag_repo.get_photos_by_tag(tag_name)
+
+    photos = await tag_repo.get_photos_by_tag(tag_name)
+    user = await get_current_user_cookies(request, db)
+
+    if isinstance(photos, List):
+        return templates.TemplateResponse(
+            "/photos/photos_by_tag.html",
+            {
+                "request": request,
+                "title": tag_name.capitalize(),
+                "photos": photos,
+                "user": user,
+            },
+        )
+
+    else:
+        return templates.TemplateResponse(
+            "/photos/photos_by_tag.html",
+            {
+                "request": request,
+                "title": tag_name.capitalize(),
+                "user": user,
+            },
+        )

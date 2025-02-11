@@ -24,7 +24,7 @@
 }
 
 .photo-details {
-    position: relative; /* Добавим относительное позиционирование для корректной работы абсолютного позиционирования кнопки */
+    position: relative; /* Для правильного расположения внутренних элементов */
     margin-top: 10px;
 }
 
@@ -111,12 +111,11 @@
 .comment {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    gap: 10px;
 }
 
 .comment-section {
     width: 25%; /* Фиксированная ширина */
-    max-width: 300px; /* Ограничение на максимальную ширину */
     padding: 10px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -241,6 +240,14 @@
     transition: filter 0.3s;
 }
 
+.action-icon-description {
+    width: 20px; /* Размер иконки */
+    height: 20px;
+    object-fit: contain;
+    filter: grayscale(50%);
+    transition: filter 0.3s;
+}
+
 .delete-button:hover .action-icon {
     filter: none; /* Убираем фильтр при наведении */
 }
@@ -308,7 +315,7 @@
 .delete-button-container {
     display: flex;
     justify-content: flex-end; /* Выравниваем кнопку удаления по правому краю */
-    margin-top: 10px; /* Расстояние от фотографии */
+    margin-bottom: 10px; /* Расстояние от фотографии */
 }
 
 .delete-button-photo {
@@ -363,24 +370,14 @@
     border-radius: 4px;
     margin-top: 10px;
     transition: background-color 0.3s;
+    margin-top: 5px; /* Отступ сверху */
 }
 
 .save-button:hover {
     background-color: #45a049;
 }
 
-.edit-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease-in-out;;
-}
-
-.edit-button-comment {
+.edit-button-comment, .edit-button-description{
     background: none;
     border: none;
     cursor: pointer;
@@ -434,12 +431,6 @@
 /* Эффект наведения на кнопку */
 .save-button:hover {
     background-color: #4fa3d1;
-    transform: translateY(-2px); /* Легкий эффект поднятия кнопки */
-}
-
-/* Добавляем эффект при нажатии */
-.save-button:active {
-    transform: translateY(0); /* Снимаем эффект поднятия */
 }
 
 /* Шрифт для текста комментариев и кнопок */
@@ -463,21 +454,29 @@
 }
 
 .edit-description-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: relative; /* Убираем absolute, чтобы она располагалась в потоке документа */
+    display: flex;
+    justify-content: flex-end; /* Выравниваем кнопки по правому краю */
+    gap: 10px; /* Отступ между кнопками */
+    margin-top: 10px; /* Отступ от предыдущего контента */
 }
 
 #edit-description-input {
     width: 100%;
-    height: 100px;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 10px;
+    height: 120px;
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 15px;
     box-sizing: border-box;
-    resize: none;
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#edit-description-input:focus {
+    border-color: #4CAF50; /* Изменение цвета границы при фокусе */
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5); /* Эффект подсветки */
 }
 
 .hidden {
@@ -513,4 +512,23 @@
     border-color: #61dafb;
 }
 
+.save-description-button {
+    display: block;
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    padding: 5px 15px;  /* Уменьшаем размер кнопки */
+    font-size: 14px;  /* Меньший шрифт */
+    font-weight: 600;  /* Легкий жирный шрифт */
+    cursor: pointer;
+    border-radius: 4px;  /* Скругляем углы */
+    transition: background-color 0.3s;
+}
 
+.save-description-button:hover {
+    background-color: #4fa3d1;
+}
+
+.save-description-button:focus {
+    outline: none; /* Убираем обводку при фокусе */
+}

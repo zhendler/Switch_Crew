@@ -46,7 +46,7 @@
             <h3>Popular tags</h3>
             <div class="tag-list">
                 {% for tag in popular_tags[:6] %}
-                <a href="/tag/{{ tag.name }}/photos/" class="tag-tile">
+                <a href="/tags/{{ tag.name }}/photos/" class="tag-tile">
                     <p class="tag-name">#{{ tag.name }}</p>
                 </a>
                 {% endfor %}

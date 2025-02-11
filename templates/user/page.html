@@ -64,7 +64,7 @@
     {% if photos %}
         {% for photo in photos %}
         <div class="card">
-            <a href="/photo/{{photo.id}}">
+            <a href="/photos/{{photo.id}}">
                 <img src="{{ photo.url_link }}" alt="Photo" class="card-img">
             </a>
             <div class="card-content">
@@ -74,7 +74,7 @@
                 <p class="description">{{ photo.description }}</p>
                 <div class="card-tags">
                     {% for tag in photo.tags %}
-                    <a href="/tag/{{ tag.name }}/photos/" class="tag-link">
+                    <a href="/tags/{{ tag.name }}/photos/" class="tag-link">
                         #{{ tag.name }}
                     </a>
                     {% endfor %}

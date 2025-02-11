@@ -1,29 +1,73 @@
 document.addEventListener('DOMContentLoaded', function() {
     const commentForm = document.querySelector('.comment-form');
     const commentInput = document.querySelector('.comment-input');
-    const commentsContainer = document.querySelector('.comments');
+    const submitButton = commentForm.querySelector('button[type="submit"]');
+    let commentsContainer = document.querySelector('.comments');
+    let isSubmitting = false;
 
-    if (!commentsContainer) {
-        const noCommentsElement = document.querySelector('.no-comments');
-        if (noCommentsElement) {
-            noCommentsElement.remove();
+    // Add loading state styles to the submit button
+    submitButton.style.position = 'relative';
+
+    function setSubmitButtonLoading(loading) {
+        if (loading) {
+            isSubmitting = true;
+            submitButton.disabled = true;
+            submitButton.style.opacity = '0.7';
+            submitButton.style.cursor = 'not-allowed';
+            // Можно добавить спиннер или другую индикацию загрузки
+            submitButton.textContent = 'Posting...';
+        } else {
+            isSubmitting = false;
+            submitButton.disabled = false;
+            submitButton.style.opacity = '1';
+            submitButton.style.cursor = 'pointer';
+            submitButton.textContent = 'Post'; // Вернуть оригинальный текст
         }
-        const newCommentsContainer = document.createElement('div');
-        newCommentsContainer.className = 'comments';
-        commentForm.parentNode.insertBefore(newCommentsContainer, commentForm.nextSibling);
+    }
+
+    // Ensure comments container always exists
+    function ensureCommentsContainer() {
+        if (!commentsContainer) {
+            const noCommentsElement = document.querySelector('.no-comments');
+            if (noCommentsElement) {
+                noCommentsElement.remove();
+            }
+            commentsContainer = document.createElement('div');
+            commentsContainer.className = 'comments';
+            commentForm.parentNode.insertBefore(commentsContainer, commentForm.nextSibling);
+        }
+        return commentsContainer;
+    }
+
+    function updateCommentsVisibility() {
+        commentsContainer = document.querySelector('.comments');
+        if (commentsContainer && commentsContainer.children.length === 0) {
+            const noCommentsElement = document.createElement('p');
+            noCommentsElement.className = 'no-comments';
+            noCommentsElement.textContent = 'No comments yet.';
+            commentsContainer.parentNode.insertBefore(noCommentsElement, commentsContainer);
+            commentsContainer.remove();
+            commentsContainer = null;
+        }
     }
 
     async function handleCommentEdit(commentId, currentContent) {
         const commentText = document.querySelector(`#comment-text-${commentId}`);
-        const originalContent = currentContent;
+        const editButton = document.querySelector(`[data-comment-id="${commentId}"]`);
+        const existingEditForm = commentText.parentNode.querySelector('.edit-form');
+
+        if (existingEditForm) {
+            existingEditForm.remove();
+            commentText.style.display = 'block';
+            return;
+        }
 
         const editForm = document.createElement('div');
         editForm.className = 'edit-form';
         editForm.innerHTML = `
-            <textarea class="comment-input">${originalContent}</textarea>
+            <textarea class="comment-input">${currentContent}</textarea>
             <div class="edit-buttons">
                 <button type="button" class="save-button">Save</button>
-                <button type="button" class="cancel-button">Cancel</button>
             </div>
         `;
 
@@ -32,12 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const textarea = editForm.querySelector('textarea');
         const saveButton = editForm.querySelector('.save-button');
-        const cancelButton = editForm.querySelector('.cancel-button');
-
-        cancelButton.addEventListener('click', () => {
-            editForm.remove();
-            commentText.style.display = 'block';
-        });
 
         saveButton.addEventListener('click', async () => {
             const newContent = textarea.value.trim();
@@ -47,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData();
                 formData.append('comment_content', newContent);
 
-                const response = await fetch(`/comment/edit/${commentId}/`, {
+                const response = await fetch(`/comments/edit/${commentId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
@@ -59,10 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (response.ok) {
                     commentText.textContent = newContent;
-                    const editButton = document.querySelector(`[data-comment-id="${commentId}"]`);
-                    if (editButton) {
-                        editButton.setAttribute('data-comment-text', newContent);
-                    }
+                    editButton.setAttribute('data-comment-text', newContent);
                     editForm.remove();
                     commentText.style.display = 'block';
                 } else {
@@ -79,8 +114,36 @@ document.addEventListener('DOMContentLoaded', function() {
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
 
+    async function handleCommentDelete(commentId, commentCard) {
+        try {
+            const response = await fetch(`/comments/delete/${commentId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                commentCard.remove();
+                updateCommentsVisibility();
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to delete comment');
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            alert('Failed to delete comment. Please try again.');
+        }
+    }
+
     commentForm.addEventListener('submit', async function(e) {
         e.preventDefault();
+
+        if (isSubmitting) {
+            return; // Предотвращаем повторную отправку
+        }
 
         const photoId = window.location.pathname.split('/').pop();
         const commentContent = commentInput.value.trim();
@@ -88,6 +151,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!commentContent) {
             return;
         }
+
+        setSubmitButtonLoading(true);
 
         const formData = new FormData();
         formData.append('comment_content', commentContent);
@@ -106,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (response.ok) {
+                const container = ensureCommentsContainer();
                 const commentElement = document.createElement('div');
                 commentElement.className = 'comment-card';
                 commentElement.innerHTML = `
@@ -140,29 +206,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p class="comment-text" id="comment-text-${data.id}">${data.content}</p>
                 `;
 
-                const commentsSection = document.querySelector('.comments');
-                if (commentsSection.children.length === 0) {
-                    commentsSection.appendChild(commentElement);
+                if (container.children.length === 0) {
+                    container.appendChild(commentElement);
                 } else {
-                    commentsSection.insertBefore(commentElement, commentsSection.firstChild);
+                    container.insertBefore(commentElement, container.firstChild);
                 }
 
                 commentInput.value = '';
-
-                const noComments = document.querySelector('.no-comments');
-                if (noComments) {
-                    noComments.remove();
-                }
             } else {
                 throw new Error(data.error || 'Failed to post comment');
             }
         } catch (error) {
             console.error('Error details:', error);
             alert('Failed to post comment. Please try again. Error: ' + error.message);
+        } finally {
+            setSubmitButtonLoading(false); // Восстанавливаем кнопку независимо от результата
         }
     });
 
-    commentsContainer.addEventListener('click', function(event) {
+    document.addEventListener('click', function(event) {
         const editButton = event.target.closest('.edit-button-comment');
         if (editButton) {
             const commentId = editButton.dataset.commentId;
@@ -174,32 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (deleteButton) {
             const commentId = deleteButton.closest('.delete-form').getAttribute('data-comment-id');
             const commentCard = deleteButton.closest('.comment-card');
-
-            fetch(`/comment/delete/${commentId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
-                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
-                },
-                credentials: 'include'
-            })
-            .then(response => {
-                if (response.ok) {
-                    commentCard.remove();
-
-                    const commentsSection = document.querySelector('.comments');
-                    if (commentsSection && commentsSection.children.length === 0) {
-                        const noCommentsElement = document.createElement('p');
-                        noCommentsElement.className = 'no-comments';
-                        noCommentsElement.textContent = 'No comments yet.';
-                        commentsSection.parentNode.insertBefore(noCommentsElement, commentsSection);
-                        commentsSection.remove();
-                    }
-                } else {
-                    response.json().then(data => alert(data.error || 'Error deleting comment'));
-                }
-            })
-            .catch(error => console.error('Network error:', error));
+            handleCommentDelete(commentId, commentCard);
         }
     });
 });

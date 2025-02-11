@@ -151,3 +151,9 @@
 .card-tags {
     margin-bottom: 5px; /* Уменьшаем отступ снизу */
 }
+
+@media (max-width: 1023px) and (min-width: 768px) {
+    .card {
+    width: 200px;
+}
+}

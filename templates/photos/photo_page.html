@@ -16,6 +16,15 @@
                             </button>
                         </form>
                     </div>
+
+                <div class="edit-description-container">
+                    <button class="edit-button-description" id="edit-description-button">
+                        <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
+                    </button>
+                    <button class="save-button" id="save-description-button" style="display: none;">
+                        Save
+                    </button>
+                </div>
                 {% endif %}
                 <div class="user-info">
                     <a href="/page/{{ photo.owner.username }}">
@@ -26,28 +35,24 @@
                     </a>
                 </div>
 
-                {% if photo.owner.username == user.username %}
-                    <div class="edit-description-container">
-                        <button class="edit-button" id="edit-description-button">
-                            <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
-                        </button>
-                    </div>
-                {% endif %}
                 <div id="description-container">
                     <p class="description" id="photo-description" data-photo-id="{{ photo.id }}">{{ photo.description }}</p>
                     <form id="edit-description-form" action="/photos/edit-description/{{ photo.id }}" method="post" style="display: none;">
                         <textarea name="description" id="edit-description-input" class="edit-comment-input">{{ photo.description }}</textarea>
-                        <button type="submit" class="save-button">Save</button>
+                        <button type="submit" class="save-button" id="save-description-button" style="display: none;">
+                            Save
+                        </button>
                     </form>
                 </div>
+
                 <div class="tags">
                     {% for tag in photo.tags %}
-                        <a href="/tag/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
+                        <a href="/tags/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
                     {% endfor %}
                 </div>
             </div>
         </div>
-
+        
         <div class="reactions">
             {% for reaction_id in range(1, 9) %}
             <div class="reaction-container" onclick="addReaction({{ reaction_id }}, {{ photo.id }})">

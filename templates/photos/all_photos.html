@@ -14,7 +14,7 @@
                     <p class="description">{{ photo.description }}</p>
                     <div class="card-tags">
                         {% for tag in photo.tags %}
-                        <a href="/tag/{{ tag.name }}/photos/" class="tag-link">
+                        <a href="/tags/{{ tag.name }}/photos/" class="tag-link">
                             #{{ tag.name }}
                         </a>
                         {% endfor %}

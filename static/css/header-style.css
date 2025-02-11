@@ -68,18 +68,21 @@ html, body {
 }
 
 /* Эффект при наведении */
-.header .nav ul li a:hover {
-    background-color: #61dafb; /* Цвет фона при наведении */
-    color: #20232a; /* Цвет текста при наведении */
-    border-color: #61dafb; /* Цвет рамки при наведении */
-    transform: scale(1.05); /* Легкое увеличение кнопки при наведении */
-}
+
 
 /* Эффект активной кнопки */
 .header .nav ul li a:active {
     background-color: #20232a; /* Темный фон при клике */
     color: #61dafb; /* Цвет текста при клике */
     border-color: #20232a; /* Цвет рамки при клике */
+    transform: scale(0.5);
+}
+
+.header .nav ul li a:hover {
+    background-color: #61dafb; /* Цвет фона при наведении */
+    color: #20232a !important; /* Цвет текста при наведении */
+    border-color: #61dafb; /* Цвет рамки при наведении */
+    transform: scale(1.2); /* Легкое увеличение кнопки при наведении */
 }
 
 /* Подчеркивание при наведении */
@@ -155,6 +158,8 @@ html, body {
 .user-actions a:hover {
     background-color: #61dafb;
     color: #20232a;
+    border-color: #61dafb; /* Цвет рамки при наведении */
+    transform: scale(1.1); /* Легкое увеличение кнопки при наведении */
 }
 
 .user-actions .register {
@@ -220,6 +225,7 @@ html, body {
 /* Эффект при наведении */
 .add-button:hover {
     background-color: #61dafb;  /* Цвет фона при наведении (цвет логотипа) */
+    transform: scale(1.07); /* Легкое увеличение кнопки при наведении */
 }
 
 /* Иконка плюса */
@@ -233,6 +239,7 @@ html, body {
 /* Эффект при наведении на иконку */
 .add-button:hover .plus-icon {
     color: #20232a;  /* Цвет плюса при наведении (темный цвет, как фон шапки) */
+    transform: scale(1.07); /* Легкое увеличение кнопки при наведении */
 }
 
 .logo img {
@@ -299,6 +306,8 @@ html, body {
 .search-bar button:hover {
     color: #20232a;
     background-color: #61dafb;
+    border-color: #61dafb; /* Цвет рамки при наведении */
+    transform: scale(1.08); /* Легкое увеличение кнопки при наведении */
 }
 
 @media (max-width: 768px) {
