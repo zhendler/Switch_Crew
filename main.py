@@ -19,7 +19,7 @@ from src.photos.routers import photo_router, mainrouter
 from src.user_profile.repos import UserProfileRepository
 from src.user_profile.routers import router as user_router
 from src.utils.front_end_utils import truncatechars
-from src.web.routers import router as web_router
+from src.subscription.routers import router as subscription_router
 
 app = FastAPI()
 
@@ -41,22 +41,19 @@ app = FastAPI()
 
 app.include_router(tag_router, prefix="/tags", tags=["tags"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
-app.include_router(
-    photo_router, prefix="/photos", tags=["photos"]
-)
-app.include_router(
-    comment_router, prefix="/comments", tags=["comments"]
-)
+app.include_router(photo_router, prefix="/photos", tags=["photos"])
+app.include_router(comment_router, prefix="/comments", tags=["comments"])
 app.include_router(
     user_router,
     prefix="/user_profile",
     tags=["user_profile"],
 )
-app.include_router(web_router, prefix="")
 app.include_router(reaction_router, prefix="/reaction", tags=["reactions"])
+app.include_router(subscription_router, prefix="/subscriptions", tags=["Subscriptions"])
 app.include_router(mainrouter, prefix="")
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
+
 
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["truncatechars"] = truncatechars
@@ -82,10 +79,10 @@ async def search(
         {
             "request": request,
             "user": user,
-            'query': query,
-            'searched_users': searched_users,
-            'tags': tags
-        }
+            "query": query,
+            "searched_users": searched_users,
+            "tags": tags,
+        },
     )
 
 
