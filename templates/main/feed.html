@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/feed.css">
+<link rel="stylesheet" href="/static/css/comments-feed-style.css">
+<div class="photo-feed-container">
+    <div class="photo-grid">
+        {% if detail %}
+            <div class="auth-prompt-container">
+                <h1 class="auth-prompt-title">Welcome to our website!</h1>
+                <p class="auth-prompt-subtitle">Join our creative community to see amazing photos and share your work</p>
+
+                <div class="auth-buttons">
+                    <a href="/auth/login_page" class="auth-button login-button">Login</a>
+                    <a href="/auth/register_page" class="auth-button register-button">Registration</a>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3 class="feature-title">Share photos</h3>
+                        <p class="feature-description">Upload and share your best moments</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Communicate</h3>
+                        <p class="feature-description">React to photos and interact with other photographers</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Explore</h3>
+                        <p class="feature-description">Discover amazing photographs from talented authors</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+
+            {% if photos %}
+                {% for photo in photos %}
+                <div class="photo-card">
+                    <a href="/photos/{{ photo.id }}">
+                        <img src="{{ photo.url_link }}" alt="Photo by {{ photo.owner.username }}" class="photo-image">
+                    </a>
+                    <div class="photo-info">
+                        <div class="reactions">
+                            {% for reaction_id in range(1, 9) %}
+                            <div class="reaction-container" onclick="addReaction({{ reaction_id }}, {{ photo.id }})">
+                                <div class="reaction-circle {% if reactions[photo.id].reaction_active == reaction_id %}active{% endif %}">
+                                    <img src="/static/images/reactions/reaction-{{ reaction_id }}.png" alt="Reaction {{ reaction_id }}">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <a href="/page/{{ photo.owner.username }}" class="photo-user">
+                            <img src="{{ photo.owner.avatar_url }}" class="user-avatar" alt="{{ photo.owner.username }}">
+                            <span class="author-username">{{ photo.owner.username }}</span>
+                        </a>
+                        <p class="photo-caption">{{ photo.description }}</p>
+                        <div class="photo-tags">
+                            {% for tag in photo.tags %}
+                                <a href="/tags/{{ tag.name }}/photos/" class="tag-link">#{{ tag.name }}</a>
+                            {% endfor %}
+                        </div>
+                        <p class="photo-caption">{{ photo.created_at | format_datetime }}</p>
+                    </div>
+                    <div class="feed-comments-section">
+                        <button class="feed-comment-toggle" onclick="toggleComments(this)">
+                            <span class="comment-count">{{ photo.comments|length }} comments</span>
+                            <img src="/static/images/arrow.png" alt="Toggle comments" style="width: 12px; height: 12px;">
+                        </button>
+
+                        <div class="feed-comments-container">
+                            <form class="feed-comment-form" data-photo-id="{{ photo.id }}">
+                                <textarea class="feed-comment-input" placeholder="Add a comment..."></textarea>
+                                <button type="submit" class="feed-comment-submit">Post</button>
+                            </form>
+
+                            {% if photo.comments %}
+                                {% for comment in photo.comments %}
+                                <div class="feed-comment-card">
+                                    <a href="/page/{{ comment.user.username }}">
+                                        <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="feed-comment-avatar">
+                                    </a>
+                                    <div class="feed-comment-content">
+                                        <a href="/page/{{ comment.user.username }}" class="feed-comment-author">
+                                            {{ comment.user.username }}
+                                        </a>
+                                        <span class="feed-comment-text">{{ comment.content }}</span>
+                                    </div>
+                                    {% if comment.user.username == user.username or user.role_id == 1 or photo.owner_id == user.id %}
+                                    <div class="feed-comment-actions">
+                                        {% if comment.user.username == user.username %}
+                                        <button class="feed-comment-action edit-button-comment" data-comment-id="{{ comment.id }}" data-comment-text="{{ comment.content }}">
+                                            <img src="/static/images/pencil.png" alt="Edit">
+                                        </button>
+                                        {% endif %}
+                                        <button class="feed-comment-action delete-button" data-comment-id="{{ comment.id }}">
+                                            <img src="/static/images/recycling-bin.png" alt="Delete">
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <H2>You don't have any subscriptions yet, subscribe to see publications in your feed.</H2>
+            {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+<script src="/static/scripts/comments-feed-toggle-script.js?v=1.0.1"></script>
+<script src="/static/scripts/comments-feed-script.js?v=1.0.1"></script>
+<script src="/static/scripts/reactions-scripts.js?v=1.0.1"></script>
+<script src="/static/scripts/comments-scripts.js?v=1.0.1"  defer></script>
+{% endblock %}
+

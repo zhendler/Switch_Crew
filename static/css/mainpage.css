@@ -1,4 +1,3 @@
-/* Общий контейнер для страницы */
 .container {
     display: flex;
     max-width: 1200px;
@@ -7,49 +6,43 @@
     box-sizing: border-box;
 }
 
-/* Левая секция */
 .main-content {
     flex: 7;
     max-width: 70%;
     margin-right: 20px;
 }
 
-/* Правая колонка */
 .sidebar {
     flex: 3;
     max-width: 30%;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding-top: 68px; /* Добавляем отступ сверху */
+    padding-top: 68px;
 }
 
-/* Секция с фотографиями */
-.photo-section { /* Фиксированная высота */
-    overflow: hidden; /* Обрезка содержимого */
+.photo-section {
+    overflow: hidden;
 }
 
 .photo-section h2 {
     margin-bottom: 15px;
 }
 
-/* Фиксированные секции боковой панели */
 .sidebar-section {
-    background-color: #fff; /* Фон белый, как у карточек */
-    border: 1px solid #ddd; /* Граница */
-    border-radius: 8px; /* Скругление углов */
+    background-color: #fff;/
+    border: 1px solid #ddd; /
+    border-radius: 8px;
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень для подсветки */
-    height: 200px; /* Фиксированная высота для каждой боковой секции */
-    overflow: hidden; /* Обрезка содержимого */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    height: 200px;
+    overflow: hidden;
 }
 
-/* Заголовки для секций */
 .sidebar-section h3 {
     margin-bottom: 10px;
 }
-
-/* Стили для списка в секциях */
+/
 .sidebar-section ul {
     list-style: none;
     padding: 0;
@@ -60,7 +53,6 @@
     margin-bottom: 8px;
 }
 
-/* Блок с пользователями как плиточки */
 .user-list {
     display: flex;
     justify-content: space-between;
@@ -92,7 +84,6 @@
     text-decoration: none;
 }
 
-/* Карточки фотографий */
 .card-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* 3 карточки в строке */
@@ -100,8 +91,8 @@
 }
 
 .card:hover {
-    transform: scale(1.05); /* Увеличение всей карточки при наведении */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Тень при наведении на карточку */
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .card {
@@ -110,7 +101,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     border: 2px solid #ddd;
-    height: 240px;
+    height: 260px;
 }
 
 .card-img {
@@ -121,9 +112,7 @@
 
 .card-content {
     display: flex;
-    align-items: center; /* Центрируем элементы по вертикали */
-    gap: 10px; /* Добавляем пространство между аватаром и ником */
-    padding: 10px;
+    align-items: center;
 }
 
 .card-content a {
@@ -131,7 +120,7 @@
 }
 
 .card-content a:hover {
-    color: #61dafb; /* Цвет текста при наведении */
+    color: #61dafb;
 }
 
 .card-content .author {
@@ -139,15 +128,14 @@
 }
 
 .card-content .author:hover {
-    color: #61dafb; /* Цвет текста для имени пользователя */
+    color: #61dafb;
 }
 
-/* Описание вынесено отдельно, чтобы быть под аватаром и ником */
 .description {
     font-size: 14px;
     color: black;
     padding-left: 15px;
-    margin-top: 0px; /* Добавляем отступ сверху */
+    margin-top: 0px;
 }
 
 .author {
@@ -156,15 +144,15 @@
 
 .tag-list {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* 3 tags per row */
-    gap: 10px; /* Space between the tags */
-    width: 100%; /* Ensure the tag list takes full width */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    width: 100%;
 }
 
 .user-list, .comment-list {
     display: flex;
     gap: 10px;
-    height: 75%; /* Плитки занимают все пространство секции */
+    height: 75%;
 }
 
 .tag-tile {
@@ -176,17 +164,17 @@
     border-radius: 8px;
     padding: 10px;
     text-decoration: none;
-    color: #000; /* Set text color to black for the tags */
+    color: #000;
     transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
 }
 
 .tag-tile a {
-    color: inherit; /* Ensure tag links inherit the color of their parent */
+    color: inherit;
     text-decoration: none;
 }
 
 .user-tile, .comment-tile {
-    flex: 1; /* Равное распределение плиток */
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -197,35 +185,35 @@
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: 10px;
-    text-decoration: none; /* Убираем стандартное подчеркивание ссылок */
-    color: #000; /* Цвет текста */
+    text-decoration: none;
+    color: #000;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .tag-tile:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    color: #61dafb; /* Light blue color on hover */
+    color: #61dafb;
     border-color: #61dafb;
 }
 
 .user-tile:hover {
-    transform: scale(1.05); /* Эффект увеличения */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Тень при наведении */
-    border-color: #61dafb; /* Цвет границы при наведении */
-    color: #61dafb; /* Цвет текста при наведении */
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    border-color: #61dafb;
+    color: #61dafb;
 }
 
 .user-tile:hover .user-avatar {
-    border-color: #61dafb; /* Цвет границы аватарки */
+    border-color: #61dafb;
 }
 
 .user-tile:hover .user-name {
-    color: #61dafb; /* Цвет имени пользователя при наведении */
+    color: #61dafb;
 }
 
 .comment-tile:hover {
-    transform: scale(1.05); /* Эффект увеличения при наведении */
+    transform: scale(1.05);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     border-color: #61dafb;
     color: #61dafb;
@@ -238,7 +226,7 @@
 }
 
 .comment-tile:hover .comment-main-text {
-    color: #61dafb !important; /* Явное изменение цвета текста при наведении */
+    color: #61dafb !important;
 }
 
 .tag-name {
@@ -256,26 +244,29 @@
 }
 
 .sidebar-section a:hover {
-    text-decoration: none; /* Убираем подчеркивание при наведении */
+    text-decoration: none;
 }
 
 .comment-avatar {
-    width: 32px; /* Ширина аватарки */
-    height: 32px; /* Высота аватарки */
-    border-radius: 50%; /* Округлая форма */
-    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
-    border: 1px solid #ddd; /* Рамка вокруг аватарки */
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+.comment-avatar:hover {
+     border-color: #61dafb;
 }
 
 .comment-comment-avatar {
-    width: 32px; /* Ширина аватарки */
-    height: 32px; /* Высота аватарки */
-    border-radius: 50%; /* Округлая форма */
-    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
-    border: 2px solid #ccc; /* Рамка вокруг аватарки */
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
 }
 
-/* Десктопная версия */
 @media (min-width: 1024px) {
     .container {
         display: flex;
@@ -296,7 +287,6 @@
     }
 }
 
-/* Планшетная версия */
 @media (max-width: 1023px) and (min-width: 768px) {
     .container {
         display: flex;
@@ -325,7 +315,6 @@
 
 }
 
-/* Мобильная версия */
 @media (max-width: 767px) {
     .container {
         display: flex;
@@ -370,7 +359,6 @@
     }
 }
 
-/* Маленькие мобильные устройства */
 @media (max-width: 480px) {
     .container {
         padding: 5px;
@@ -403,7 +391,6 @@
     }
 }
 
-/* Общие стили для плиток */
 .user-tile, .comment-tile, .tag-tile {
     background-color: #fff;
     border-radius: 8px;
@@ -415,7 +402,6 @@
     color: inherit;
 }
 
-/* Фиксы для изображений и текста */
 .user-avatar, .comment-avatar {
     width: 40px;
     height: 40px;

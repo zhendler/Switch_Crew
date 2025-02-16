@@ -159,3 +159,14 @@ class ReactionRepository:
                 reaction_counts[reaction_id] = count
 
         return reaction_counts
+
+    async def get_all_reactions_in_feed(self, photos, user):
+        reaction_data = {}
+        for photo in photos:
+            reaction_counts = await self.get_reaction_counts(photo.id)
+            reaction_active = await self.get_reaction_by_user_and_photo(photo.id, user.id) if user else None
+            reaction_data[photo.id] = {
+                "reaction_counts": reaction_counts,
+                "reaction_active": reaction_active.reaction_id if reaction_active else None
+            }
+        return reaction_data

@@ -11,7 +11,7 @@
     align-items: center;
     gap: 10px;
     position: relative;
-    width: 100px; /* Фиксированная ширина для выравнивания */
+    width: 100px;
     justify-content: center;
 }
 

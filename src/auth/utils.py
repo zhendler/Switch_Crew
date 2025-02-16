@@ -188,12 +188,14 @@ async def check_user_banned(user: User = Depends(get_current_user)) -> None:
 async def get_current_user_cookies(request, db: AsyncSession):
     token = request.cookies.get("access_token")
     if token:
-        user = decode_access_token(token)
+        user_data = decode_access_token(token)
     else:
         return None
-    if user is not None:
+    if user_data is not None:
         user_repo = UserRepository(db)
-        user = await user_repo.get_user_by_username(user.username)
+        user = await user_repo.get_user_by_username(user_data.username)
+    else:
+        return None
 
     return user
 

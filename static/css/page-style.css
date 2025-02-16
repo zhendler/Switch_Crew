@@ -20,9 +20,9 @@
 
 .user-info-section {
     flex-grow: 1;
-    text-align: left; /* Текст выравнивается по левому краю */
-    position: relative; /* Для позиционирования кнопки внутри этого контейнера */
-    padding-top: 20px; /* Увеличиваем верхний отступ для кнопки */
+    text-align: left;
+    position: relative;
+
 }
 
 .user-avatar-section {
@@ -30,7 +30,7 @@
 }
 
 .fullname, .country, .birthdate, .registration-date {
-    font-size: 14px;
+    font-size: 15px;
     color: #666;
     margin: 0;
     line-height: 1.4;
@@ -58,7 +58,7 @@
 }
 
 .edit-profile-button, .save-button:focus {
-    outline: none; /* Убираем обводку при фокусе */
+    outline: none;
 }
 
 .edit-profile-button, .save-button:hover {
@@ -115,30 +115,45 @@ input:focus {
 }
 
 .profile-container {
-    margin: 20px auto; /* Центрирование контейнера по горизонтали */
+    margin: 20px auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center; /* Текст по центру */
+    text-align: center;
     background-color: #fff;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 600px; /* Ограничиваем ширину контейнера */
+    max-width: 700px;
     width: 100%;
 
 }
 
-.photo-count {
-    text-align: center;
-    margin: 16px auto;
+.photo-stats {
+    display: flex;
+    justify-content: center;
+    gap: 180px;
+    margin: 24px auto;
     font-size: 24px;
     color: #444;
+    margin-bottom: auto;
 }
 
-.photo-count .count {
+.photo-stats .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+}
+
+.photo-stats .count {
     font-size: 28px;
     font-weight: bold;
     color: #61dafb;
+
+}
+
+.photo-stats .label {
+    font-weight: bold;
 }
 
 .hidden {
@@ -146,15 +161,15 @@ input:focus {
 }
 
 .card {
-    width: calc(25% - 16px); /* Каждая карточка занимает 25% ширины с учетом отступов */
-    max-width: 200px; /* Максимальная ширина для карточки */
+    width: calc(25% - 16px);
+    max-width: 200px;
 }
 
 .card-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 16px; /* Расстояние между карточками */
-    justify-content: center; /* Центрируем карточки по горизонтали */
+    gap: 16px;
+    justify-content: center;
 }
 .alarm-message {
     color: red;
@@ -164,13 +179,13 @@ input:focus {
 }
 
 .verify-email-button {
-    position: absolute; /* Для позиционирования в правом верхнем углу */
+    position: absolute;
     top: 10px;
     right: 10px;
-    background-color: #28a745; /* Зелёный цвет */
+    background-color: #28a745;
     color: white;
     border: none;
-    padding: 8px 16px; /* Размер кнопки, аналогичный кнопке изменения профиля */
+    padding: 8px 16px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
@@ -179,10 +194,31 @@ input:focus {
 }
 
 .verify-email-button:hover {
-    background-color: #218838; /* Цвет при наведении */
+    background-color: #218838;
 }
 
 .verify-email-button:focus {
     outline: none;
-    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5); /* Тень при фокусе */
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.description{
+    margin-top: 0px
+}
+
+.tag-link-photo {
+    display: inline-block;
+    margin-right: 5px;
+    font-size: 12px;
+    color: #61dafb;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.tag-link-photo:hover {
+    transform: scale(1.1);
+    background-color: #61dafb;
+    color: #ffffff;
 }

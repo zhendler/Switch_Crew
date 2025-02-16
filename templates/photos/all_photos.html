@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<link rel="stylesheet" href="/static/css/all_photos.css">
 <p class="centered-title">{{ title }}</p>
 
 <div class="card-container-wrapper">
@@ -10,11 +10,18 @@
         <div class="card">
             <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                 <div class="card-content">
-                    <a href="/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                    <div class="user-link-info">
+                        <a href="/page/{{ photo.owner.username }}">
+                        <img src="{{ photo.owner.avatar_url }}" alt="Avatar" class="comment-avatar">
+                    </a>
+                    <a href="/page/{{photo.owner.username}}">
+                        <p class="author" >{{ photo.owner.username }}</p>
+                    </a>
+                    </div>
                     <p class="description">{{ photo.description }}</p>
                     <div class="card-tags">
                         {% for tag in photo.tags %}
-                        <a href="/tags/{{ tag.name }}/photos/" class="tag-link">
+                        <a href="/tags/{{ tag.name }}/photos/" class="tag-link-photo">
                             #{{ tag.name }}
                         </a>
                         {% endfor %}

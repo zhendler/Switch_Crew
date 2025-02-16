@@ -10,6 +10,7 @@ from config.db import get_db
 from src.auth.repos import UserRepository
 from src.photos.repos import PhotoRepository
 from src.reactions.routers import reaction_router
+from src.subscription.repos import SubscriptionRepository
 from src.tags.repos import TagRepository
 from src.tags.routers import tag_router
 from src.comments.routers import router as comment_router
@@ -18,7 +19,7 @@ from src.auth.utils import BANNED_CHECK, ACTIV_AND_BANNED, get_current_user_cook
 from src.photos.routers import photo_router, mainrouter
 from src.user_profile.repos import UserProfileRepository
 from src.user_profile.routers import router as user_router
-from src.utils.front_end_utils import truncatechars
+from src.utils.front_end_utils import truncatechars, format_datetime
 from src.subscription.routers import router as subscription_router
 
 app = FastAPI()
@@ -104,6 +105,14 @@ async def page(request: Request,
 
     detail = request.query_params.get("detail")
 
+    sub_repo = SubscriptionRepository(db)
+    if user:
+        subscribe = await sub_repo.check_is_subscribed(user.id, user_page.id)
+    else:
+        subscribe = False
+
+    amount_of_subscribes = await sub_repo.amount_of_subscribes(user_page.id)
+
     return templates.TemplateResponse(
         "/user/page.html",
         {
@@ -114,5 +123,7 @@ async def page(request: Request,
             "Date_reg": date_of_registration,
             "amount_of_photos": amount_of_photos,
             "detail": detail,
+            "subscribe": subscribe,
+            "amount_of_subscribes": amount_of_subscribes,
         },
     )

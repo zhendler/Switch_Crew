@@ -153,17 +153,6 @@ class PhotoRepository:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    # async def get_all_photos(self):
-    #     """
-    #     Retrieve all photos in the database.
-    #
-    #     Returns:
-    #         list[Photo]: A list of all photos in the database.
-    #     """
-    #     query = select(Photo)
-    #     result = await self.session.execute(query)
-    #     return result.scalars().all()
-
     async def get_all_photos(self, page):
 
         photos_per_page = 20
@@ -227,6 +216,20 @@ class PhotoRepository:
         tags_result = tags.scalars().unique().all()
 
         return users_result, photos_result, tags_result, comments_result
+
+    async def get_following_photos(self, users):
+        following_ids = [following_user.id for following_user in users]
+
+        photos_query = (
+            select(Photo)
+            .where(Photo.owner_id.in_(following_ids))
+            .order_by(Photo.created_at.desc())
+            .options(joinedload(Photo.owner), joinedload(Photo.tags))
+        )
+        photos_result = await self.session.execute(photos_query)
+        photos = photos_result.unique().scalars().all()
+
+        return photos
 
 class PhotoRatingRepository:
     def __init__(self, session: AsyncSession):

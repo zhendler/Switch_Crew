@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import get_db
-from src.auth.utils import get_current_user
+from src.auth.utils import get_current_user, get_current_user_cookies
 from src.models.models import User
 from src.auth.repos import UserRepository
 from src.subscription.repos import SubscriptionRepository
@@ -14,9 +14,9 @@ router = APIRouter()
 # Підписатися
 @router.post("/subscribe/{user_id}", status_code=status.HTTP_200_OK)
 async def subscribe(
+    request: Request,
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
     Subscribe to a user.
@@ -27,9 +27,9 @@ async def subscribe(
     - The user is not already subscribed to the target user.
 
     Args:
+        request: Request
         user_id (int): The ID of the user to subscribe to.
         db (AsyncSession): Database session.
-        current_user (User): The currently authenticated user.
 
     Raises:
         HTTPException: If the user is not active, the target user is not found,
@@ -38,6 +38,7 @@ async def subscribe(
     Returns:
         Response: Successful subscription creation.
     """
+    current_user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_id(user_id)
     if not current_user.is_active:
@@ -64,11 +65,11 @@ async def subscribe(
 
 
 # Відписатися
-@router.delete("/unsubscribe/{user_id}", status_code=status.HTTP_200_OK)
+@router.post("/unsubscribe/{user_id}", status_code=status.HTTP_200_OK)
 async def unsubscribe(
+    request: Request,
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
     Unsubscribe from a user.
@@ -90,6 +91,7 @@ async def unsubscribe(
     Returns:
         Response: Successful subscription deletion.
     """
+    current_user = await get_current_user_cookies(request, db)
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_id(user_id)
     if not current_user.is_active:
@@ -151,38 +153,54 @@ async def get_all_subscriptions(
 
 
 # Переглянути всіx підписників (тих хто підписаний на юзера)
-@router.get("/subscribers", status_code=status.HTTP_200_OK)
+@router.get("/subscribers/{user_id}", status_code=status.HTTP_200_OK)
 async def get_all_subscribers(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+        user_id: int,
+        db: AsyncSession = Depends(get_db),
 ):
     """
-    View all subscribers of the current user (users who are subscribed to the current user).
-
-    This route returns a list of users who are subscribed to the current user.
+    View all subscribers of a specific user.
 
     Args:
+        user_id (int): ID of the user whose subscribers we want to see
         db (AsyncSession): Database session.
         current_user (User): The currently authenticated user.
 
-    Raises:
-        HTTPException: If the user is not active or has no subscribers.
-
     Returns:
-        dict: A list of the current user's subscribers.
+        dict: A list of the user's subscribers.
     """
-    if not current_user.is_active:
+    # Проверяем существование пользователя
+    user_repo = UserRepository(db)
+    user = await user_repo.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is not active. Please activate your account first.",
+            detail="This account is not active.",
         )
+
     sub_repo = SubscriptionRepository(db)
-    subscribers = await sub_repo.get_all_subscribers(current_user.id)
+    subscribers = await sub_repo.get_all_subscribers(user_id)
     if not subscribers:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="No subscribers found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No subscribers found"
         )
-    return {"my subscribers": [user.username for user in subscribers]}
+
+    return {
+        "subscribers": [
+            {
+                "username": user.username,
+                "avatar_url": user.avatar_url
+            }
+            for user in subscribers
+        ]
+    }
 
 
 # Перевірка чи підписаний інший юзер на поточного юзера

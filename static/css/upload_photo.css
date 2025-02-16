@@ -2,7 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: calc(100vh - 80px); /* Высота контента, минус высота шапки */
+    height: calc(100vh - 80px);
     padding: 20px;
     background-color: #3a4750;
 }
@@ -40,14 +40,14 @@ h2 {
 
 .form-group input,
 .form-group textarea {
-    width: calc(100% - 20px); /* Убираем 20px для отступов */
+    width: calc(100% - 20px);
     padding: 10px;
     border-radius: 4px;
     border: 1px solid #ccc;
     background-color: #444;
     color: white;
     font-size: 14px;
-    margin-right: 10px; /* Добавляем небольшой правый отступ */
+    margin-right: 10px;
 }
 
 .form-group input::placeholder,

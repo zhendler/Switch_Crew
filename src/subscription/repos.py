@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import Subscription
@@ -173,3 +173,8 @@ class SubscriptionRepository:
         result = await self.db.execute(query)
         subscribers = result.scalars().all()
         return subscribers
+
+    async def amount_of_subscribes(self, user_id: int) -> int:
+        query = select(func.count()).where(Subscription.subscribed_to_id == user_id)
+        result = await self.db.scalar(query)
+        return result or 0

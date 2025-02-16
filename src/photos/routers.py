@@ -1,4 +1,5 @@
 from typing import List, Union, Optional
+from datetime import datetime
 
 from fastapi import (
     APIRouter,
@@ -21,7 +22,6 @@ from src.models.models import User, Photo
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import (
     PhotoResponse,
-    PhotoUpdate,
     UrlPhotoResponse,
     PhotoRatingsListResponse,
     UserRatingsListResponse,
@@ -29,13 +29,13 @@ from src.photos.schemas import (
     AverageRatingResponse,
 )
 from src.reactions.repos import ReactionRepository
+from src.subscription.repos import SubscriptionRepository
 from src.utils.cloudinary_helper import (
     upload_photo_to_cloudinary,
     get_cloudinary_image_id,
 )
-from src.utils.front_end_utils import templates, get_response_format, truncatechars
+from src.utils.front_end_utils import templates, get_response_format, truncatechars, format_datetime
 from src.utils.qr_code_helper import generate_qr_code
-from src.web.repos import TagWebRepository
 
 photo_router = APIRouter()
 mainrouter = APIRouter()
@@ -67,6 +67,41 @@ async def read_root(
             "recent_comments": recent_comments,
         },
     )
+
+templates.env.filters["format_datetime"] = format_datetime
+
+@mainrouter.get("/feed")
+async def read_root(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+
+    user = await get_current_user_cookies(request, db)
+    if user:
+        photo_repo = PhotoRepository(db)
+        sub_repo = SubscriptionRepository(db)
+        following_users = await sub_repo.get_all_subscriptions(user.id)
+        photos = await photo_repo.get_following_photos(following_users)
+        reactions_repo = ReactionRepository(db)
+        reactions = await reactions_repo.get_all_reactions_in_feed(photos, user)
+        return templates.TemplateResponse(
+            "/main/feed.html",
+            {
+                "request": request,
+                "user": user,
+                "photos":photos,
+                "reactions": reactions,
+            },
+        )
+    else:
+        return templates.TemplateResponse(
+            "/main/feed.html",
+            {
+                "request": request,
+                "user": user,
+                "detail": "Authorization required",
+            },
+        )
 
 @photo_router.get("/upload_photo/")
 async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
@@ -229,6 +264,9 @@ async def photo_page(
 
     photo.created_at = photo.created_at.isoformat()
     reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
+
+    formatted_date = datetime.fromisoformat(photo.created_at[:-6]).strftime("%d %B %Y")
+
     if response_format == "json":
         return photo
     else:
@@ -237,7 +275,8 @@ async def photo_page(
                                         "photo": photo,
                                         "user": user,
                                         "reaction_active": reaction_active,
-                                        "reaction_counts": reaction_counts}
+                                        "reaction_counts": reaction_counts,
+                                        "photo_created_at": formatted_date}
         )
 
 # @photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
