@@ -13,6 +13,7 @@ Dependencies:
 from fastapi import APIRouter, UploadFile, HTTPException, status, Depends, File, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 import cloudinary
 import cloudinary.uploader
 
@@ -24,10 +25,16 @@ from src.user_profile.schemas import (
     UserProfileResponse,
     AdminUserProfileResponse,
     UserAvatarResponse,
+    PopularUsersResponse,
 )
-from src.user_profile.repos import UserProfileRepository
+from src.user_profile.repos import UserProfileRepository, PopularUsersRepository
 from src.auth.repos import UserRepository, RoleRepository
-from src.auth.utils import FORADMIN, ACTIVATE, get_current_user, get_current_user_cookies
+from src.auth.utils import (
+    FORADMIN,
+    ACTIVATE,
+    get_current_user,
+    get_current_user_cookies,
+)
 from src.auth.schemas import RoleEnum
 
 
@@ -380,3 +387,27 @@ async def unban_user(
             detail=f"User with username '{username}' not found.",
         )
     return {"detail": f"User '{username}' has been unbanned."}
+
+
+@router.get(
+    "/popular_users",
+    response_model=List[PopularUsersResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_popular_users(db: AsyncSession = Depends(get_db)):
+    """
+    Retrieve the top 10 most popular users.
+
+    This endpoint returns a list of users sorted by popularity.
+    Popularity is determined based on the criteria implemented in
+    `PopularUsersRepository.get_top_10_popular_users()`.
+
+    Args:
+        db (AsyncSession): Asynchronous database session obtained via Depends(get_db).
+
+    Returns:
+        List[PopularUsersResponse]: A list of objects containing information
+        about the most popular users.
+    """
+    popular_user_repo = PopularUsersRepository(db)
+    return await popular_user_repo.get_top_10_popular_users()
