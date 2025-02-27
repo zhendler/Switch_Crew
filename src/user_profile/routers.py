@@ -10,6 +10,8 @@ Dependencies:
 - Cloudinary for handling file uploads.
 """
 
+import json
+import aiofiles
 from fastapi import APIRouter, UploadFile, HTTPException, status, Depends, File, Request
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -411,3 +413,43 @@ async def get_popular_users(db: AsyncSession = Depends(get_db)):
     """
     popular_user_repo = PopularUsersRepository(db)
     return await popular_user_repo.get_top_10_popular_users()
+
+
+@router.get(
+    "/popular_users_json",
+    response_model=List[PopularUsersResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def get_popular_users_from_json():
+    """
+    Retrieve the top 10 popular users from the 'top_users.json' file.
+
+    This endpoint reads user data from the 'top_users.json' file and returns
+    a list of the top 10 users based on their scores. If the file is empty
+    or missing, appropriate HTTP exceptions are raised.
+
+    Returns:
+        List[PopularUsersResponse]: A list of up to 10 popular users.
+
+    Raises:
+        HTTPException: 404 Not Found if the file is missing or empty.
+        HTTPException: 505 HTTP Version Not Supported if the JSON decoding fails.
+    """
+    try:
+        async with aiofiles.open("top_users.json", "r", encoding="utf-8") as f:
+            top_users = json.loads(await f.read())
+        if not top_users:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="No popular users found."
+            )
+        return top_users[:10]
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="File 'top_users.json' not found.",
+        )
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_505_HTTP_VERSION_NOT_SUPPORTED,
+            detail="Error decoding JSON file.",
+        )

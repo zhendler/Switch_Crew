@@ -13,9 +13,12 @@ Dependencies:
     - src.auth.repos: Provides utility functions for user-related database operations.
 """
 
+import json
 from sqlalchemy import select, or_, func, desc
 from sqlalchemy.orm import aliased
 from sqlalchemy.ext.asyncio import AsyncSession
+import asyncio
+import aiofiles
 
 from src.models.models import (
     User,
@@ -300,3 +303,124 @@ class PopularUsersRepository:
             for i, user in enumerate(popular_users[:10])
         ]
         return top_10_users
+
+    async def get_top_all_users(self):
+        """
+        Retrieve and rank all users based on their popularity score.
+
+        This method fetches all distinct users from the database, calculates their
+        popularity score based on various engagement metrics, sorts them in
+        descending order, and assigns ranking positions. The results are then
+        stored in the 'top_users.json' file.
+
+        Popularity score is determined using:
+            - Number of subscribers
+            - Number of comments
+            - Number of reactions
+            - Number of photos uploaded
+
+        Returns:
+            List[Dict[str, Union[int, str]]]: A list of users ranked by popularity,
+            including position, user ID, username, and score.
+
+        Raises:
+            Any database-related errors or file writing issues if they occur.
+        """
+        # Отримуємо всіх користувачів з бази даних
+        query = select(User.id, User.username).distinct()
+        result = await self.session.execute(query)
+        all_users = result.all()
+
+        # Рахуємо популярність кожного користувача
+        popular_users = []
+        for user_id, username in all_users:
+            params = await self.find_users_by_params(user_id)
+            score = self.calculate_popularity_score(
+                params["subscribers_count"],
+                params["comments_count"],
+                params["reactions_count"],
+                params["photos_count"],
+            )
+            popular_users.append(
+                {"user_id": user_id, "username": username, "score": score}
+            )
+
+        # Сортуємо користувачів за популярністю
+        popular_users.sort(key=lambda x: x["score"], reverse=True)
+
+        # Формуємо список з позиціями
+        top_all_users = [
+            {
+                "position": i + 1,
+                "user_id": user["user_id"],
+                "username": user["username"],
+                "score": user["score"],
+            }
+            for i, user in enumerate(popular_users)
+        ]
+
+        # Записуємо у JSON-файл
+        async with aiofiles.open("top_users.json", "w", encoding="utf-8") as f:
+            await f.write(json.dumps(top_all_users, ensure_ascii=False, indent=4))
+
+        return top_all_users
+
+    async def update_top_all_users(self):
+        """
+        Update the 'top_users.json' file with the latest user rankings from the database.
+
+        This method reads the existing user ranking data from 'top_users.json' and
+        compares it with the latest data fetched from the database. It updates
+        user scores if they have changed, adds new users, and removes users who
+        are no longer present in the database. If any modifications occur, the
+        file is rewritten with the updated rankings.
+
+        Returns:
+            List[Dict[str, Union[int, str]]]: An updated list of users with their
+            ranking positions, user IDs, usernames, and scores.
+
+        Raises:
+            Any file-related or database-related errors if they occur.
+        """
+        file_path = "top_users.json"
+
+        # Зчитуємо дані з файлу
+        async with aiofiles.open(file_path, "r", encoding="utf-8") as f:
+            from_json_top = json.loads(await f.read())
+
+        # Отримуємо поточні дані з БД
+        from_db_top = await self.get_top_all_users()
+
+        # Створюємо словники для зручного порівняння даних
+        json_users_dict = {user["user_id"]: user for user in from_json_top}
+        db_users_dict = {user["user_id"]: user for user in from_db_top}
+
+        # Оновлюємо або додаємо нових користувачів
+        for user_id, current_user in db_users_dict.items():
+            # Якщо користувач є в файлі, перевіряємо, чи змінився він
+            if user_id in json_users_dict:
+                if db_users_dict[user_id]["score"] != current_user["score"]:
+                    json_users_dict[user_id]["score"] = current_user["score"]
+            else:
+                # Якщо користувача немає в файлі, додаємо його
+                json_users_dict[user_id] = current_user
+
+        # Видаляємо користувачів, яких вже немає в БД
+        users_to_delete = [
+            user_id for user_id in json_users_dict if user_id not in db_users_dict
+        ]
+        for user_id in users_to_delete:
+            del json_users_dict[user_id]
+
+        # Створюємо новий список для запису
+        updated_top_users = list(json_users_dict.values())
+
+        # Перезаписуємо файл, якщо є зміни
+        if updated_top_users != from_json_top:
+            async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+                await f.write(
+                    json.dumps(updated_top_users, ensure_ascii=False, indent=4)
+                )
+            print("File top_users.json updated.")
+
+        return updated_top_users
