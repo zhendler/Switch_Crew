@@ -50,12 +50,12 @@ async def read_root(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-
     user = await get_current_user_cookies(request, db)
     photo_repo = PhotoRepository(db)
     popular_users, photos, popular_tags, recent_comments = (
         await photo_repo.get_data_for_main_page()
     )
+
     return templates.TemplateResponse(
         "/main/index.html",
         {

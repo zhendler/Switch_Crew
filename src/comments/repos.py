@@ -118,3 +118,10 @@ class CommentsRepository:
         :return: The Comment object if found, otherwise None.
         """
         return await self.session.get(Comment, comment_id)
+
+    async def reply_to_comment_with_comment(self, comment_id: int, user_id: int, content: str) -> Comment:
+        new_comment = Comment(user_id=user_id, parent_id=comment_id, content=content)
+        self.session.add(new_comment)
+        await self.session.commit()
+        await self.session.refresh(new_comment)
+        return new_comment

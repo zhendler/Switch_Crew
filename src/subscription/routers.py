@@ -169,7 +169,6 @@ async def get_all_subscribers(
     Returns:
         dict: A list of the user's subscribers.
     """
-    # Проверяем существование пользователя
     user_repo = UserRepository(db)
     user = await user_repo.get_user_by_id(user_id)
     if not user:

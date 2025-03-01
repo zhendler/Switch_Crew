@@ -4,13 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, APIRouter, Form, status, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse, RedirectResponse
-from functools import partial
 
 from .repos import TagRepository
 from config.db import get_db
 from .schemas import TagResponse
 from src.auth.utils import FORALL, FORMODER, get_current_user_cookies
-from src.photos.schemas import PhotoResponse
 from src.utils.front_end_utils import get_response_format
 from ..models.models import User
 
@@ -70,12 +68,6 @@ async def get_all_tags_with_photos(
         user: User = Depends(get_user_dep),
         response_format: str = Depends(get_response_format)
 ):
-
-    # request: Request Додаємо якщо будете повертати темплейт.
-    # Додаемо response_format: str = Depends(get_response_format) таким чином роут розуміє запит зі сваггера чи з фронту.
-    # Необхідні імпорти:
-    # from src.utils.front_end_utils import get_response_format
-    # from src.web.repos import TagWebRepository
     """
     Endpoint to fetch all tags.
 
@@ -110,11 +102,6 @@ async def get_all_tags(
         db: AsyncSession = Depends(get_db),
         response_format: str = Depends(get_response_format)
 ):
-    # request: Request Додаємо якщо будете повертати темплейт.
-    # Додаемо response_format: str = Depends(get_response_format) таким чином роут розуміє запит зі сваггера чи з фронту.
-    # Необхідні імпорти:
-    # from src.utils.front_end_utils import get_response_format
-    # from src.web.repos import TagWebRepository
     """
     Endpoint to fetch all tags.
 
@@ -126,15 +113,15 @@ async def get_all_tags(
     :return: A list of `TagResponse` objects representing all tags.
     """
 
-    user = await get_current_user_cookies(request, db)# "отримування поточного юзера" Обов'язковий
-    # параметр щоб тримати юзера авторизованим. !!! Додаємо до кожного роута який повертає темплейт.
+    user = await get_current_user_cookies(request, db)
+
     tag_repo = TagRepository(db)
     tags = await tag_repo.get_all_tags()
-    if response_format == "json": # Умова якщо запит зі сваггера.
-        return tags # Повертаємо як завжди дані у сваггер.
-    else: # Якщо запит не зі сваггера, тоді він з фронту.
-        return templates.TemplateResponse( # Повертаємо темплейт. Обов'язковими для усіх темплейтів є request та user,
-            # а далі вже залежно від логіки сторінки
+
+    if response_format == "json":
+        return tags
+    else:
+        return templates.TemplateResponse(
             "/tags/tags.html", {"request": request, "title": "Tags", "tags": tags, "user": user}
         )
 
@@ -187,27 +174,6 @@ async def delete_tag_by_name(
     tag_repo = TagRepository(db)
     await tag_repo.delete_tag_by_name(tag_name)
     return JSONResponse(content={"detail": f"Tag {tag_name} deleted"}, status_code=200)
-
-
-# @tag_router.post(
-#     "/tags/delete/",
-#     summary="Delete a tag by name",
-#     description="""This endpoint deletes a tag from the database by its name.
-#     If the tag is not found, an error message is returned.""",
-#     operation_id="delete_tag",
-#     include_in_schema=False,
-# )
-# async def delete_tag_by_name(
-#     request: Request, tag_name: str = Form(...), db: AsyncSession = Depends(get_db)
-# ):
-#     user = await get_current_user_cookies(request, db)
-#     if user.role_id not in [1, 2]:
-#         return RedirectResponse(url="/tags/?error=no_permission", status_code=302)
-#
-#     tag_repo = TagRepository(db)
-#     await tag_repo.delete_tag_by_name(tag_name)
-#
-#     return RedirectResponse("/tags/", status_code=302)
 
 
 @tag_router.put(

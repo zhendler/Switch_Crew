@@ -93,7 +93,11 @@ class PhotoRepository:
             Photo: The photo object if found, else None.
         """
         result = await self.session.execute(select(Photo).filter(Photo.id == photo_id))
-        return result.scalar_one_or_none()
+        photo = result.scalar_one_or_none()
+        if photo:
+            return photo
+        else:
+            raise HTTPException(status_code=404, detail="Photo not found")
 
     async def update_photo_description(
         self, photo_id: int, description: str, user_id: int
@@ -112,16 +116,17 @@ class PhotoRepository:
         Raises:
             HTTPException: If the photo does not exist or the user is not the owner.
         """
-        photo = await self.session.get(Photo, photo_id)
+        photo = await self.get_photo_by_id(photo_id)
 
         if photo is None:
-            return None
-        photo.description = description
-        await self.session.commit()
-        await self.session.refresh(photo)
-        return photo
+            raise HTTPException(status_code=404, detail="Rating not found")
+        else:
+            photo.description = description
+            await self.session.commit()
+            await self.session.refresh(photo)
+            return photo
 
-    async def delete_photo(self, photo_id: int):
+    async def delete_photo(self, photo_id: int) -> str:
         """
         Delete a photo by its ID.
 
@@ -148,10 +153,14 @@ class PhotoRepository:
             await self.session.rollback()
             raise e
 
-    async def get_users_all_photos(self, user: User):
+    async def get_users_all_photos(self, user: User) -> list[Photo]:
         query = select(Photo).where(Photo.owner_id == user.id)
         result = await self.session.execute(query)
-        return result.scalars().all()
+        photos = result.scalars().all()
+        if photos:
+            return photos
+        else:
+            return None
 
     async def get_all_photos(self, page):
 
@@ -159,53 +168,105 @@ class PhotoRepository:
         offset = (page - 1) * photos_per_page
 
         photos_query = (
-            select(Photo)
-            .options(
-                selectinload(Photo.owner),
-                selectinload(Photo.tags),
-                selectinload(Photo.comments),
-            )
-            .order_by(Photo.created_at.desc())
+            select(Photo.id, Photo.url_link, Photo.description, User.username, User.avatar_url)
+            .join(User, Photo.owner_id == User.id)
+            .order_by(desc(Photo.created_at))
             .offset(offset)
             .limit(photos_per_page)
-            .order_by(desc(Photo.created_at))
         )
+
         result = await self.session.execute(photos_query)
-        photos = result.scalars().all()
+        photos = result.all()
+
+        photos_list = []
+        photo_ids = []
+
+        for row in photos:
+            photo_id, url, description, username, avatar_url = row
+            photo_ids.append(photo_id)
+            photos_list.append({
+                "photo_id": photo_id,
+                "url_link": url,
+                "description": description,
+                "username": username,
+                "avatar_url": avatar_url,
+                "tags": [],
+                "last_comment": None
+            })
+
+        if photo_ids:
+            tags_query = (
+                select(photo_tags.c.photo_id, Tag.name)
+                .join(Tag, Tag.id == photo_tags.c.tag_id)
+                .where(photo_tags.c.photo_id.in_(photo_ids))
+            )
+
+            tags_result = await self.session.execute(tags_query)
+
+            tags_dict = {}
+            for photo_id, tag_name in tags_result:
+                tags_dict.setdefault(photo_id, []).append(tag_name)
+
+            for photo in photos_list:
+                photo["tags"] = tags_dict.get(photo["photo_id"], [])
+
+            last_comments_query = (
+                select(Comment.photo_id, Comment.content, User.username)
+                .join(User, Comment.user_id == User.id)
+                .where(Comment.photo_id.in_(photo_ids))
+                .order_by(Comment.photo_id, desc(Comment.created_at))
+            )
+
+            comments_result = await self.session.execute(last_comments_query)
+
+            last_comments_dict = {}
+            for photo_id, content, comment_author in comments_result:
+                if photo_id not in last_comments_dict:
+                    last_comments_dict[photo_id] = {
+                        "content": content,
+                        "author": comment_author
+                    }
+
+            for photo in photos_list:
+                photo["last_comment"] = last_comments_dict.get(photo["photo_id"])
+
+
         total_photos_query = select(func.count(Photo.id))
         total_photos_result = await self.session.execute(total_photos_query)
         total_photos = total_photos_result.scalar()
 
         total_pages = (total_photos + photos_per_page - 1) // photos_per_page
-
-        return photos, total_pages
+        print(photos_list)
+        return photos_list, total_pages
 
     async def get_data_for_main_page(self):
         photos_query = (
-            select(Photo)
+            select(Photo.id, Photo.url_link, Photo.description, User.username, User.avatar_url)
+            .join(User, Photo.owner_id == User.id)
             .order_by(desc(Photo.created_at))
             .limit(9)
-            .options(joinedload(Photo.tags), joinedload(Photo.comments))
         )
 
         photos = await self.session.execute(photos_query)
-        photos_result = photos.scalars().unique().all()
+        photos_result = photos.all()
+
         comments_query = (
-            select(Comment)
+            select(Comment.content, Comment.photo_id, User.username, User.avatar_url)
+            .join(User, Comment.user_id == User.id)
             .order_by(desc(Comment.created_at))
             .limit(3)
-            .options(joinedload(Comment.user))
         )
 
         comments = await self.session.execute(comments_query)
-        comments_result = comments.scalars().unique().all()
+        comments_result = comments.all()
 
-        users_query = select(User).order_by(desc(User.created_at)).limit(3)
+
+        users_query = select(User.username, User.avatar_url).order_by(desc(User.created_at)).limit(3)
         users = await self.session.execute(users_query)
-        users_result = users.scalars().unique().all()
+        users_result = users.all()
 
         tags_query = (
-            select(Tag, func.count(photo_tags.c.photo_id).label("photo_count"))
+            select(Tag.name, func.count(photo_tags.c.photo_id).label("photo_count"))
             .join(photo_tags, Tag.id == photo_tags.c.tag_id)
             .group_by(Tag.id)
             .order_by(desc("photo_count"))
@@ -217,7 +278,7 @@ class PhotoRepository:
 
         return users_result, photos_result, tags_result, comments_result
 
-    async def get_following_photos(self, users):
+    async def get_following_photos(self, users) -> list[Photo]:
         following_ids = [following_user.id for following_user in users]
 
         photos_query = (

@@ -101,7 +101,10 @@ async def page(request: Request,
     date_of_registration = date_obj.strftime("%Y-%m-%d")
 
     photos = await photo_repo.get_users_all_photos(user_page)
-    amount_of_photos = len(photos)
+    if photos:
+        amount_of_photos = len(photos)
+    else:
+        amount_of_photos = 0
 
     detail = request.query_params.get("detail")
 

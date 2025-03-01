@@ -1,8 +1,10 @@
+from typing import Sequence
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.models import Subscription
+from src.models.models import Subscription, User
 from src.models.models import User
 
 
@@ -132,7 +134,7 @@ class SubscriptionRepository:
         await self.db.commit()
         return {"message": "Subscription canceled."}
 
-    async def get_all_subscriptions(self, current_user: int) -> list:
+    async def get_all_subscriptions(self, current_user: int) -> Sequence[User]:
         """
         Retrieve all users the current user is subscribed to.
 
@@ -153,7 +155,7 @@ class SubscriptionRepository:
         subscriptions = result.scalars().all()
         return subscriptions
 
-    async def get_all_subscribers(self, current_user: int) -> list:
+    async def get_all_subscribers(self, current_user: int) -> Sequence[User]:
         """
         Retrieve all users who are subscribed to the current user.
 

@@ -11,11 +11,11 @@
                 <div class="card">
                     <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img">
                     <div class="card-content">
-                        <a href="/page/{{ photo.owner.username }}">
-                            <img src="{{ photo.owner.avatar_url }}" alt="Avatar" class="comment-avatar">
+                        <a href="/page/{{ photo.username }}">
+                            <img src="{{ photo.avatar_url }}" alt="Avatar" class="comment-avatar">
                         </a>
-                        <a href="/page/{{ photo.owner.username }}">
-                            <p class="author">{{ photo.owner.username }}</p>
+                        <a href="/page/{{ photo.username }}">
+                            <p class="author">{{ photo.username }}</p>
                         </a>
                     </div>
                     {% if photo.description %}
@@ -47,7 +47,7 @@
             <div class="tag-list">
                 {% for tag in popular_tags[:6] %}
                 <a href="/tags/{{ tag.name }}/photos/" class="tag-tile">
-                    <p class="tag-name">#{{ tag.name }}</p>
+                    <p class="tag-name">#{{ tag }}</p>
                 </a>
                 {% endfor %}
             </div>
@@ -58,8 +58,8 @@
             <div class="comment-list">
                 {% for comment in recent_comments[:3] %}
                 <a href="/photos/{{ comment.photo_id }}" class="user-tile">
-                    <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="comment-comment-avatar">
-                    <p class="author">{{ comment.user.username }}</p>
+                    <img src="{{ comment.avatar_url }}" alt="Avatar" class="comment-comment-avatar">
+                    <p class="author">{{ comment.username }}</p>
                     <p class="comment-main-text">{{ comment.content|truncatechars(12) }}</p>
                 </a>
                 {% endfor %}

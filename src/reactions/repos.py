@@ -25,7 +25,7 @@ class ReactionRepository:
         """
         self.db = db
 
-    async def create_reaction(self, reaction_name):
+    async def create_reaction(self, reaction_name) -> Reaction:
         new_reaction = Reaction(name=reaction_name)
         self.db.add(new_reaction)
         await self.db.commit()
@@ -52,6 +52,8 @@ class ReactionRepository:
 
         reaction = await self.db.execute(select(Reaction).filter_by(id=reaction_id))
         reaction = reaction.scalar_one_or_none()
+        if not reaction:
+            raise ValueError(f"Reaction not found")
 
         reaction_photo = insert(photo_reactions).values(photo_id=photo_id, user_id=user_id, reaction_id=reaction.id)
         await self.db.execute(reaction_photo)
@@ -59,7 +61,7 @@ class ReactionRepository:
 
         return await self.get_reaction_by_user_and_photo(photo_id, user_id)
 
-    async def get_reaction_by_user_and_photo(self, photo_id: int, user_id: int):
+    async def get_reaction_by_user_and_photo(self, photo_id: int, user_id: int) -> ReactionResponse or None:
         query = select(
             photo_reactions.c.reaction_id,
             photo_reactions.c.user_id,
@@ -84,9 +86,10 @@ class ReactionRepository:
                 photo_id=reaction_data.photo_id,
                 created_at=reaction_data.created_at
             )
-        return None
+        else:
+            return None
 
-    async def get_all_reactions_by_photo(self, photo_id):
+    async def get_all_reactions_by_photo(self, photo_id) -> list[ReactionResponse]:
         query = select(
             photo_reactions.c.reaction_id,
             photo_reactions.c.user_id,
@@ -115,9 +118,9 @@ class ReactionRepository:
 
             return reactions
         else:
-            return "Reactions not found"
+            raise ValueError(f"Reactions not found")
 
-    async def change_reaction(self, photo_id, user_id, new_reaction_id):
+    async def change_reaction(self, photo_id, user_id, new_reaction_id) -> Reaction:
         await self.db.execute(
             photo_reactions.update()
             .where(
@@ -131,7 +134,7 @@ class ReactionRepository:
 
         return reaction
 
-    async def delete_reaction(self, photo_id, user_id):
+    async def delete_reaction(self, photo_id, user_id) -> str:
         query = photo_reactions.delete().where(
             (photo_reactions.c.photo_id == photo_id) &
             (photo_reactions.c.user_id == user_id)

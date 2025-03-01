@@ -234,7 +234,10 @@ class Comment(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     content: Mapped[str] = mapped_column(String, nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    photo_id: Mapped[int] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"), nullable=False)
+    photo_id: Mapped[int | None] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"),
+                                                 nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"),
+                                                  nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
@@ -246,6 +249,13 @@ class Comment(Base):
 
     user: Mapped["User"] = relationship("User", lazy="selectin")
     photo: Mapped["Photo"] = relationship("Photo", lazy="selectin")
+
+    parent: Mapped["Comment"] = relationship(
+        "Comment", remote_side=[id], back_populates="replies", lazy="selectin"
+    )
+    replies: Mapped[list["Comment"]] = relationship(
+        "Comment", back_populates="parent", cascade="all, delete-orphan", lazy="selectin"
+    )
 
 
 class Tag(Base):

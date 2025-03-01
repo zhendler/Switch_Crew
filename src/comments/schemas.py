@@ -23,3 +23,14 @@ class CommentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CommentResponseComment(BaseModel):
+    id: int
+    user_id: int
+    parent_id: int
+    content: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True

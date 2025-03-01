@@ -125,6 +125,7 @@
 
 .card-content .author {
     font-weight: bold;
+    padding-left: 5px;
 }
 
 .card-content .author:hover {
