@@ -311,7 +311,7 @@
     }
     .photo-section {
         overflow: visible;
-
+        display: grid;
     }
 
 }
@@ -357,6 +357,9 @@
         text-align: center;
         font-size: 20px;
         margin-bottom: 15px;
+    }
+    .photo-section {
+        display: grid;
     }
 }
 
@@ -420,6 +423,7 @@
     .photo-section h2 {
         font-size: 18px;
         text-align: center;
+        display: grid;
     }
 }
 
