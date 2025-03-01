@@ -241,4 +241,219 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+document.addEventListener('click', function(event) {
+    const replyButton = event.target.closest('.reply-button');
+    if (replyButton) {
+        const commentId = replyButton.dataset.commentId;
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
+
+        if (replyForm.style.display === 'none') {
+            replyForm.style.display = 'block';
+            replyButton.textContent = 'Cancel';
+        } else {
+            replyForm.style.display = 'none';
+            replyButton.textContent = 'Reply';
+        }
+    }
+
+    const editReplyButton = event.target.closest('.edit-button-reply');
+    if (editReplyButton) {
+        const replyId = editReplyButton.dataset.replyId;
+        const replyText = editReplyButton.dataset.replyText;
+        handleReplyEdit(replyId, replyText);
+    }
+
+    const deleteReplyButton = event.target.closest('.delete-form[data-reply-id] .delete-button');
+    if (deleteReplyButton) {
+        const replyId = deleteReplyButton.closest('.delete-form').getAttribute('data-reply-id');
+        const replyCard = deleteReplyButton.closest('.reply-card');
+        handleReplyDelete(replyId, replyCard);
+    }
+});
+
+document.addEventListener('submit', function(event) {
+    const replyForm = event.target.closest('.reply-form');
+    if (replyForm) {
+        event.preventDefault();
+        const commentId = replyForm.dataset.commentId;
+        const replyInput = replyForm.querySelector('.reply-input');
+        const replyContent = replyInput.value.trim();
+
+        if (replyContent) {
+            submitReply(commentId, replyContent, replyForm);
+        }
+    }
+});
+
+async function submitReply(commentId, content, form) {
+    const replyButton = document.querySelector(`.reply-button[data-comment-id="${commentId}"]`);
+    const submitButton = form.querySelector('.post-reply-button');
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Posting...';
+
+    try {
+        const formData = new FormData();
+        formData.append('comment_content', content);
+
+        const response = await fetch(`/comments/create/comment/${commentId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                             document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+            },
+            body: formData,
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            let repliesContainer = document.getElementById(`replies-${commentId}`);
+
+            if (!repliesContainer) {
+                repliesContainer = document.createElement('div');
+                repliesContainer.className = 'replies';
+                repliesContainer.id = `replies-${commentId}`;
+                const replySection = document.getElementById(`reply-section-${commentId}`);
+                replySection.insertBefore(repliesContainer, replySection.firstChild);
+            }
+
+            const replyElement = document.createElement('div');
+            replyElement.className = 'reply-card';
+            replyElement.innerHTML = `
+                <div class="reply-header">
+                    <div class="comment-author-container">
+                        <a href="/page/${data.user.username}">
+                            <img src="${data.user.avatar_url}" alt="Avatar" class="comment-avatar">
+                        </a>
+                        <a href="/page/${data.user.username}">
+                            <p class="username">${data.user.username}</p>
+                        </a>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="edit-button-reply" data-reply-id="${data.id}" data-reply-text="${data.content}">
+                            <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">
+                        </button>
+                        <form class="delete-form" data-reply-id="${data.id}">
+                            <button type="button" class="delete-button">
+                                <img src="/static/images/recycling-bin.png" alt="Trash Icon" class="action-icon">
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <p class="reply-text" id="reply-text-${data.id}">${data.content}</p>
+            `;
+
+            repliesContainer.appendChild(replyElement);
+
+            form.querySelector('.reply-input').value = '';
+            form.parentElement.style.display = 'none';
+            replyButton.textContent = 'Reply';
+        } else {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to post reply');
+        }
+    } catch (error) {
+        console.error('Error posting reply:', error);
+        alert('Failed to post reply. Please try again.');
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Post';
+    }
+}
+
+async function handleReplyEdit(replyId, currentContent) {
+    const replyText = document.getElementById(`reply-text-${replyId}`);
+    const existingEditForm = replyText.parentNode.querySelector('.edit-form');
+
+    if (existingEditForm) {
+        existingEditForm.remove();
+        replyText.style.display = 'block';
+        return;
+    }
+
+    const editForm = document.createElement('div');
+    editForm.className = 'edit-form';
+    editForm.innerHTML = `
+        <textarea class="comment-input">${currentContent}</textarea>
+        <div class="edit-buttons">
+            <button type="button" class="save-button">Save</button>
+        </div>
+    `;
+
+    replyText.style.display = 'none';
+    replyText.parentNode.insertBefore(editForm, replyText);
+
+    const textarea = editForm.querySelector('textarea');
+    const saveButton = editForm.querySelector('.save-button');
+
+    saveButton.addEventListener('click', async () => {
+        const newContent = textarea.value.trim();
+        if (!newContent) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('comment_content', newContent);
+
+            const response = await fetch(`/comments/edit/${replyId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                                 document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+                },
+                body: formData,
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                replyText.textContent = newContent;
+                const editButton = document.querySelector(`.edit-button-reply[data-reply-id="${replyId}"]`);
+                if (editButton) {
+                    editButton.setAttribute('data-reply-text', newContent);
+                }
+                editForm.remove();
+                replyText.style.display = 'block';
+            } else {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to update reply');
+            }
+        } catch (error) {
+            console.error('Error updating reply:', error);
+            alert('Failed to update reply. Please try again.');
+        }
+    });
+
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+}
+
+async function handleReplyDelete(replyId, replyCard) {
+    try {
+        const response = await fetch(`/comments/delete/${replyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                             document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1],
+            },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            replyCard.remove();
+
+            const parentReplies = replyCard.parentNode;
+            if (parentReplies && parentReplies.children.length === 0) {
+                parentReplies.remove();
+            }
+        } else {
+            const data = await response.json();
+            throw new Error(data.error || 'Failed to delete reply');
+        }
+    } catch (error) {
+        console.error('Error deleting reply:', error);
+        alert('Failed to delete reply. Please try again.');
+    }
+}
 });
