@@ -1,32 +1,38 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+<link rel="stylesheet" href="/static/css/all_photos.css">
 <p class="centered-title">{{ title }}</p>
 
 <div class="card-container-wrapper">
     <div class="card-container">
         {% for photo in photos %}
         <div class="card">
-            <a href="/photos/{{photo.id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
+            <a href="/photos/{{photo.photo_id}}"><img src="{{ photo.url_link }}" alt="Photo" class="card-img"></a>
                 <div class="card-content">
-                    <a href="/page/{{photo.owner.username}}"><p class="author" >{{ photo.owner.username }}</p></a>
+                    <div class="user-link-info">
+                        <a href="/page/{{ photo.username }}">
+                        <img src="{{ photo.avatar_url }}" alt="Avatar" class="comment-avatar">
+                    </a>
+                    <a href="/page/{{photo.username}}">
+                        <p class="author" >{{ photo.username }}</p>
+                    </a>
+                    </div>
                     <p class="description">{{ photo.description }}</p>
                     <div class="card-tags">
                         {% for tag in photo.tags %}
-                        <a href="/tag/{{ tag.name }}/photos/" class="tag-link">
-                            #{{ tag.name }}
+                        <a href="/tags/{{ tag }}/photos/" class="tag-link-photo">
+                            #{{ tag }}
                         </a>
                         {% endfor %}
                     </div>
                     <div class="comments-section">
-                        {% for comment in photo.comments[:1] %}
                         <div class="comment">
-                            <a href="/page/{{ comment.user.username }}" class="comment-author">{{ comment.user.username }}</a>
-                            <p class="comment-text">{{ comment.content }}</p>
+                            <a href="/page/{{ photo.last_comment.author }}" class="comment-author">{{ photo.last_comment.author }}</a>
+                            <p class="comment-text">{{ photo.last_comment.content }}</p>
                         </div>
-                        {% endfor %}
                     </div>
+
                 </div>
             </div>
         {% endfor %}

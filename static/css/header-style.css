@@ -1,9 +1,9 @@
 html, body {
-    height: 100%; /* Высота на 100% окна браузера */
+    height: 100%;
     margin: 0;
     font-family: Arial, sans-serif;
     display: flex;
-    flex-direction: column; /* Колонка для размещения элементов */
+    flex-direction: column;
 }
 
 .header {
@@ -32,7 +32,7 @@ html, body {
 
 .header .nav {
     flex-grow: 1;
-    text-align: center; /* Центрируем элементы */
+    text-align: center;
 }
 
 .header .nav ul {
@@ -41,48 +41,45 @@ html, body {
     padding: 0;
     display: flex;
     gap: 10px;
-    justify-content: center; /* Центрируем навигацию */
-    height: 100%; /* Высота контейнера, чтобы кнопки занимали всю высоту шапки */
+    justify-content: center;
+    height: 100%;
 }
 
 .header .nav ul li {
     position: relative;
-    height: 100%; /* Высота кнопки */
+    height: 100%;
 }
 
-/* Стили для ссылок */
 .header .nav ul li a {
-    display: flex; /* Используем flex для растягивания по вертикали */
-    align-items: center; /* Центрируем текст по вертикали */
-    justify-content: center; /* Центрируем текст по горизонтали */
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: white;
     text-decoration: none;
     font-size: 16px;
     font-weight: bold;
-    padding: 10px 20px; /* Горизонтальные отступы */
-    height: 100%; /* Высота кнопки на всю высоту шапки */
-    background-color: transparent; /* Без фона, сливается с шапкой */
-    border: 2px solid transparent; /* Без границы */
-    border-radius: 4px; /* Скругленные углы */
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.3s; /* Плавные анимации */
+    padding: 10px 20px;
+    height: 100%;
+    background-color: transparent;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.3s;
 }
 
-/* Эффект при наведении */
-.header .nav ul li a:hover {
-    background-color: #61dafb; /* Цвет фона при наведении */
-    color: #20232a; /* Цвет текста при наведении */
-    border-color: #61dafb; /* Цвет рамки при наведении */
-    transform: scale(1.05); /* Легкое увеличение кнопки при наведении */
-}
-
-/* Эффект активной кнопки */
 .header .nav ul li a:active {
-    background-color: #20232a; /* Темный фон при клике */
-    color: #61dafb; /* Цвет текста при клике */
-    border-color: #20232a; /* Цвет рамки при клике */
+    background-color: #20232a;
+    color: #61dafb;
+    border-color: #20232a;
+    transform: scale(0.5);
 }
 
-/* Подчеркивание при наведении */
+.header .nav ul li a:hover {
+    background-color: #61dafb;
+    color: #20232a !important;
+    border-color: #61dafb;
+    transform: scale(1.2);
+}
+
 .header .nav ul li a::after {
     content: '';
     position: absolute;
@@ -94,26 +91,24 @@ html, body {
     transition: width 0.3s;
 }
 
-/* Мобильная версия */
+
 @media (max-width: 768px) {
     .header .nav ul {
-        flex-direction: column; /* Кнопки будут располагаться вертикально на мобильных устройствах */
+        flex-direction: row;
         gap: 10px;
     }
 
     .header .nav ul li a {
-        padding: 15px 20px; /* Увеличиваем отступы для кнопок на мобильных устройствах */
+        padding: 15px 20px;
     }
 }
 
-/* Контейнер для аватара и имени пользователя */
 .user-profile-header {
     display: flex;
-    align-items: center; /* Центрирование аватара и ника по вертикали */
+    align-items: center;
     gap: 10px;
 }
 
-/* Стили для аватара */
 .user-avatar-header {
     width: 40px;
     height: 40px;
@@ -122,7 +117,10 @@ html, body {
     border: 2px solid #ccc;
 }
 
-/* Стили для имени пользователя */
+.user-avatar-header:hover {
+    border-color: #61dafb;
+}
+
 .user-name-header {
     font-size: 14px;
     color: white;
@@ -131,17 +129,16 @@ html, body {
 }
 
 .user-name-header:hover {
-    color: #61dafb; /* Цвет при наведении */
+    color: #61dafb;
 }
 
-/* Блок с кнопкой Log out */
 .user-actions {
     display: flex;
     gap: 15px;
     align-items: center;
+
 }
 
-/* Стили для кнопок входа и регистрации */
 .user-actions a {
     color: white;
     text-decoration: none;
@@ -150,11 +147,14 @@ html, body {
     border: 1px solid #61dafb;
     border-radius: 4px;
     transition: background-color 0.3s, color 0.3s;
+    white-space: nowrap;
 }
 
 .user-actions a:hover {
     background-color: #61dafb;
     color: #20232a;
+    border-color: #61dafb;
+    transform: scale(1.1);
 }
 
 .user-actions .register {
@@ -195,62 +195,60 @@ html, body {
 }
 
 .footer-nav a:hover {
-    color: #ffffff; /* Белый цвет при наведении */
+    color: #ffffff;
 }
 
-/* Контейнер для контента */
 .content {
-    flex: 1; /* Заполняет всё свободное пространство */
+    flex: 1;
 }
 
 .add-button {
-    width: 40px;  /* Ширина кнопки */
-    height: 40px; /* Высота кнопки */
-    border-radius: 8px;  /* Слегка скругленные углы */
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
     background-color: transparent;
-    border: 2px solid #61dafb;  /* Цвет границы кнопки (тот же, что и у логотипа) */
+    border: 2px solid #61dafb;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    transition: background-color 0.3s;  /* Плавное изменение фона */
-    margin-right: 6px;  /* Отступ от аватарки уменьшен в 1,5 раза */
+    transition: background-color 0.3s;
+    margin-right: 6px;
 }
 
-/* Эффект при наведении */
 .add-button:hover {
-    background-color: #61dafb;  /* Цвет фона при наведении (цвет логотипа) */
+    background-color: #61dafb;
+    transform: scale(1.07);
 }
 
-/* Иконка плюса */
 .plus-icon {
     font-size: 24px;
-    color: #61dafb;  /* Цвет плюса совпадает с цветом границы кнопки */
+    color: #61dafb;
     font-weight: bold;
-    transition: color 0.3s;  /* Плавное изменение цвета плюса */
+    transition: color 0.3s;
 }
 
-/* Эффект при наведении на иконку */
 .add-button:hover .plus-icon {
-    color: #20232a;  /* Цвет плюса при наведении (темный цвет, как фон шапки) */
+    color: #20232a;
+    transform: scale(1.07);
 }
 
 .logo img {
-    max-width: 45px; /* Максимальная ширина логотипа */
-    height: auto; /* Сохраняет пропорции изображения */
-    display: block; /* Убирает лишние пробелы вокруг изображения */
-    margin: 0 auto; /* Центрирует изображение, если нужно */
+    max-width: 45px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 @media (max-width: 768px) {
     .logo img {
-        max-width: 120px; /* Уменьшение размера логотипа на маленьких экранах */
+        max-width: 120px;
     }
 }
 
 @media (max-width: 480px) {
     .logo img {
-        max-width: 100px; /* Еще меньше для мобильных устройств */
+        max-width: 100px;
     }
 }
 
@@ -263,9 +261,9 @@ html, body {
 }
 
 .search-bar form {
-    display: flex; /* Горизонтальное выравнивание элементов внутри формы */
-    align-items: center; /* Центрирование по вертикали */
-    width: 100%; /* Форма растягивается на всю ширину */
+    display: flex;
+    align-items: center;
+    width: 100%;
 }
 
 .search-bar input[type="text"] {
@@ -299,6 +297,8 @@ html, body {
 .search-bar button:hover {
     color: #20232a;
     background-color: #61dafb;
+    border-color: #61dafb;
+    transform: scale(1.08);
 }
 
 @media (max-width: 768px) {
@@ -321,7 +321,7 @@ html, body {
 .nav {
     margin: 0;
     padding: 1rem 0;
-    width: auto;  /* Изменил с фиксированной ширины */
+    width: auto;
 }
 
 .nav ul {
@@ -334,18 +334,23 @@ html, body {
 
 .nav a {
     text-decoration: none;
-    color: #333;  /* Добавил базовый цвет */
+    color: #333;
     padding: 0.5rem 1rem;
     transition: color 0.3s ease;
 }
 
-/* Важно: убедитесь, что этот стиль находится в вашем CSS */
 .nav a.active {
-    color: #61dafb !important;  /* Добавил !important для приоритета */
+    color: #61dafb !important;
     font-weight: 500;
 }
 
 .nav a:hover {
     color: #61dafb;
     opacity: 0.8;
+}
+
+.tab-icon {
+    width: 26px;
+    height: 26px;
+    margin-right: 5px;
 }

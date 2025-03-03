@@ -1,0 +1,43 @@
+.subscribe-button, .unsubscribe-button {
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 36px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    border: 2px solid transparent;
+}
+
+.subscribe-button {
+    background-color: #61dafb;
+    color: #20232a;
+    border-color: #61dafb;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.subscribe-button:hover {
+    background-color: #4fa3d1;
+    border-color: #4fa3d1;
+    transform: scale(1.05);
+}
+
+.unsubscribe-button {
+    background-color: transparent;
+    color: #61dafb;
+    border: 2px solid #61dafb;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.unsubscribe-button:hover {
+    background-color: rgba(97, 218, 251, 0.1);
+    transform: scale(1.05);
+}
+
+.button-icon {
+    font-size: 16px;
+    line-height: 1;
+}

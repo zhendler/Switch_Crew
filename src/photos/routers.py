@@ -1,4 +1,5 @@
 from typing import List, Union, Optional
+from datetime import datetime
 
 from fastapi import (
     APIRouter,
@@ -17,11 +18,10 @@ from starlette.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from config.db import get_db
 from src.auth.utils import get_current_user, FORALL, FORMODER, get_current_user_cookies
-from src.models.models import User
+from src.models.models import User, Photo
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import (
     PhotoResponse,
-    PhotoUpdate,
     UrlPhotoResponse,
     PhotoRatingsListResponse,
     UserRatingsListResponse,
@@ -29,24 +29,18 @@ from src.photos.schemas import (
     AverageRatingResponse,
 )
 from src.reactions.repos import ReactionRepository
+from src.subscription.repos import SubscriptionRepository
 from src.utils.cloudinary_helper import (
     upload_photo_to_cloudinary,
     get_cloudinary_image_id,
 )
-from src.utils.front_end_utils import templates, get_response_format
+from src.utils.front_end_utils import templates, get_response_format, truncatechars, format_datetime
 from src.utils.qr_code_helper import generate_qr_code
-from src.web.repos import TagWebRepository
 
 photo_router = APIRouter()
 mainrouter = APIRouter()
 
 templates = Jinja2Templates(directory="templates")
-
-
-def truncatechars(value: str = "1", length: int = 35):
-    if len(value) > length:
-        return value[:length] + "..."
-    return value
 
 templates.env.filters["truncatechars"] = truncatechars
 
@@ -56,12 +50,12 @@ async def read_root(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-
     user = await get_current_user_cookies(request, db)
-    web_repo = TagWebRepository(db)
+    photo_repo = PhotoRepository(db)
     popular_users, photos, popular_tags, recent_comments = (
-        await web_repo.get_data_for_main_page()
+        await photo_repo.get_data_for_main_page()
     )
+
     return templates.TemplateResponse(
         "/main/index.html",
         {
@@ -74,11 +68,46 @@ async def read_root(
         },
     )
 
+templates.env.filters["format_datetime"] = format_datetime
+
+@mainrouter.get("/feed")
+async def read_root(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+
+    user = await get_current_user_cookies(request, db)
+    if user:
+        photo_repo = PhotoRepository(db)
+        sub_repo = SubscriptionRepository(db)
+        following_users = await sub_repo.get_all_subscriptions(user.id)
+        photos = await photo_repo.get_following_photos(following_users)
+        reactions_repo = ReactionRepository(db)
+        reactions = await reactions_repo.get_all_reactions_in_feed(photos, user)
+        return templates.TemplateResponse(
+            "/main/feed.html",
+            {
+                "request": request,
+                "user": user,
+                "photos":photos,
+                "reactions": reactions,
+            },
+        )
+    else:
+        return templates.TemplateResponse(
+            "/main/feed.html",
+            {
+                "request": request,
+                "user": user,
+                "detail": "Authorization required",
+            },
+        )
+
 @photo_router.get("/upload_photo/")
 async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
     user = await get_current_user_cookies(request, db)
     return templates.TemplateResponse(
-        "/photos/upload_photo.html", {"request": request, "user": user}
+        "photos/upload_photo.html", {"request": request, "user": user}
     )
 
 @photo_router.post(
@@ -88,18 +117,28 @@ async def upload_photo(request: Request, db: AsyncSession = Depends(get_db)):
     )
 async def create_photo(
     request: Request,
-    description: str = Form(...),
+    description: Optional[str] = Form(...),
     tags: Optional[str] = Form(None),
     file: UploadFile = File(...),
+    effect: str = Form(None),
     db: AsyncSession = Depends(get_db),
     response_format: str = Depends(get_response_format)
 ):
-    cloudinary_url = await upload_photo_to_cloudinary(file)
+    url_cloudinary = await upload_photo_to_cloudinary(file)  # This is now a string
+    image_id = get_cloudinary_image_id(url_cloudinary)
+
+    if effect:
+        transformed_url, _ = cloudinary_url(image_id, transformation=[{"effect": effect}])
+    else:
+        transformed_url, _ = cloudinary_url(image_id)
+
     user = await get_current_user_cookies(request, db)
 
+    tags = tags.split(',') if tags else []
+
     photo_repo = PhotoRepository(db)
-    tags = tags.split(',')
-    new_photo = await photo_repo.create_photo(cloudinary_url, description, user, tags)
+    new_photo = await photo_repo.create_photo(transformed_url, description, user, tags)
+
     if response_format == "json":
         return new_photo
     else:
@@ -148,8 +187,8 @@ async def all_photos(
     response_format: str = Depends(get_response_format)
 ):
     user = await get_current_user_cookies(request, db)
-    web_repo = TagWebRepository(db)
-    photos, total_pages = await web_repo.get_all_photos(page)
+    photo_repo = PhotoRepository(db)
+    photos, total_pages = await photo_repo.get_all_photos(page)
 
     if not photos:
         raise HTTPException(status_code=404, detail="Photos not found")
@@ -225,6 +264,9 @@ async def photo_page(
 
     photo.created_at = photo.created_at.isoformat()
     reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
+
+    formatted_date = datetime.fromisoformat(photo.created_at[:-6]).strftime("%d %B %Y")
+
     if response_format == "json":
         return photo
     else:
@@ -233,7 +275,8 @@ async def photo_page(
                                         "photo": photo,
                                         "user": user,
                                         "reaction_active": reaction_active,
-                                        "reaction_counts": reaction_counts}
+                                        "reaction_counts": reaction_counts,
+                                        "photo_created_at": formatted_date}
         )
 
 # @photo_router.get("/{photo_id}", response_model=PhotoResponse, dependencies=FORALL)
@@ -264,34 +307,58 @@ async def photo_page(
 #     return photo
 
 
-@photo_router.put(
-    "/update/{photo_id}", response_model=PhotoResponse, dependencies=FORALL
-)
-async def update_photo_description(
-    photo_id: int,
-    photo: PhotoUpdate,
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Update the description of a photo.
+# @photo_router.put(
+#     "/update/{photo_id}", response_model=PhotoResponse, dependencies=FORALL
+# )
+# async def update_photo_description(
+#     photo_id: int,
+#     photo: PhotoUpdate,
+#     user: User = Depends(get_current_user),
+#     db: AsyncSession = Depends(get_db),
+# ):
+#     """
+#     Update the description of a photo.
+#
+#     This endpoint allows the authenticated user to update the description of a photo they own.
+#
+#     Args:
+#         photo_id (int): The ID of the photo.
+#         photo (PhotoUpdate): The new description for the photo.
+#         user (User): The authenticated user making the request.
+#         db (AsyncSession): The database session.
+#
+#     Returns:
+#         PhotoResponse: The updated photo details.
+#     """
+#     photo_repo = PhotoRepository(db)
+#     update_photo = await photo_repo.update_photo_description(
+#         photo_id, photo.description, user.id
+#     )
+#     return update_photo
 
-    This endpoint allows the authenticated user to update the description of a photo they own.
 
-    Args:
-        photo_id (int): The ID of the photo.
-        photo (PhotoUpdate): The new description for the photo.
-        user (User): The authenticated user making the request.
-        db (AsyncSession): The database session.
+@photo_router.post("/edit-description/{photo_id}/")
+async def edit_photo_description(
+        request: Request,
+        photo_id: int,
+        description: str = Form(...),
+        response_format: str = Depends(get_response_format),
+        db: AsyncSession = Depends(get_db)):
+    photo = await db.get(Photo, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
 
-    Returns:
-        PhotoResponse: The updated photo details.
-    """
-    photo_repo = PhotoRepository(db)
-    update_photo = await photo_repo.update_photo_description(
-        photo_id, photo.description, user.id
-    )
-    return update_photo
+    user = await get_current_user_cookies(request, db)
+
+    if photo.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this photo")
+
+    photo.description = description
+    await db.commit()
+    if response_format == 'json':
+        return photo.description
+    else:
+        return {"message": "Description updated successfully"}
 
 
 @photo_router.post("/delete/{photo_id}")

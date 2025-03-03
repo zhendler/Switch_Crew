@@ -8,7 +8,7 @@
 }
 
 .photo-section {
-    flex: 3; /* 75% ширины */
+    flex: 3;
     background-color: #ffffff;
     border-radius: 8px;
     padding: 20px;
@@ -24,21 +24,17 @@
 }
 
 .photo-details {
-    position: relative; /* Добавим относительное позиционирование для корректной работы абсолютного позиционирования кнопки */
+    position: relative;
     margin-top: 10px;
 }
 
-
-
 .avatar {
-    width: 40px; /* Ширина аватарки */
-    height: 40px; /* Высота аватарки */
-    border-radius: 50%; /* Округлая форма */
-    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
     border: 2px solid #ccc;
 }
-
-
 
 .owner-username {
     font-size: 20px;
@@ -54,7 +50,7 @@
     margin: 0;
 }
 
-.username:hover { /* Эффект увеличения при наведении */
+.username:hover {
     color: #61dafb;
     transform: scale(1.05);
 }
@@ -63,13 +59,14 @@
     font-size: 14px;
     color: #555;
     margin: 10px 0;
-     word-wrap: break-word; /* Переносит длинные слова на новую строку */
-    overflow-wrap: break-word; /* Для совместимости с другими браузерами */
-    white-space: normal; /* Текст будет перенесен на новую строку */
-    word-break: break-word; /* Разрывает длинные слова на новую строку */
-    width: 100%; /* Контейнер будет занимать всю доступную ширину */
-    box-sizing: border-box; /* Учитывает padding и border в ширине */
-    line-height: 1.6; /* Увеличивает расстояние между строками */
+     word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    word-break: break-word;
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1.6;
+    margin-bottom: auto;
 }
 
 .tags {
@@ -95,28 +92,27 @@
 }
 
 .comment-section {
-    border: 1px solid #ccc; /* Добавляем серую рамку */
-    border-radius: 8px; /* Скругляем углы */
-    padding: 15px; /* Внутренний отступ */
-    background-color: #f9f9f9; /* Светло-серый фон */
-    margin-top: 20px; /* Отступ сверху */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Легкая тень для глубины */
-    max-height: 600px; /* Фиксированная высота для отображения примерно 5 комментариев */
-    overflow-y: auto; /* Включаем вертикальный скролл */
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-height: 600px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Расстояние между элементами */
+    gap: 15px;
 }
 
 .comment {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    gap: 10px;
 }
 
 .comment-section {
-    width: 25%; /* Фиксированная ширина */
-    max-width: 300px; /* Ограничение на максимальную ширину */
+    width: 25%;
     padding: 10px;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -124,7 +120,7 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Расстояние между элементами */
+    gap: 15px;
 }
 
 .comment-form {
@@ -139,7 +135,7 @@
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    resize: none; /* Отключить изменение размера */
+    resize: none;
     font-family: Arial, sans-serif;
     font-size: 14px;
     box-sizing: border-box;
@@ -175,14 +171,14 @@
 }
 
 .comment:last-child {
-    border-bottom: none; /* Убрать линию у последнего комментария */
+    border-bottom: none;
 }
 
 .comment-card {
     background-color: #ffffff;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px 15px; /* Уменьшенный отступ сверху */
+    padding: 10px 15px;
     margin-bottom: 15px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -193,15 +189,15 @@
 
 .comment-header {
     display: flex;
-    justify-content: space-between; /* Разделяем имя и кнопку по краям */
-    align-items: center; /* Выравниваем по вертикали */
-    margin-bottom: 8px; /* Отступ между заголовком и текстом комментария */
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
 }
 
 .comment-author {
     font-weight: bold;
     font-size: 14px;
-    margin: 0; /* Убираем стандартный отступ */
+    margin: 0;
 }
 
 .comment-text {
@@ -212,8 +208,8 @@
 
 .action-buttons {
     display: flex;
-    align-items: center; /* Выравнивание кнопок по вертикали */
-    gap: 5px; /* Расстояние между кнопками */
+    align-items: center;
+    gap: 5px;
 }
 
 .delete-button {
@@ -222,40 +218,48 @@
     cursor: pointer;
     padding: 0;
     display: flex;
-    align-items: center; /* Центрирование иконки внутри кнопки */
+    align-items: center;
     justify-content: center;
-    width: 24px; /* Размер кнопки */
+    width: 24px;
     height: 24px;
     transition: transform 0.2s ease-in-out;
 }
 
 .delete-button:hover {
-    transform: scale(1.1); /* Увеличение кнопки при наведении */
+    transform: scale(1.1);
 }
 
 .action-icon {
-    width: 15px; /* Размер иконки */
+    width: 15px;
     height: 15px;
     object-fit: contain;
     filter: grayscale(50%);
     transition: filter 0.3s;
 }
 
+.action-icon-description {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: grayscale(50%);
+    transition: filter 0.3s;
+}
+
 .delete-button:hover .action-icon {
-    filter: none; /* Убираем фильтр при наведении */
+    filter: none;
 }
 
 
 .trash-icon {
-    width: 15px; /* Размер иконки */
+    width: 15px;
     height: 15px;
-    object-fit: contain; /* Сохраняет пропорции PNG */
-    filter: grayscale(50%); /* Лёгкий стиль для ненажатого состояния */
+    object-fit: contain;
+    filter: grayscale(50%);
     transition: filter 0.3s;
 }
 
 .delete-button:hover .trash-icon {
-    filter: none; /* Убираем фильтр при наведении */
+    filter: none;
 }
 
 .comment-author {
@@ -269,7 +273,6 @@
     line-height: 1.5;
 }
 
-/* Выравнивание по шапке */
 .content {
     margin-top: 20px;
     padding: 0 20px;
@@ -287,16 +290,16 @@
 
 .comment-author-container {
     display: flex;
-    align-items: center; /* Выравнивание по вертикали */
-    gap: 10px; /* Расстояние между аватаркой и ником */
+    align-items: center;
+    gap: 10px;
 }
 
 .comment-avatar {
-    width: 30px; /* Ширина аватарки */
-    height: 30px; /* Высота аватарки */
-    border-radius: 50%; /* Округлая форма */
-    object-fit: cover; /* Автоматическое обрезание для сохранения пропорций */
-    border: 2px solid #ccc; /* Рамка вокруг аватарки */
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ccc;
 }
 
 .comment-avatar:hover {
@@ -307,8 +310,8 @@
 
 .delete-button-container {
     display: flex;
-    justify-content: flex-end; /* Выравниваем кнопку удаления по правому краю */
-    margin-top: 10px; /* Расстояние от фотографии */
+    justify-content: flex-end;
+    margin-bottom: 10px;
 }
 
 .delete-button-photo {
@@ -330,7 +333,7 @@
 }
 
 .delete-button-photo:hover .delete-text {
-    color: #d9534f; /* Красный цвет при наведении */
+    color: #d9534f;
 }
 
 .trash-icon-photo {
@@ -341,7 +344,7 @@
 }
 
 .delete-button-photo:hover .trash-icon-photo {
-    filter: none; /* Убираем фильтр при наведении */
+    filter: none;
 }
 
 .edit-comment-input {
@@ -363,24 +366,14 @@
     border-radius: 4px;
     margin-top: 10px;
     transition: background-color 0.3s;
+    margin-top: 5px;
 }
 
 .save-button:hover {
     background-color: #45a049;
 }
 
-.edit-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease-in-out;;
-}
-
-.edit-button-comment {
+.edit-button-comment, .edit-button-description{
     background: none;
     border: none;
     cursor: pointer;
@@ -392,15 +385,14 @@
 }
 
 .edit-button:hover {
-    transform: scale(1.1); /* Увеличение кнопки при наведении */
+    transform: scale(1.1);
 }
 
-/* Улучшенное поле для изменения комментария */
 .edit-comment-input {
     width: 100%;
     height: 60px;
     padding: 8px;
-    font-size: 16px; /* Увеличим размер шрифта для улучшения читаемости */
+    font-size: 16px;
     font-family: 'Arial', sans-serif;
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -411,45 +403,35 @@
     margin: 8px 0;
 }
 
-/* Добавляем эффект при наведении на поле */
 .edit-comment-input:focus {
     outline: none;
-    border-color: #61dafb; /* Цвет рамки при фокусе */
-    box-shadow: 0 0 8px rgba(97, 218, 251, 0.6); /* Легкий эффект подсветки */
+    border-color: #61dafb;
+    box-shadow: 0 0 8px rgba(97, 218, 251, 0.6);
 }
 
-/* Кнопка для сохранения */
 .save-button {
     background-color: #61dafb;
     color: white;
     border: none;
-    padding: 5px 15px;  /* Уменьшаем размер кнопки */
-    font-size: 14px;  /* Меньший шрифт */
-    font-weight: 600;  /* Легкий жирный шрифт */
+    padding: 5px 15px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    border-radius: 4px;  /* Скругляем углы */
+    border-radius: 4px;
     transition: background-color 0.3s;
 }
 
-/* Эффект наведения на кнопку */
 .save-button:hover {
     background-color: #4fa3d1;
-    transform: translateY(-2px); /* Легкий эффект поднятия кнопки */
 }
 
-/* Добавляем эффект при нажатии */
-.save-button:active {
-    transform: translateY(0); /* Снимаем эффект поднятия */
-}
-
-/* Шрифт для текста комментариев и кнопок */
 .comment-text, .save-button, .edit-comment-input {
     position: relative;
     margin-bottom: 10px;
 }
 
 .save-button:focus {
-    outline: none; /* Убираем обводку при фокусе */
+    outline: none;
 }
 
 @media (max-width: 768px) {
@@ -463,21 +445,29 @@
 }
 
 .edit-description-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 #edit-description-input {
     width: 100%;
-    height: 100px;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    margin-bottom: 10px;
+    height: 120px;
+    padding: 15px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 15px;
     box-sizing: border-box;
-    resize: none;
+    resize: vertical;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#edit-description-input:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
 
 .hidden {
@@ -486,8 +476,8 @@
 
 .user-info {
     display: flex;
-    align-items: center; /* Центрируем элементы по вертикали */
-    gap: 10px; /* Добавляем пространство между аватаром и ником */
+    align-items: center;
+    gap: 10px;
 }
 
 .user-info a {
@@ -496,7 +486,7 @@
 
 .user-info a:hover {
     transform: scale(1.05);
-    color: #61dafb; /* Цвет текста при наведении */
+    color: #61dafb;
 }
 
 .user-info .owner-username {
@@ -505,12 +495,31 @@
 
 .user-info .owner-username:hover {
     transform: scale(1.05);
-    color: #61dafb; /* Цвет текста для имени пользователя */
+    color: #61dafb;
 }
 
-.avatar:hover { /* Эффект увеличения при наведении */
+.avatar:hover {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     border-color: #61dafb;
 }
 
+.save-description-button {
+    display: block;
+    background-color: #61dafb;
+    color: white;
+    border: none;
+    padding: 5px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
 
+.save-description-button:hover {
+    background-color: #4fa3d1;
+}
+
+.save-description-button:focus {
+    outline: none;
+}

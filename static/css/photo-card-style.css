@@ -1,9 +1,9 @@
 .center-horizontal {
   display: flex;
-  flex-direction: column; /* Элементы располагаются вертикально */
-  align-items: center;    /* Центрирование по горизонтали */
-  margin: 0 auto;         /* Центрирование самого div, если это необходимо */
-  text-align: center;     /* Текст внутри элементов центрируется */
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  text-align: center;
 }
 
 .avatar {
@@ -17,137 +17,137 @@
 
 .card-container {
     display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Максимум 5 карточек в строке */
-    gap: 20px; /* Расстояние между карточками */
-    max-width: 1200px; /* Ограничение ширины */
-    margin: 20px auto; /* Центрирование контейнера по горизонтали */
-    padding: 0 20px; /* Отступы от краев экрана */
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
     box-sizing: border-box;
     justify-content: center;
 }
 
 .card-container-wrapper {
-    margin-top: 20px; /* Отступ сверху от шапки */
+    margin-top: 20px;
 }
 
-/* Стили карточки */
 .card {
     background-color: #ffffff;
     border-radius: 8px;
-    border: 2px solid #ddd; /* Края */
+    border: 2px solid #ddd;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    width: 250px; /* Фиксированная ширина карточки */
+    width: 250px;
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
-    transform: translateY(-10px); /* Эффект при наведении */
-    border-color: #61dafb; /* Изменение цвета края при наведении */
+    transform: translateY(-10px);
+    border-color: #61dafb;
 }
 
-/* Изображение карточки */
 .card-img {
-    width: 100%; /* Ширина по ширине карточки */
-    height: 200px; /* Фиксированная высота */
-    object-fit: cover; /* Центрирование и обрезка изображения */
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
     border-bottom: 2px solid #f1f1f1;
 }
 
-/* Содержимое карточки */
 .card-content {
-    padding: 10px; /* Уменьшаем общий отступ */
+    padding: 10px;
 }
 
 .author {
     font-size: 16px;
     font-weight: bold;
     color: #333;
-    margin-top: 5px; /* Добавляем небольшой отступ сверху */
-    margin-bottom: 5px; /* Уменьшаем отступ снизу */
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 .description {
     font-size: 15px;
     color: #666;
     line-height: 0.5;
+    padding-left: 10px;
 }
-
 
 @media (max-width: 768px) {
     .card-container {
         grid-template-columns: 1fr;
     }
 }
-/* Секция с комментариями */
+
 .comments-section {
-    margin-top: 20px; /* Отступ сверху */
-    border-top: 1px solid rgba(0, 0, 0, 0.2); /* Полупрозрачная линия */
-    width: 90%; /* Линия не на всю ширину карточки */
-    margin-left: auto; /* Центрируем линию по горизонтали */
+    margin-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    width: 90%;
+    margin-left: auto;
     margin-right: auto;
-    padding: 0; /* Убираем возможные отступы внутри контейнера */
+    padding: 0;
 }
 
-/* Стили для каждого комментария */
 .comment {
-    margin-top: 5px; /* Небольшой отступ сверху */
-    display: flex; /* Используем flex для равномерного выравнивания */
-    align-items: flex-start; /* Выравнивание по верху */
-    gap: 5px; /* Небольшой промежуток между автором и текстом */
+    margin-top: 5px;
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
 }
-/* Ник пользователя, который написал комментарий */
+
 .comment-author {
-    font-size: 12px; /* Размер шрифта для ника */
+    font-size: 12px;
     font-weight: bold;
-    color: #007bff;
+    color: black;
     text-decoration: none;
-    margin-right: 5px; /* Отступ между ником и текстом комментария */
+    margin-right: 5px;
 }
 
 .comment-author:hover {
-    text-decoration: underline; /* Подчеркивание при наведении */
+    text-decoration: none;
+    color: #61dafb;
 }
 
-/* Текст комментария */
 .comment-text {
-    font-size: 12px; /* Размер текста комментария */
+    font-size: 12px;
     color: #444;
-    margin: 0; /* Убираем отступы вокруг текста */
-    line-height: 1.2; /* Межстрочный интервал */
+    margin: 0;
+    line-height: 1.2;
 }
 
-/* Мобильные устройства */
 @media (max-width: 768px) {
     .comment-author {
-        font-size: 11px; /* Для мобильных устройств уменьшение шрифта никнейма */
+        font-size: 11px;
     }
 
     .comment-text {
-        font-size: 11px; /* Уменьшаем текст комментария для мобильных устройств */
+        font-size: 11px;
     }
 }
 
 @media (max-width: 768px) {
     .card-container {
-        grid-template-columns: repeat(2, 1fr); /* Максимум 2 карточки на строке */
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 480px) {
     .card-container {
-        grid-template-columns: 1fr; /* Одна карточка на строке */
+        grid-template-columns: 1fr;
     }
 }
 
 .centered-title {
-    font-size: 36px; /* Увеличенный размер шрифта */
-    font-weight: bold; /* Жирный текст */
-    color: #20232a; /* Тёмный цвет для текста */
-    text-align: center; /* Центрирование по горизонтали */
-
+    font-size: 36px;
+    font-weight: bold;
+    color: #20232a;
+    text-align: center;
 }
 
 .card-tags {
-    margin-bottom: 5px; /* Уменьшаем отступ снизу */
+    margin-bottom: 5px;
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+    .card {
+        width: 200px;
+    }
 }

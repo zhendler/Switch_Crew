@@ -1,10 +1,9 @@
-from fastapi import Depends, APIRouter, Form, status, Request, Path, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import Depends, APIRouter, Form, status, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import get_db
 from src.auth.utils import FORADMIN, get_current_user, get_current_user_cookies
-from src.models.models import User
+from src.models.models import User, Reaction
 from src.reactions.repos import ReactionRepository
 from src.reactions.schemas import ReactionResponse, ReactionRequest
 from src.utils.front_end_utils import get_response_format
@@ -32,7 +31,7 @@ async def create_tag(
     This endpoint allows the creation of a new tag in the database. If a tag with the same name already exists,
     it will be returned instead of creating a duplicate.
 
-    :param reaction_number: The number of the reaction to create (required).
+    :param reaction_name: The name of the reaction to create (required).
     :param db: Database session dependency.
     :param response_format: Swagger or HTML?
     :return: The newly created or existing tag as a `TagResponse` model.
@@ -50,7 +49,7 @@ async def create_tag(
 async def add_reaction_to_photo(
         request: Request,
         reaction_data: ReactionRequest,
-        db: AsyncSession = Depends(get_db),):
+        db: AsyncSession = Depends(get_db),) -> dict:
     user = await get_current_user_cookies(request, db)
     reaction_repo = ReactionRepository(db)
 
@@ -97,10 +96,10 @@ async def get_reaction_by_user_and_photo(
         photo_id: int,
         db: AsyncSession = Depends(get_db),):
     reaction_repo = ReactionRepository(db)
-    reaction = await reaction_repo.get_all_reactions_by_photo(photo_id)
+    reactions = await reaction_repo.get_all_reactions_by_photo(photo_id)
 
-    if reaction:
-        return reaction
+    if reactions:
+        return reactions
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -130,7 +129,7 @@ async def change_reaction(
             detail="Reaction not found"
         )
 
-@reaction_router.post(
+@reaction_router.post(       
     "/delete_reaction/",
     status_code=status.HTTP_202_ACCEPTED,
     response_model=str

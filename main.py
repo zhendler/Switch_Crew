@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.admin.routers import router as admin_router
 from config.db import get_db
 from src.auth.repos import UserRepository
+from src.photos.repos import PhotoRepository
 from src.reactions.routers import reaction_router
+from src.subscription.repos import SubscriptionRepository
 from src.tags.repos import TagRepository
 from src.tags.routers import tag_router
 from src.comments.routers import router as comment_router
@@ -17,7 +20,7 @@ from src.auth.utils import BANNED_CHECK, ACTIV_AND_BANNED, get_current_user_cook
 from src.photos.routers import photo_router, mainrouter
 from src.user_profile.repos import UserProfileRepository
 from src.user_profile.routers import router as user_router
-from src.web.routers import router as web_router
+from src.utils.front_end_utils import truncatechars, format_datetime
 from src.subscription.routers import router as subscription_router
 
 app = FastAPI()
@@ -50,7 +53,6 @@ app.include_router(
     prefix="/user_profile",
     tags=["user_profile"],
 )
-app.include_router(web_router, prefix="")
 app.include_router(reaction_router, prefix="/reaction", tags=["reactions"])
 app.include_router(subscription_router, prefix="/subscriptions", tags=["Subscriptions"])
 app.include_router(mainrouter, prefix="")
@@ -59,9 +61,10 @@ app.mount("/static", StaticFiles(directory=static_path), name="static")
 
 
 templates = Jinja2Templates(directory="templates")
+templates.env.filters["truncatechars"] = truncatechars
 
 
-@app.get("/search/")
+@app.get('/search/')
 async def search(
     request: Request,
     query: str,
@@ -84,5 +87,50 @@ async def search(
             "query": query,
             "searched_users": searched_users,
             "tags": tags,
+        },
+    )
+
+
+@app.get("/page/{username}")
+async def page(request: Request,
+               username: str,
+               db: AsyncSession = Depends(get_db)):
+    user_repo = UserRepository(db)
+    photo_repo = PhotoRepository(db)
+
+    user_page = await user_repo.get_user_by_username(username)
+    user = await get_current_user_cookies(request, db)
+
+    date_obj = datetime.fromisoformat(str(user_page.created_at))
+    date_of_registration = date_obj.strftime("%Y-%m-%d")
+
+    photos = await photo_repo.get_users_all_photos(user_page)
+    if photos:
+        amount_of_photos = len(photos)
+    else:
+        amount_of_photos = 0
+
+    detail = request.query_params.get("detail")
+
+    sub_repo = SubscriptionRepository(db)
+    if user:
+        subscribe = await sub_repo.check_is_subscribed(user.id, user_page.id)
+    else:
+        subscribe = False
+
+    amount_of_subscribes = await sub_repo.amount_of_subscribes(user_page.id)
+
+    return templates.TemplateResponse(
+        "/user/page.html",
+        {
+            "request": request,
+            "user_page": user_page,
+            "user": user,
+            "photos": photos,
+            "Date_reg": date_of_registration,
+            "amount_of_photos": amount_of_photos,
+            "detail": detail,
+            "subscribe": subscribe,
+            "amount_of_subscribes": amount_of_subscribes,
         },
     )

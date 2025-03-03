@@ -136,13 +136,13 @@ class User(Base):
 
     role: Mapped["Role"] = relationship("Role", back_populates="users", lazy="selectin")
     photos: Mapped[list["Photo"]] = relationship(
-        "Photo", back_populates="owner", lazy="selectin"
+        "Photo", back_populates="owner", lazy="selectin", cascade="all, delete"
     )
     comments: Mapped[list["Comment"]] = relationship(
-        "Comment", back_populates="user", lazy="selectin"
+        "Comment", back_populates="user", lazy="selectin", cascade="all, delete"
     )
     reactions: Mapped[list["Reaction"]] = relationship(
-        "Reaction", secondary=photo_reactions, back_populates="user", lazy="selectin"
+        "Reaction", secondary=photo_reactions, back_populates="user", lazy="selectin", cascade="all, delete"
     )
     # Зв'язок з підписками, де користувач є підписником
     subscriptions: Mapped[list["Subscription"]] = relationship(
@@ -187,7 +187,7 @@ class Photo(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     rating: Mapped[int] = mapped_column(Integer, nullable=True)
     qr_core_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped["datetime"] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
@@ -198,7 +198,7 @@ class Photo(Base):
     )
     # Відношення з Comment
     comments: Mapped[list["Comment"]] = relationship(
-        "Comment", back_populates="photo", lazy="selectin"
+        "Comment", back_populates="photo", lazy="selectin", cascade="all, delete"
     )
     # Відношення з Tag через проміжну таблицю
     tags: Mapped[list["Tag"]] = relationship(
@@ -233,8 +233,11 @@ class Comment(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     content: Mapped[str] = mapped_column(String, nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    photo_id: Mapped[int] = mapped_column(ForeignKey("photos.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    photo_id: Mapped[int | None] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"),
+                                                 nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"),
+                                                  nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
@@ -246,6 +249,13 @@ class Comment(Base):
 
     user: Mapped["User"] = relationship("User", lazy="selectin")
     photo: Mapped["Photo"] = relationship("Photo", lazy="selectin")
+
+    parent: Mapped["Comment"] = relationship(
+        "Comment", remote_side=[id], back_populates="replies", lazy="selectin"
+    )
+    replies: Mapped[list["Comment"]] = relationship(
+        "Comment", back_populates="parent", cascade="all, delete-orphan", lazy="selectin"
+    )
 
 
 class Tag(Base):

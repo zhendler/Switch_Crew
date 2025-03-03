@@ -24,7 +24,7 @@
                             <div class="photos">
                                 {% if user.photos %}
                                     {% for photo in user.photos[:3] %}
-                                    <a href="/photo/{{photo.id}}" class="photo-link">
+                                    <a href="/photos/{{photo.id}}" class="photo-link">
                                         <div class="photo">
                                             <img src="{{ photo.url_link }}" alt="Photo by {{ user.username }}">
                                         </div>
@@ -48,13 +48,13 @@
         <div class="tags-container">
             {% if tags %}
                 {% for tag in tags[:6] %}
-                <a href="/tag/{{tag.name}}/photos/" class="photo-link">
+                <a href="/tags/{{tag.name}}/photos/" class="photo-link">
                 <div class="tag-section">
                     <h4>#{{ tag.name }}</h4>
                     <div class="tag-photos">
                         {% if tag.photos %}
                             {% for photo in tag.photos[:3] %}
-                            <a href="/photo/{{ photo.id }}" class="photo-link">
+                            <a href="/photos/{{ photo.id }}" class="photo-link">
                                 <div class="photo">
                                     <img src="{{ photo.url_link }}" alt="Photo tagged with {{ tag.name }}">
                                 </div>

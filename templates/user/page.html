@@ -2,7 +2,8 @@
 
 {% block content %}
 <link rel="stylesheet" href="/static/css/page-style.css">
-
+<link rel="stylesheet" href="/static/css/subscribe-buttons-styles.css">
+<link rel="stylesheet" href="/static/css/user_subs-styles.css">s
 <div class="profile-container">
     {% if detail %}
         <h5 class="success-message">{{ detail }}</h5>
@@ -17,7 +18,7 @@
             </div>
         {% endif %}
         <div class="user-info-section">
-            {% if user_page.id == user.id and  user.is_active == False %}
+            {% if user_page.id == user.id and user.is_active == False %}
                 <form action="/auth/resend-verifi-email" method="post">
                     <input type="hidden" name="email" value="{{ user.email }}">
                     <button class="verify-email-button">Verify Email</button>
@@ -54,27 +55,42 @@
             </form>
             {% endif %}
         </div>
+        {% if subscribe == True and user_page.id != user.id %}
+            <button class="unsubscribe-button" data-user-id="{{ user_page.id }}">
+                <span class="button-icon"></span>
+                Followed
+            </button>
+        {% elif subscribe == False and user_page.id != user.id %}
+            <button class="subscribe-button" data-user-id="{{ user_page.id }}">
+                <span class="button-icon"></span>
+                Follow
+            </button>
+        {% endif %}
     </div>
-    <p class="photo-count">
-        <span class="count">{{ amount_of_photos }}</span> Publications
-    </p>
+    <div class="photo-stats">
+        <div class="stat" data-user-id="{{ user_page.id }}">
+            <span class="count">{{ amount_of_subscribes }}</span>
+            <span class="label">Followers</span>
+        </div>
+        <div class="stat">
+            <span class="count">{{ amount_of_photos }}</span>
+            <span class="label">Publications</span>
+        </div>
+    </div>
 </div>
 
 <div class="card-container">
     {% if photos %}
         {% for photo in photos %}
         <div class="card">
-            <a href="/photo/{{photo.id}}">
+            <a href="/photos/{{photo.id}}">
                 <img src="{{ photo.url_link }}" alt="Photo" class="card-img">
             </a>
             <div class="card-content">
-                <a href="/page/{{photo.owner.username}}">
-                    <p class="author">{{ photo.owner.username }}</p>
-                </a>
                 <p class="description">{{ photo.description }}</p>
                 <div class="card-tags">
                     {% for tag in photo.tags %}
-                    <a href="/tag/{{ tag.name }}/photos/" class="tag-link">
+                    <a href="/tags/{{ tag.name }}/photos/" class="tag-link-photo">
                         #{{ tag.name }}
                     </a>
                     {% endfor %}
@@ -95,4 +111,6 @@
     {% endif %}
 </div>
 <script src="/static/scripts/change-profile.js"></script>
+<script src="/static/scripts/subscribe.js"></script>
+<script src="/static/scripts/amount_of_subs-scripts.js"></script>
 {% endblock %}

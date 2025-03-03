@@ -1,0 +1,33 @@
+.preview-container {
+    width: 100%;
+    max-width: 460px;
+    height: 230px;
+    margin: 20px auto;
+    text-align: center;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    transition: border-color 0.3s ease;
+}
+
+.preview-container:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+#preview-image {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#preview-image.show {
+    display: block;
+    opacity: 1;
+}

@@ -2,26 +2,46 @@
 
 {% block content %}
 <link rel="stylesheet" href="/static/css/upload_photo.css">
+<link rel="stylesheet" href="/static/css/photo_preview.css">
 <main class="content">
     <div class="upload-container">
         <h2>Photo uploading</h2>
-<form action="/photos/create/" method="POST" enctype="multipart/form-data" class="upload-form">            <div class="form-group">
-                <label for="file">Select photo</label>
-                <input type="file" id="file" name="file" required>
-            </div>
+<form action="/photos/create/" method="POST" enctype="multipart/form-data" class="upload-form">
+  <div class="form-group">
+        <label for="file">Select photo</label>
+        <input type="file" id="file" name="file" required>
+    </div>
+    <div class="preview-container">
+        <img id="preview-image" alt="Image Preview">
+    </div>
 
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description" rows="2" required></textarea>
-            </div>
+    <div class="form-group">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="2"></textarea>
+    </div>
 
-            <div class="form-group">
-                <label for="tags">Tags</label>
-                <input type="text" id="tags" name="tags" placeholder="Enter tags separated by commas (max 5 tags)" required>
-                <small>Tags can be separated by commas, for example: nature, travel, recreation.</small>
-            </div>
-            <button type="submit" class="submit-btn">Upload photo</button>
-        </form>
+    <div class="form-group">
+        <label for="tag-input">Tags</label>
+        <input type="text" id="tag-input" placeholder="Enter tags (press space to add)">
+        <div class="tag-container"></div>
+        <input type="hidden" id="tags" name="tags">
+    </div>
+
+    <div class="form-group">
+        <label for="effect" class="form-label">Effect</label>
+        <select id="effect" name="effect" class="styled-select">
+            <option value="">None</option>
+            <option value="sepia">Sepia</option>
+            <option value="grayscale">Grayscale</option>
+            <option value="blur">Blur</option>
+            <option value="negate">Negate</option>
+        </select>
+    </div>
+
+    <button type="submit" class="submit-btn">Upload photo</button>
+</form>
     </div>
 </main>
+<script src="/static/scripts/photo_preview.js"></script>
+<script src="/static/scripts/upload_photo-scripts.js"></script>
 {% endblock %}

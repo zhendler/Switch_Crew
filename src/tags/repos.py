@@ -35,14 +35,12 @@ class TagRepository:
         :raises HTTPException: If no tag with the specified name is found.
         """
         result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
-        print("Hello")
         tag = result.scalar_one_or_none()
-        if tag:
-            return tag
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!"
-            )
+
+        if not tag:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found!")
+
+        return tag
 
     async def create_tag(self, tag_name: str) -> Tag:
         """
@@ -54,16 +52,15 @@ class TagRepository:
         :param tag_name: The name of the tag to create.
         :return: A `Tag` object representing the newly created or existing tag.
         """
-        result = await self.db.execute(select(Tag).where(Tag.name == tag_name))
-        existing_tag = result.scalar_one_or_none()
+        existing_tag = await self.get_tag_by_name(tag_name)
         if existing_tag:
             return existing_tag
-
-        new_tag = Tag(name=tag_name)
-        self.db.add(new_tag)
-        await self.db.commit()
-        await self.db.refresh(new_tag)
-        return new_tag
+        else:
+            new_tag = Tag(name=tag_name)
+            self.db.add(new_tag)
+            await self.db.commit()
+            await self.db.refresh(new_tag)
+            return new_tag
 
     async def get_all_tags(self) -> Sequence[Tag]:
         """
@@ -74,7 +71,11 @@ class TagRepository:
         :return: A sequence of `Tag` objects representing all tags in the database.
         """
         tags = await self.db.execute(select(Tag))
+        if not tags:
+            raise HTTPException(status_code=404, detail="Tags not found!")
+
         return tags.scalars().all()
+
 
     async def get_all_tags_with_photos(self) -> Sequence[Tag]:
         """
@@ -86,9 +87,11 @@ class TagRepository:
         """
         result = await self.db.execute(select(Tag))
         tags = result.scalars().all()
-        tags_with_photos = [tag for tag in tags if tag.photos]
-        return tags_with_photos
 
+        tags_with_photos = [tag for tag in tags if tag.photos]
+        if not tags_with_photos:
+            raise HTTPException(status_code=404, detail="Tags not found!")
+        return tags_with_photos
 
     async def delete_tag_by_name(self, tag_name: str) -> str:
         """
@@ -101,10 +104,12 @@ class TagRepository:
         :raises HTTPException: If the tag with the specified name does not exist.
         """
         tag = await self.get_tag_by_name(tag_name)
-
-        await self.db.delete(tag)
-        await self.db.commit()
-        return "Successfully deleted!"
+        if tag:
+            await self.db.delete(tag)
+            await self.db.commit()
+            return "Successfully deleted!"
+        else:
+            raise HTTPException(status_code=404, detail="Tag not found!")
 
     async def update_tag_name(self, tag_name: str, tag_new_name: str) -> Tag:
         """
@@ -118,13 +123,15 @@ class TagRepository:
         :raises HTTPException: If the tag with the specified name does not exist.
         """
         tag = await self.get_tag_by_name(tag_name)
+        if tag:
+            tag.name = tag_new_name
+            await self.db.commit()
+            await self.db.refresh(tag)
+            return tag
+        else:
+            raise HTTPException(status_code=404, detail="Tag not found!")
 
-        tag.name = tag_new_name
-        await self.db.commit()
-        await self.db.refresh(tag)
-        return tag
-
-    async def get_photos_by_tag(self, tag_name: str) -> Sequence[Photo]:
+    async def get_photos_by_tag(self, tag_name: str) -> Sequence[Photo] or str:
         """
         Retrieves all photos associated with a specific tag.
 
@@ -170,6 +177,8 @@ class TagRepository:
         )
         result = await self.db.execute(query)
         tags = result.scalars().all()
+        if not tags:
+            raise HTTPException(status_code=404, detail="Tags not found!")
 
         tags_sorted = sorted(tags, key=lambda tag: not tag.name.startswith(text))
         return tags_sorted

@@ -16,6 +16,7 @@ async function addReaction(reactionId, photoId) {
             const data = await response.json();
             console.log('Reaction processed:', data);
 
+            // Обновляем счетчики реакций для текущей фотографии
             for (let i = 1; i <= 8; i++) {
                 const reactionCountElement = document.querySelector(`.reaction-container[onclick="addReaction(${i}, ${photoId})"] .reaction-count`);
                 if (reactionCountElement) {
@@ -23,10 +24,13 @@ async function addReaction(reactionId, photoId) {
                 }
             }
 
-            document.querySelectorAll('.reaction-circle.active').forEach(el => {
+            // Удаляем класс 'active' со всех реакций
+            const activeReactions = document.querySelectorAll('.reaction-circle.active');
+            activeReactions.forEach(el => {
                 el.classList.remove('active');
             });
 
+            // Добавляем класс 'active' к выбранной реакции
             if (data.current_reaction !== null) {
                 const reactionCircle = document.querySelector(`.reaction-container[onclick="addReaction(${reactionId}, ${photoId})"] .reaction-circle`);
                 if (reactionCircle) {

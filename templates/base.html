@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <link rel="stylesheet" href="/static/css/header-style.css">
     <link rel="stylesheet" href="/static/css/photo-card-style.css">
+    <link rel="stylesheet" href="/static/css/phones.css">
 </head>
   <body>
     <header class="header">
@@ -16,9 +17,23 @@
             </a>
         <nav class="nav">
             <ul>
-                <li><a href="/" class="{{ 'active' if request.path == '/' }}">Main</a></li>
-                <li><a href="/photos/all_photos/" class="{{ 'active' if request.path == '/photos/all_photos/' }}">Photos</a></li>
-                <li><a href="/tags/tags/" class="{{ 'active' if request.path == '/tags/tags/' }}">Tags</a></li>
+                <li>
+                    <a href="/feed" class="{{ 'active' if request.path == '/' }}">
+                        <img src="/static/images/house.png" class="tab-icon">Feed
+                    </a>
+                </li>
+                <li>
+                    <a href="/photos/all_photos/" class="{{ 'active' if request.path == '/photos/all_photos/' }}">
+                        <img src="/static/images/photo.png" class="tab-icon">
+                        Photos
+                    </a>
+                </li>
+                <li>
+                    <a href="/tags/tags/" class="{{ 'active' if request.path == '/tags/tags/' }}">
+                        <img src="/static/images/tag.png" class="tab-icon">
+                        Tags
+                    </a>
+                </li>
             </ul>
         </nav>
         <div class="search-bar">
@@ -53,7 +68,6 @@
         {% endif %}
     </div>
 </header>
-
 <main class="content">
     {% block content %}
     {% endblock %}
@@ -69,6 +83,5 @@
         </nav>
     </div>
 </footer>
-
 </body>
 </html>
