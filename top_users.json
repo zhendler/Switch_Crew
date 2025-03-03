@@ -1,0 +1,338 @@
+[
+    {
+        "position": 1,
+        "user_id": 3,
+        "username": "Maksym",
+        "score": 87
+    },
+    {
+        "position": 2,
+        "user_id": 79,
+        "username": "Viktor",
+        "score": 52
+    },
+    {
+        "position": 3,
+        "user_id": 81,
+        "username": "Yevhenii",
+        "score": 40
+    },
+    {
+        "position": 4,
+        "user_id": 38,
+        "username": "user23",
+        "score": 35
+    },
+    {
+        "position": 5,
+        "user_id": 6,
+        "username": "user48",
+        "score": 30
+    },
+    {
+        "position": 6,
+        "user_id": 80,
+        "username": "Dmitriy",
+        "score": 22
+    },
+    {
+        "position": 7,
+        "user_id": 5,
+        "username": "user7",
+        "score": 21
+    },
+    {
+        "position": 8,
+        "user_id": 9,
+        "username": "user50",
+        "score": 20
+    },
+    {
+        "position": 9,
+        "user_id": 36,
+        "username": "user21",
+        "score": 11
+    },
+    {
+        "position": 10,
+        "user_id": 37,
+        "username": "user22",
+        "score": 10
+    },
+    {
+        "position": 11,
+        "user_id": 15,
+        "username": "user56",
+        "score": 10
+    },
+    {
+        "position": 12,
+        "user_id": 11,
+        "username": "user52",
+        "score": 10
+    },
+    {
+        "position": 13,
+        "user_id": 4,
+        "username": "user6",
+        "score": 10
+    },
+    {
+        "position": 14,
+        "user_id": 69,
+        "username": "banana",
+        "score": 10
+    },
+    {
+        "position": 15,
+        "user_id": 18,
+        "username": "user18",
+        "score": 10
+    },
+    {
+        "position": 16,
+        "user_id": 13,
+        "username": "user54",
+        "score": 10
+    },
+    {
+        "position": 17,
+        "user_id": 65,
+        "username": "user41",
+        "score": 10
+    },
+    {
+        "position": 18,
+        "user_id": 54,
+        "username": "zhendler312312",
+        "score": 6
+    },
+    {
+        "position": 19,
+        "user_id": 43,
+        "username": "user27",
+        "score": 1
+    },
+    {
+        "position": 20,
+        "user_id": 52,
+        "username": "user33",
+        "score": 1
+    },
+    {
+        "position": 21,
+        "user_id": 8,
+        "username": "user49",
+        "score": 0
+    },
+    {
+        "position": 22,
+        "user_id": 58,
+        "username": "user106",
+        "score": 0
+    },
+    {
+        "position": 23,
+        "user_id": 72,
+        "username": "user45",
+        "score": 0
+    },
+    {
+        "position": 24,
+        "user_id": 46,
+        "username": "user31",
+        "score": 0
+    },
+    {
+        "position": 25,
+        "user_id": 14,
+        "username": "user55",
+        "score": 0
+    },
+    {
+        "position": 26,
+        "user_id": 62,
+        "username": "user38",
+        "score": 0
+    },
+    {
+        "position": 27,
+        "user_id": 78,
+        "username": "user46",
+        "score": 0
+    },
+    {
+        "position": 28,
+        "user_id": 2,
+        "username": "user47",
+        "score": 0
+    },
+    {
+        "position": 29,
+        "user_id": 12,
+        "username": "user53",
+        "score": 0
+    },
+    {
+        "position": 30,
+        "user_id": 45,
+        "username": "user30",
+        "score": 0
+    },
+    {
+        "position": 31,
+        "user_id": 16,
+        "username": "user57",
+        "score": 0
+    },
+    {
+        "position": 32,
+        "user_id": 56,
+        "username": "user35",
+        "score": 0
+    },
+    {
+        "position": 33,
+        "user_id": 17,
+        "username": "Test-useruser",
+        "score": 0
+    },
+    {
+        "position": 34,
+        "user_id": 10,
+        "username": "user51",
+        "score": 0
+    },
+    {
+        "position": 35,
+        "user_id": 1,
+        "username": "user200",
+        "score": 0
+    },
+    {
+        "position": 36,
+        "user_id": 50,
+        "username": "user32",
+        "score": 0
+    },
+    {
+        "position": 37,
+        "user_id": 66,
+        "username": "user42",
+        "score": 0
+    },
+    {
+        "position": 38,
+        "user_id": 34,
+        "username": "user19",
+        "score": 0
+    },
+    {
+        "position": 39,
+        "user_id": 53,
+        "username": "user34",
+        "score": 0
+    },
+    {
+        "position": 40,
+        "user_id": 63,
+        "username": "user39",
+        "score": 0
+    },
+    {
+        "position": 41,
+        "user_id": 49,
+        "username": "user102",
+        "score": 0
+    },
+    {
+        "position": 42,
+        "user_id": 64,
+        "username": "user40",
+        "score": 0
+    },
+    {
+        "position": 43,
+        "user_id": 39,
+        "username": "user24",
+        "score": 0
+    },
+    {
+        "position": 44,
+        "user_id": 42,
+        "username": "user26",
+        "score": 0
+    },
+    {
+        "position": 45,
+        "user_id": 71,
+        "username": "useruseruser",
+        "score": 0
+    },
+    {
+        "position": 46,
+        "user_id": 61,
+        "username": "user37",
+        "score": 0
+    },
+    {
+        "position": 47,
+        "user_id": 55,
+        "username": "user105",
+        "score": 0
+    },
+    {
+        "position": 48,
+        "user_id": 44,
+        "username": "user28",
+        "score": 0
+    },
+    {
+        "position": 49,
+        "user_id": 47,
+        "username": "user100",
+        "score": 0
+    },
+    {
+        "position": 50,
+        "user_id": 57,
+        "username": "user36",
+        "score": 0
+    },
+    {
+        "position": 51,
+        "user_id": 41,
+        "username": "user25",
+        "score": 0
+    },
+    {
+        "position": 52,
+        "user_id": 70,
+        "username": "user44",
+        "score": 0
+    },
+    {
+        "position": 53,
+        "user_id": 35,
+        "username": "user20",
+        "score": 0
+    },
+    {
+        "position": 54,
+        "user_id": 60,
+        "username": "user29",
+        "score": 0
+    },
+    {
+        "position": 55,
+        "user_id": 68,
+        "username": "user43",
+        "score": 0
+    },
+    {
+        "position": 56,
+        "user_id": 48,
+        "username": "user101",
+        "score": 0
+    }
+]
