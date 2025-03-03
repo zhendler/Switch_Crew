@@ -8,7 +8,7 @@ It includes:
 - User status checks for active and banned accounts.
 """
 
-from fastapi import Depends, status, HTTPException, Response
+from fastapi import Depends, status, HTTPException, Request
 from jose import jwt, JWTError
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +27,11 @@ VERIFICATION_TOKEN_EXPIRE_HOURS = settings.verification_token_expire_hours
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+def token_from_cookie(request: Request):
+    token = request.cookies.get("access_token")
+    if token is None:
+        return None
+    return token
 
 def create_verification_token(email: str) -> str:
     """
@@ -120,8 +125,14 @@ def decode_access_token(token: str) -> TokenData | None:
         return None
 
 
+# async def get_current_user(
+#     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)   # оригінал
+# ) -> User:
+
+
+
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+    token: str = Depends(token_from_cookie), db: AsyncSession = Depends(get_db)
 ) -> User:
     """
     Retrieves the current user based on the access token.
@@ -136,6 +147,8 @@ async def get_current_user(
     Raises:
         HTTPException: If the token is invalid or the user does not exist.
     """
+    if token is None:
+        return None
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -188,7 +201,7 @@ async def check_user_banned(user: User = Depends(get_current_user)) -> None:
 async def get_current_user_cookies(request, db: AsyncSession):
     token = request.cookies.get("access_token")
     if token:
-        user = decode_access_token(token)
+        user = decode_access_token(token) # returns username
     else:
         return None
     if user is not None:
@@ -210,7 +223,7 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     async def __call__(
-        self, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)
+        self, token: str = Depends(token_from_cookie), db: AsyncSession = Depends(get_db)
     ) -> User:
         """
         Checks if the user has the required role to access a resource.
@@ -225,17 +238,23 @@ class RoleChecker:
         Raises:
             HTTPException: If the user does not have the required role.
         """
-        user = await get_current_user(token, db)
-        is_admin_or_moderator = user.role.name in [
-            RoleEnum.ADMIN.value,
-            RoleEnum.MODERATOR.value,
-        ]
-        if user.role.name not in [role.value for role in self.allowed_roles]:
+        if token:
+            user = await get_current_user(token, db)
+            is_admin_or_moderator = user.role.name in [
+                RoleEnum.ADMIN.value,
+                RoleEnum.MODERATOR.value,
+            ]
+            if user.role.name not in [role.value for role in self.allowed_roles]:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="You do not have permission to perform this action",
+                )
+            return user, is_admin_or_moderator
+        else:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to perform this action",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="You are not authenticated",
             )
-        return user, is_admin_or_moderator
 
 
 

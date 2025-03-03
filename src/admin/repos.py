@@ -1,9 +1,10 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased, joinedload
 
 from src import Comment
-from src.models.models import User, Photo
+from src.admin.schemas import RoleEnum
+from src.models.models import User, Photo, Role
 
 
 class AdminRepository:
@@ -46,10 +47,39 @@ class AdminRepository:
 
     async def get_all_users_comments(self, user_id: int):
 
-        query = select(Comment).where(Comment.user_id == user_id)
+        query = (select(Comment)
+                 .options(joinedload(Comment.photo))
+                 .where(Comment.user_id == user_id))
         comments = await self.session.execute(query)
         return comments.scalars().all()
 
 
+    async def get_role_by_name(self, name: RoleEnum):
+        """
+        Retrieves a role by its name.
 
+        Args:
+            name (RoleEnum): The name of the role to retrieve.
+
+        Returns:
+            Role or None: The `Role` object if found, otherwise `None`.
+        """
+        query = select(Role).where(Role.name == name.value)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+
+    async def ban_unban(self, user_id: int):
+        query = select(User).where(User.id == user_id)
+        result = await self.session.execute(query)
+        user = result.scalar_one_or_none()
+        if not user:
+            return None
+
+        user.is_banned = not user.is_banned
+
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
 

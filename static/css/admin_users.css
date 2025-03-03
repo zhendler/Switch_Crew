@@ -98,10 +98,36 @@
     text-align: center;
 }
 
-.comment-photo {
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
-    object-fit: cover;
+
+
+
+ div user-comments {
+    width: 20%;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.comment-card {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.comment-card:hover {
+    background-color: #ececec;
+}
+
+
 

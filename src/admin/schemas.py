@@ -2,6 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from enum import Enum
 
 
 class UserForAdmin(BaseModel):
@@ -32,6 +33,9 @@ class UserNameForAdmin(BaseModel):
     class Config:
         from_attributes = True
 
+class PhotoForComments(BaseModel):
+    url_link: str
+
 class UserCommentsForAdmin(BaseModel):
     id: int
     content: str
@@ -39,3 +43,14 @@ class UserCommentsForAdmin(BaseModel):
     photo_id: int
     created_at: datetime
     updated_at: datetime
+    photo: PhotoForComments
+
+    class Config:
+        from_attributes = True
+
+class RoleEnum(Enum):
+    ADMIN = "Admin"
+    MODERATOR = "Moderator"
+    USER = "User"
+
+
