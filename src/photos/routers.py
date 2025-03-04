@@ -19,6 +19,7 @@ from fastapi.responses import RedirectResponse
 from config.db import get_db
 from src.auth.utils import get_current_user, FORALL, FORMODER, get_current_user_cookies
 from src.models.models import User, Photo
+from src.photos.optimized_repos_for_pages import PhotoRepositoryOptimized
 from src.photos.repos import PhotoRepository, PhotoRatingRepository
 from src.photos.schemas import (
     PhotoResponse,
@@ -246,8 +247,8 @@ async def photo_page(
         db: AsyncSession = Depends(get_db),
         response_format: str = Depends(get_response_format)
 ):
-    photo_repo = PhotoRepository(db)
-    photo = await photo_repo.get_photo_by_id(photo_id)
+    photo_repo = PhotoRepositoryOptimized(db)
+    photo = await photo_repo.data_for_photo_page(photo_id)
     reaction_repo = ReactionRepository(db)
 
     user = await get_current_user_cookies(request, db)
@@ -256,16 +257,16 @@ async def photo_page(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Photo with id {photo_id} not found",
         )
-
     if user:
         reaction_active = await reaction_repo.get_reaction_by_user_and_photo(photo_id, user.id)
     else:
         reaction_active = None
 
-    photo.created_at = photo.created_at.isoformat()
+    print(photo)
+    print('111111111111111111111111111111111111111')
     reaction_counts = await reaction_repo.get_reaction_counts(photo_id)
 
-    formatted_date = datetime.fromisoformat(photo.created_at[:-6]).strftime("%d %B %Y")
+    formatted_date = datetime.fromisoformat(photo["created_at"][:-6]).strftime("%d %B %Y")
 
     if response_format == "json":
         return photo

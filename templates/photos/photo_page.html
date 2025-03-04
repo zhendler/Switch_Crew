@@ -8,7 +8,7 @@
         <div class="photo-section">
             <img src="{{ photo.url_link }}" alt="{{ photo.title }}" class="photo-img">
             <div class="photo-details">
-                {% if photo.owner.username == user.username %}
+                {% if photo.username == user.username %}
                     <div class="delete-button-container">
                         <form action="/photos/delete/{{ photo.id }}" method="post">
                             <button type="submit" class="delete-button-photo">
@@ -27,11 +27,11 @@
                 </div>
                 {% endif %}
                 <div class="user-info">
-                    <a href="/page/{{ photo.owner.username }}">
-                        <img src="{{ photo.owner.avatar_url }}" alt="{{ photo.owner.username }}" class="avatar">
+                    <a href="/page/{{ photo.username }}">
+                        <img src="{{ photo.avatar_url }}" alt="{{ photo.username }}" class="avatar">
                     </a>
-                    <a href="/page/{{ photo.owner.username }}">
-                        <p class="owner-username">{{ photo.owner.username }}</p>
+                    <a href="/page/{{ photo.username }}">
+                        <p class="owner-username">{{ photo.username }}</p>
                     </a>
                 </div>
 
@@ -47,10 +47,10 @@
 
                 <div class="tags">
                     {% for tag in photo.tags %}
-                        <a href="/tags/{{ tag.name }}/photos/" class="tag">#{{ tag.name }}</a>
+                        <a href="/tags/{{ tag }}/photos/" class="tag">#{{ tag }}</a>
                     {% endfor %}
                 </div>
-                <p class="description" data-photo-id="{{ photo.id }}">{{ photo_created_at }}</p>
+                <p class="description" data-photo-id="{{ photo.id }}">{{ photo.created_at }}</p>
             </div>
         </div>
         
@@ -77,14 +77,14 @@
                 <div class="comment-card">
                     <div class="comment-header">
                         <div class="comment-author-container">
-                            <a href="/page/{{ comment.user.username }}">
-                                <img src="{{ comment.user.avatar_url }}" alt="Avatar" class="comment-avatar">
+                            <a href="/page/{{ comment.username }}">
+                                <img src="{{ comment.avatar_url }}" alt="Avatar" class="comment-avatar">
                             </a>
-                            <a href="/page/{{ comment.user.username }}">
-                                <p class="username">{{ comment.user.username }}</p>
+                            <a href="/page/{{ comment.username }}">
+                                <p class="username">{{ comment.username }}</p>
                             </a>
                         </div>
-                        {% if comment.user.username == user.username %}
+                        {% if comment.username == user.username %}
                         <div class="action-buttons">
                                 <button class="edit-button-comment" data-comment-id="{{ comment.id }}" data-comment-text="{{ comment.content }}">
                                     <img src="/static/images/pencil.png" alt="Edit Icon" class="action-icon">

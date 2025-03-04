@@ -249,7 +249,8 @@ class PhotoRepository:
 
         photos = await self.session.execute(photos_query)
         photos_result = photos.all()
-
+        print(photos_result)
+        print('222222222222222222222222222222222222222222222222222222')
         comments_query = (
             select(Comment.content, Comment.photo_id, User.username, User.avatar_url)
             .join(User, Comment.user_id == User.id)
