@@ -1,6 +1,11 @@
 import os
 from datetime import datetime
+import json
 
+import aiofiles
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,12 +23,44 @@ from src.comments.routers import router as comment_router
 from src.auth.routers import router as auth_router
 from src.auth.utils import BANNED_CHECK, ACTIV_AND_BANNED, get_current_user_cookies
 from src.photos.routers import photo_router, mainrouter
-from src.user_profile.repos import UserProfileRepository
+from src.user_profile.repos import UserProfileRepository, PopularUsersRepository
 from src.user_profile.routers import router as user_router
 from src.utils.front_end_utils import truncatechars, format_datetime
 from src.subscription.routers import router as subscription_router
 
-app = FastAPI()
+
+async def update_top_users():
+    async for session in get_db():
+        repository = PopularUsersRepository(session)
+        await repository.update_top_all_users()
+
+
+def start_scheduler():
+    scheduler = AsyncIOScheduler()
+    trigger = CronTrigger(hour=16, minute=32, timezone="Europe/Kiev")
+    scheduler.add_job(update_top_users, trigger)
+    scheduler.start()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    file_path = "top_users.json"
+    if not os.path.exists(file_path):
+        async for session in get_db():
+            repository = PopularUsersRepository(session)
+            top_users = await repository.get_top_all_users()
+            async with aiofiles.open(file_path, "w", encoding="utf-8") as f:
+                await f.write(json.dumps(top_users, ensure_ascii=False, indent=4))
+            print("File top_users.json was created.")
+            break
+    else:
+        print("File top_users.json already exists.")
+    start_scheduler()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+
 
 # app.include_router(tag_router, prefix="/tags", tags=["tags"], dependencies=BANNED_CHECK)
 # app.include_router(auth_router, prefix="/auth", tags=["auth"])
@@ -64,7 +101,7 @@ templates = Jinja2Templates(directory="templates")
 templates.env.filters["truncatechars"] = truncatechars
 
 
-@app.get('/search/')
+@app.get("/search/")
 async def search(
     request: Request,
     query: str,
@@ -92,9 +129,7 @@ async def search(
 
 
 @app.get("/page/{username}")
-async def page(request: Request,
-               username: str,
-               db: AsyncSession = Depends(get_db)):
+async def page(request: Request, username: str, db: AsyncSession = Depends(get_db)):
     user_repo = UserRepository(db)
     photo_repo = PhotoRepository(db)
 

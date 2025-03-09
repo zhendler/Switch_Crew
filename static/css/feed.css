@@ -273,25 +273,182 @@
     line-height: 1.5;
 }
 
+
+/* Mobile Optimization for Feed Page */
 @media (max-width: 768px) {
+    .photo-feed-container {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .photo-grid {
+        gap: 15px;
+    }
+
+    .photo-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .photo-image {
+        max-height: 300px;
+    }
+
+    .photo-info {
+        padding: 10px;
+    }
+
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+    }
+
+    .photo-user {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .photo-caption {
+        font-size: 12px;
+        margin: 8px 0;
+        padding: 0 8px;
+    }
+
+    .photo-tags {
+        gap: 3px;
+        padding: 0 8px;
+    }
+
+    .tag-link {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .reactions {
+        gap: 5px;
+    }
+
+    .reaction-circle {
+        width: 35px;
+        height: 35px;
+    }
+
+    .reaction-circle img {
+        width: 25px;
+        height: 25px;
+    }
+
+    .feed-comments-section {
+        margin-top: 5px;
+    }
+
+    .feed-comment-toggle {
+        padding: 5px 15px;
+        font-size: 12px;
+    }
+
+    .feed-comment-form {
+        flex-direction: column;
+        gap: 5px;
+        margin: 5px 0;
+        padding: 0 5px;
+    }
+
+    .feed-comment-input {
+        width: 100%;
+        min-height: 30px;
+        max-height: 30px;
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+
+    .feed-comment-submit {
+        width: 100%;
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .feed-comment-card {
+        padding: 5px;
+        gap: 8px;
+    }
+
+    .feed-comment-avatar {
+        width: 20px;
+        height: 20px;
+    }
+
+    .feed-comment-content {
+        font-size: 12px;
+    }
+
+    .feed-comment-actions {
+        gap: 3px;
+    }
+
+    .feed-comment-action img {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Auth Prompt Mobile Styles */
     .auth-prompt-container {
-        margin: 20px;
+        margin: 10px;
+        padding: 15px;
     }
 
     .auth-prompt-title {
-        font-size: 24px;
+        font-size: 22px;
+        margin-bottom: 15px;
     }
 
     .auth-prompt-subtitle {
-        font-size: 16px;
+        font-size: 14px;
+        margin-bottom: 20px;
     }
 
     .auth-buttons {
         flex-direction: column;
+        gap: 10px;
     }
 
     .auth-button {
-        width: 100%;
-        text-align: center;
+        padding: 12px 20px;
+        font-size: 16px;
     }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 10px;
+    }
+
+    .feature-card {
+        padding: 15px;
+    }
+
+    .feature-title {
+        font-size: 18px;
+    }
+
+    .feature-description {
+        font-size: 14px;
+    }
+}
+
+/* Additional Mobile-First Improvements */
+body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+input, textarea, button {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
 }

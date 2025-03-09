@@ -41,3 +41,13 @@ class UserAvatarResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PopularUsersResponse(BaseModel):
+    position: int
+    user_id: int
+    username: str
+    score: int
+
+    class Config:
+        from_attributes = True
