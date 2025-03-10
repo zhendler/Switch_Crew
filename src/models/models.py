@@ -199,6 +199,14 @@ class User(Base):
         back_populates="subscribed_to",
         lazy="selectin",
     )
+
+    chats: Mapped[list["Chat"]] = relationship(
+        "Chat", secondary=chat_users, back_populates="users", lazy="selectin"
+    )
+    messages: Mapped[list["Message"]] = relationship(
+        "Message", back_populates="sender", lazy="selectin", cascade="all, delete"
+    )
+
     # Скарги, які подав користувач
     submitted_reports: Mapped[list["Report"]] = relationship("Report", foreign_keys=[Report.user_id], lazy="selectin")
 
