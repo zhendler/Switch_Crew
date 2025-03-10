@@ -125,15 +125,15 @@ def decode_access_token(token: str) -> TokenData | None:
         return None
 
 
-# async def get_current_user(
-#     token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)   # оригінал
-# ) -> User:
-
-
-
 async def get_current_user(
-    token: str = Depends(token_from_cookie), db: AsyncSession = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)   # оригінал
 ) -> User:
+
+
+
+# async def get_current_user(
+#     token: str = Depends(token_from_cookie), db: AsyncSession = Depends(get_db)
+# ) -> User:
     """
     Retrieves the current user based on the access token.
 
@@ -147,8 +147,8 @@ async def get_current_user(
     Raises:
         HTTPException: If the token is invalid or the user does not exist.
     """
-    if token is None:
-        return None
+    # if token is None:
+    #     return None
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

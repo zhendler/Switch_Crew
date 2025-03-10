@@ -1,4 +1,3 @@
-from django.db.models.expressions import result
 from fastapi import APIRouter, Request, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
