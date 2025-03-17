@@ -1,0 +1,86 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/admin_users.css">
+<div class="container_users">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">Користувачі</h1>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="table">
+            <thead class="th">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avatar</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for user in users %}
+                <tr>
+                    <td><a href = "/admin/user/{{user.id}}" target = "_blank">{{ user.id }}</a></td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if user.avatar_url %}
+                            <img src="{{ user.avatar_url }}" alt="Avatar" class="h-10 w-10 rounded-full" style="width: 50px; height: 50px; ">
+                        {% else %}
+                            <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span class="text-gray-500 text-sm">{{ user.username[0] | upper }}</span>
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ user.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if user.is_active %}
+                                bg-green-100 text-green-800
+                            {% else %}
+                                bg-red-100 text-red-800
+                            {% endif %}">
+                            {{ 'Активний' if user.is_active else 'Неактивний' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="/users/{{ user.id }}" class="text-blue-600 hover:text-blue-900 mr-4">Деталі</a>
+                        <a href="/users/{{ user.id }}/edit" class="text-indigo-600 hover:text-indigo-900 mr-4">Редагувати</a>
+                        <button onclick="deleteUser({{ user.id }})" class="text-red-600 hover:text-red-900">Видалити</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function deleteUser(userId) {
+    if (confirm('Ви впевнені, що хочете видалити цього користувача?')) {
+        fetch(`/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Помилка при видаленні користувача');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Помилка при видаленні користувача');
+        });
+    }
+}
+</script>
+{% endblock %}

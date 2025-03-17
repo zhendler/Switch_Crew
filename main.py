@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.admin.routers import router as admin_router
 from config.db import get_db
 from src.auth.repos import UserRepository
 from src.photos.optimized_repos_for_pages import PhotoRepositoryOptimized
@@ -77,6 +78,9 @@ app = FastAPI(lifespan=lifespan)
 #     dependencies=BANNED_CHECK,
 # )
 # app.include_router(web_router, prefix="")
+
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
+app.include_router(mainrouter, prefix="")
 
 app.include_router(tag_router, prefix="/tags", tags=["tags"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])

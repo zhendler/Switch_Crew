@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/css/admin-styles.css">
+    <link rel="stylesheet" href="/static/css/admin-header-style.css">
+
+</head>
+  <body>
+    <header class="header">
+    <div class="container">
+        <div class="logo">
+            <a href="/">
+                <img src="/static/images/logo.png" alt="Logo" class="Logo">
+            </a>
+        </div>
+        <nav class="nav">
+            <ul>
+                <li><a href="/">Back to Main</a></li>
+                <li><a href="/admin">Dashboard</a></li>
+                <li><a href="/admin/userinfo/">Users</a></li>
+                <li><a href="/admin/reports/">Reports</a></li>
+            </ul>
+        </nav>
+        <div class="search-bar">
+            <form action="/search/" method="get">
+                <input type="text" name="query" placeholder="Search...">
+                <button type="submit" class="search-button">
+                    <img src="/static/images/search-icon.png" alt="Search" class="search-icon">
+                </button>
+            </form>
+        </div>
+
+
+        {% if user %}
+        <div class="user-profile-header">
+            <a href="/photos/upload_photo/">
+                <button class="add-button">
+                    <span class="plus-icon">+</span>
+                </button>
+            </a>
+            <a href="/page/{{ user.username }}">
+                <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="user-avatar-header">
+            </a>
+            <a href="/page/{{ user.username }}" class="user-name-header">{{ user.username }}</a>
+        </div>
+        <div class="user-actions">
+            <a href="/logout" class="register">Log out</a>
+        </div>
+        {% else %}
+        <div class="user-actions">
+            <a href="/login/" class="login">Login</a>
+            <a href="/register_page" class="register">Sign up</a>
+        </div>
+        {% endif %}
+    </div>
+</header>
+
+<main class="content">
+    {% block content %}
+
+    {% endblock %}
+</main>
+
+<footer class="footer">
+    <div class="footer-container">
+        <p>&copy; 2024 Switch Crew. All rights reserved.</p>
+        <nav class="footer-nav">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+            <a href="#">Contact Us</a>
+        </nav>
+    </div>
+</footer>
+
+</body>
+
+  </html>
+
