@@ -92,3 +92,51 @@ class PhotoRepositoryOptimized:
                     })
 
         return photo_info
+
+
+    async def get_photos_for_page(self, user_id: int):
+        latest_comment = aliased(Comment)
+        comment_author = aliased(User)
+
+        latest_comment_content = (
+            select(latest_comment.content)
+            .where(latest_comment.photo_id == Photo.id)
+            .order_by(desc(latest_comment.created_at))
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        latest_comment_user_id = (
+            select(latest_comment.user_id)
+            .where(latest_comment.photo_id == Photo.id)
+            .order_by(desc(latest_comment.created_at))
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        latest_comment_username = (
+            select(comment_author.username)
+            .join(latest_comment, comment_author.id == latest_comment.user_id)
+            .where(latest_comment.photo_id == Photo.id)
+            .order_by(desc(latest_comment.created_at))
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        result = await self.session.execute(
+            select(
+                Photo.id,
+                Photo.url_link,
+                Photo.description,
+                latest_comment_content.label("comment_content"),
+                latest_comment_user_id.label("comment_user_id"),
+                latest_comment_username.label("comment_username")
+            )
+            .outerjoin(photo_tags, Photo.id == photo_tags.c.photo_id)
+            .where(Photo.owner_id == user_id)
+            .distinct()
+        )
+
+        rows = result.mappings().all()
+        print(rows)
+        return rows

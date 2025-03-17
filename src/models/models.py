@@ -17,6 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from config.db import Base
+from src.reports.schemas import ReportStatus
 
 
 class Role(Base):
@@ -78,6 +79,48 @@ class Reaction(Base):
     )
     user: Mapped["User"] = relationship(
         "User", secondary=photo_reactions, back_populates="reactions", lazy="selectin"
+    )
+
+
+class Report(Base):
+    __tablename__ = "reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    reported_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
+    photo_id: Mapped[int | None] = mapped_column(
+        ForeignKey("photos.id", ondelete="CASCADE"), nullable=True
+    )
+    comment_id: Mapped[int | None] = mapped_column(
+        ForeignKey("comments.id", ondelete="CASCADE"), nullable=True
+    )
+    reason: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String, default=ReportStatus.PENDING.value)
+
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    # Користувач, що подав скаргу
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id], lazy="selectin")
+
+    # Користувач, на якого подано скаргу
+    reported_user: Mapped["User"] = relationship(
+        "User", foreign_keys=[reported_user_id], lazy="selectin"
+    )
+
+    # Фото, на яке подано скаргу (якщо скарга на фото)
+    photo: Mapped["Photo"] = relationship(
+        "Photo", back_populates="reports", lazy="selectin"
+    )
+
+    # Коментар, на який подано скаргу (якщо скарга на коментар)
+    comment: Mapped["Comment"] = relationship(
+        "Comment", back_populates="reports", lazy="selectin"
     )
 
 
@@ -177,6 +220,16 @@ class User(Base):
         cascade="all, delete",
     )
 
+    # Скарги, які подав користувач
+    submitted_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.user_id], lazy="selectin"
+    )
+
+    # Скарги, подані на цього користувача
+    received_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.reported_user_id], lazy="selectin"
+    )
+
 
 class Photo(Base):
     """
@@ -230,6 +283,9 @@ class Photo(Base):
     reactions: Mapped[list["Reaction"]] = relationship(
         "Reaction", secondary=photo_reactions, back_populates="photos", lazy="selectin"
     )
+    reports: Mapped[list["Report"]] = relationship(
+        "Report", back_populates="photo", lazy="selectin"
+    )
 
 
 class Comment(Base):
@@ -282,6 +338,9 @@ class Comment(Base):
         back_populates="parent",
         cascade="all, delete-orphan",
         lazy="selectin",
+    )
+    reports: Mapped[list["Report"]] = relationship(
+        "Report", back_populates="comment", lazy="selectin"
     )
 
 

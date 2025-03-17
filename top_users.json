@@ -3,13 +3,13 @@
         "position": 1,
         "user_id": 3,
         "username": "Maksym",
-        "score": 87
+        "score": 108
     },
     {
         "position": 2,
         "user_id": 79,
         "username": "Viktor",
-        "score": 52
+        "score": 62
     },
     {
         "position": 3,
@@ -19,21 +19,21 @@
     },
     {
         "position": 4,
+        "user_id": 80,
+        "username": "Dmitriy",
+        "score": 36
+    },
+    {
+        "position": 5,
         "user_id": 38,
         "username": "user23",
         "score": 35
     },
     {
-        "position": 5,
+        "position": 6,
         "user_id": 6,
         "username": "user48",
         "score": 30
-    },
-    {
-        "position": 6,
-        "user_id": 80,
-        "username": "Dmitriy",
-        "score": 22
     },
     {
         "position": 7,
