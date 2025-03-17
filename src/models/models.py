@@ -66,13 +66,6 @@ photo_reactions = Table(
     Column("created_at", DateTime, default=datetime.now()),
 )
 
-chat_users = Table(
-    "chat_users",
-    Base.metadata,
-    Column("chat_id", ForeignKey("chats.id"), primary_key=True),
-    Column("user_id", ForeignKey("users.id"), primary_key=True),
-)
-
 
 class Reaction(Base):
     __tablename__ = "reactions"
@@ -169,11 +162,19 @@ class User(Base):
         back_populates="subscribed_to",
         lazy="selectin",
     )
-    chats: Mapped[list["Chat"]] = relationship(
-        "Chat", secondary=chat_users, back_populates="users", lazy="selectin"
+    sent_messages: Mapped[list["Message"]] = relationship(
+        "Message",
+        foreign_keys="[Message.sender_id]",
+        back_populates="sender",
+        lazy="selectin",
+        cascade="all, delete",
     )
-    messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="sender", lazy="selectin", cascade="all, delete"
+    received_messages: Mapped[list["Message"]] = relationship(
+        "Message",
+        foreign_keys="[Message.receiver_id]",
+        back_populates="resiver",
+        lazy="selectin",
+        cascade="all, delete",
     )
 
 
@@ -371,67 +372,25 @@ class Subscription(Base):
     )
 
 
-class Chat(Base):
-    """
-    Chat Model.
-
-    Represents a chat between users.
-
-    Attributes:
-        id (int): The unique identifier of the chat.
-        created_at (datetime): The timestamp when the chat was created.
-        updated_at (datetime): The timestamp of the last message in the chat.
-        users (list[User]): Many-to-many relationship with the User model.
-        messages (list[Message]): One-to-many relationship with the Message model.
-    """
-
-    __tablename__ = "chats"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=text("CURRENT_TIMESTAMP"),
-    )
-    users: Mapped[list["User"]] = relationship(
-        "User", secondary="chat_users", back_populates="chats", lazy="selectin"
-    )
-    messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="chat", cascade="all, delete", lazy="selectin"
-    )
-
-
 class Message(Base):
-    """
-    Message Model.
-
-    Represents a message in a chat.
-
-    Attributes:
-        id (int): The unique identifier of the message.
-        chat_id (int): The ID of the chat this message belongs to.
-        sender_id (int): The ID of the user who sent the message.
-        content (str): The text content of the message.
-        created_at (datetime): The timestamp when the message was sent.
-        chat (Chat): A many-to-one relationship with the Chat model.
-        sender (User): A many-to-one relationship with the User model.
-    """
-
     __tablename__ = "messages"
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    chat_id: Mapped[int] = mapped_column(ForeignKey("chats.id"), nullable=False)
     sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    receiver_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
-    )
-    chat: Mapped["Chat"] = relationship(
-        "Chat", back_populates="messages", lazy="selectin"
     )
     sender: Mapped["User"] = relationship(
-        "User", back_populates="messages", lazy="selectin"
+        "User",
+        foreign_keys=[sender_id],
+        back_populates="sent_messages",
+        lazy="selectin",
+    )
+    resiver: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[receiver_id],
+        back_populates="received_messages",
+        lazy="selectin",
     )
