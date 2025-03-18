@@ -205,6 +205,16 @@ class User(Base):
         back_populates="subscribed_to",
         lazy="selectin",
     )
+
+    # Скарги, які подав користувач
+    submitted_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.user_id], lazy="selectin"
+    )
+
+    # Скарги, подані на цього користувача
+    received_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.reported_user_id], lazy="selectin"
+    )
     sent_messages: Mapped[list["Message"]] = relationship(
         "Message",
         foreign_keys="[Message.sender_id]",
@@ -218,16 +228,6 @@ class User(Base):
         back_populates="resiver",
         lazy="selectin",
         cascade="all, delete",
-    )
-
-    # Скарги, які подав користувач
-    submitted_reports: Mapped[list["Report"]] = relationship(
-        "Report", foreign_keys=[Report.user_id], lazy="selectin"
-    )
-
-    # Скарги, подані на цього користувача
-    received_reports: Mapped[list["Report"]] = relationship(
-        "Report", foreign_keys=[Report.reported_user_id], lazy="selectin"
     )
 
 
@@ -432,12 +432,14 @@ class Subscription(Base):
 
 
 class Message(Base):
+
     __tablename__ = "messages"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     receiver_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    content: Mapped[str] = mapped_column(String, nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    content: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
