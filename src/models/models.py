@@ -67,13 +67,6 @@ photo_reactions = Table(
     Column("created_at", DateTime, default=datetime.now()),
 )
 
-chat_users = Table(
-    "chat_users",
-    Base.metadata,
-    Column("chat_id", ForeignKey("chats.id"), primary_key=True),
-    Column("user_id", ForeignKey("users.id"), primary_key=True),
-)
-
 
 class Reaction(Base):
     __tablename__ = "reactions"
@@ -93,10 +86,18 @@ class Report(Base):
     __tablename__ = "reports"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    reported_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    photo_id: Mapped[int | None] = mapped_column(ForeignKey("photos.id", ondelete="CASCADE"), nullable=True)
-    comment_id: Mapped[int | None] = mapped_column(ForeignKey("comments.id", ondelete="CASCADE"), nullable=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    reported_user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
+    photo_id: Mapped[int | None] = mapped_column(
+        ForeignKey("photos.id", ondelete="CASCADE"), nullable=True
+    )
+    comment_id: Mapped[int | None] = mapped_column(
+        ForeignKey("comments.id", ondelete="CASCADE"), nullable=True
+    )
     reason: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default=ReportStatus.PENDING.value)
 
@@ -108,14 +109,19 @@ class Report(Base):
     user: Mapped["User"] = relationship("User", foreign_keys=[user_id], lazy="selectin")
 
     # Користувач, на якого подано скаргу
-    reported_user: Mapped["User"] = relationship("User", foreign_keys=[reported_user_id], lazy="selectin")
+    reported_user: Mapped["User"] = relationship(
+        "User", foreign_keys=[reported_user_id], lazy="selectin"
+    )
 
     # Фото, на яке подано скаргу (якщо скарга на фото)
-    photo: Mapped["Photo"] = relationship("Photo", back_populates="reports", lazy="selectin")
+    photo: Mapped["Photo"] = relationship(
+        "Photo", back_populates="reports", lazy="selectin"
+    )
 
     # Коментар, на який подано скаргу (якщо скарга на коментар)
-    comment: Mapped["Comment"] = relationship("Comment", back_populates="reports", lazy="selectin")
-
+    comment: Mapped["Comment"] = relationship(
+        "Comment", back_populates="reports", lazy="selectin"
+    )
 
 
 class User(Base):
@@ -200,20 +206,29 @@ class User(Base):
         lazy="selectin",
     )
 
-    chats: Mapped[list["Chat"]] = relationship(
-        "Chat", secondary=chat_users, back_populates="users", lazy="selectin"
-    )
-    messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="sender", lazy="selectin", cascade="all, delete"
-    )
-
     # Скарги, які подав користувач
-    submitted_reports: Mapped[list["Report"]] = relationship("Report", foreign_keys=[Report.user_id], lazy="selectin")
+    submitted_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.user_id], lazy="selectin"
+    )
 
     # Скарги, подані на цього користувача
-    received_reports: Mapped[list["Report"]] = relationship("Report", foreign_keys=[Report.reported_user_id],
-                                                            lazy="selectin")
-
+    received_reports: Mapped[list["Report"]] = relationship(
+        "Report", foreign_keys=[Report.reported_user_id], lazy="selectin"
+    )
+    sent_messages: Mapped[list["Message"]] = relationship(
+        "Message",
+        foreign_keys="[Message.sender_id]",
+        back_populates="sender",
+        lazy="selectin",
+        cascade="all, delete",
+    )
+    received_messages: Mapped[list["Message"]] = relationship(
+        "Message",
+        foreign_keys="[Message.receiver_id]",
+        back_populates="resiver",
+        lazy="selectin",
+        cascade="all, delete",
+    )
 
 
 class Photo(Base):
@@ -268,7 +283,8 @@ class Photo(Base):
     reactions: Mapped[list["Reaction"]] = relationship(
         "Reaction", secondary=photo_reactions, back_populates="photos", lazy="selectin"
     )
-    reports: Mapped[list["Report"]] = relationship("Report", back_populates="photo", lazy="selectin"
+    reports: Mapped[list["Report"]] = relationship(
+        "Report", back_populates="photo", lazy="selectin"
     )
 
 
@@ -323,7 +339,8 @@ class Comment(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    reports: Mapped[list["Report"]] = relationship("Report", back_populates="comment", lazy="selectin"
+    reports: Mapped[list["Report"]] = relationship(
+        "Report", back_populates="comment", lazy="selectin"
     )
 
 
@@ -414,67 +431,27 @@ class Subscription(Base):
     )
 
 
-class Chat(Base):
-    """
-    Chat Model.
-
-    Represents a chat between users.
-
-    Attributes:
-        id (int): The unique identifier of the chat.
-        created_at (datetime): The timestamp when the chat was created.
-        updated_at (datetime): The timestamp of the last message in the chat.
-        users (list[User]): Many-to-many relationship with the User model.
-        messages (list[Message]): One-to-many relationship with the Message model.
-    """
-
-    __tablename__ = "chats"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP(timezone=True),
-        server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=text("CURRENT_TIMESTAMP"),
-    )
-    users: Mapped[list["User"]] = relationship(
-        "User", secondary="chat_users", back_populates="chats", lazy="selectin"
-    )
-    messages: Mapped[list["Message"]] = relationship(
-        "Message", back_populates="chat", cascade="all, delete", lazy="selectin"
-    )
-
-
 class Message(Base):
-    """
-    Message Model.
-
-    Represents a message in a chat.
-
-    Attributes:
-        id (int): The unique identifier of the message.
-        chat_id (int): The ID of the chat this message belongs to.
-        sender_id (int): The ID of the user who sent the message.
-        content (str): The text content of the message.
-        created_at (datetime): The timestamp when the message was sent.
-        chat (Chat): A many-to-one relationship with the Chat model.
-        sender (User): A many-to-one relationship with the User model.
-    """
 
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    chat_id: Mapped[int] = mapped_column(ForeignKey("chats.id"), nullable=False)
     sender_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    receiver_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), server_default=func.now(), nullable=False
     )
-    chat: Mapped["Chat"] = relationship(
-        "Chat", back_populates="messages", lazy="selectin"
-    )
     sender: Mapped["User"] = relationship(
-        "User", back_populates="messages", lazy="selectin"
+        "User",
+        foreign_keys=[sender_id],
+        back_populates="sent_messages",
+        lazy="selectin",
+    )
+    resiver: Mapped["User"] = relationship(
+        "User",
+        foreign_keys=[receiver_id],
+        back_populates="received_messages",
+        lazy="selectin",
     )
