@@ -16,6 +16,7 @@ from config.db import get_db
 from src.auth.repos import UserRepository
 from src.photos.repos import PhotoRepository
 from src.reactions.routers import reaction_router
+from src.reports.routers import report_router
 from src.subscription.repos import SubscriptionRepository
 from src.tags.repos import TagRepository
 from src.tags.routers import tag_router
@@ -80,6 +81,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(admin_router, prefix="/admin", tags=["admin"])
 app.include_router(mainrouter, prefix="")
+app.include_router(report_router, prefix="/report", tags=["report"])
 
 app.include_router(tag_router, prefix="/tags", tags=["tags"])
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
