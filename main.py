@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.admin.routers import router as admin_router
 from config.db import get_db
 from src.auth.repos import UserRepository
+from src.photos.optimized_repos_for_pages import PhotoRepositoryOptimized
 from src.photos.repos import PhotoRepository
 from src.reactions.routers import reaction_router
 from src.reports.routers import report_router
@@ -141,7 +142,8 @@ async def page(request: Request, username: str, db: AsyncSession = Depends(get_d
     date_obj = datetime.fromisoformat(str(user_page.created_at))
     date_of_registration = date_obj.strftime("%Y-%m-%d")
 
-    photos = await photo_repo.get_users_all_photos(user_page)
+    photo_repo_opt = PhotoRepositoryOptimized(db)
+    photos = await photo_repo_opt.get_photos_for_page(user_page.id)
     if photos:
         amount_of_photos = len(photos)
     else:
