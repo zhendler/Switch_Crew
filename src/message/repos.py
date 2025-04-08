@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import select, and_
 
 from src.models.models import User, Message
+from src.message.error_handlers import check_exists
 from src.message.schemas import (
     MessageCreate,
     SentMessageResponse,
@@ -23,10 +24,7 @@ class MessageRepository:
         query = select(User).filter(User.id == receiver_id)
         result = await self.session.execute(query)
         receiver = result.scalars().first()
-        if not receiver:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Receiver not found"
-            )
+        check_exists(receiver, "Receiver not found.")
         new_message = Message(
             sender_id=sender_id,
             receiver_id=receiver_id,
@@ -49,16 +47,12 @@ class MessageRepository:
     async def get_sent_messages(
         self, sender_id: int, receiver_id: int | None = None, limit: int = 30
     ) -> list[SentMessageResponse]:
+        receiver = None
         if receiver_id:
-            result = await self.session.execute(
-                select(User).where(User.id == receiver_id)
-            )
+            query = select(User).filter(User.id == receiver_id)
+            result = await self.session.execute(query)
             receiver = result.scalars().first()
-            if not receiver:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Receiver with ID {receiver_id} not found",
-                )
+            check_exists(receiver, "Receiver not found.")
         stmt = (
             select(Message)
             .where(Message.sender_id == sender_id)
@@ -70,11 +64,7 @@ class MessageRepository:
             stmt = stmt.where(Message.receiver_id == receiver_id)
         result = await self.session.execute(stmt)
         messages = result.scalars().all()
-        if not messages:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No sent messages found.",
-            )
+        check_exists(messages, "No sent messages found.")
         message_response = []
         for message in messages:
             receiver_username = message.resiver.username if message.resiver else None
@@ -93,16 +83,12 @@ class MessageRepository:
     async def get_received_messages(
         self, receiver_id: int, sender_id: int | None = None, limit: int = 30
     ) -> list[ReceivedMessageResponse]:
+        sender = None
         if sender_id:
-            result = await self.session.execute(
-                select(User).where(User.id == sender_id)
-            )
+            query = select(User).filter(User.id == sender_id)
+            result = await self.session.execute(query)
             sender = result.scalars().first()
-            if not sender:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Sender with ID {sender_id} not found",
-                )
+            check_exists(sender, "Sender not found.")
         stmt = (
             select(Message)
             .where(Message.receiver_id == receiver_id)
@@ -114,11 +100,7 @@ class MessageRepository:
             stmt = stmt.where(Message.sender_id == sender_id)
         result = await self.session.execute(stmt)
         messages = result.scalars().all()
-        if not messages:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No received messages found.",
-            )
+        check_exists(messages, "No received messages found.")
         message_response = []
         for message in messages:
             sender_username = message.sender.username if message.sender else None
@@ -137,16 +119,12 @@ class MessageRepository:
     async def get_unread_messages(
         self, receiver_id: int, sender_id: int | None = None, limit: int = 30
     ) -> list[Message]:
+        sender = None
         if sender_id:
-            result = await self.session.execute(
-                select(User).where(User.id == sender_id)
-            )
+            query = select(User).filter(User.id == sender_id)
+            result = await self.session.execute(query)
             sender = result.scalars().first()
-            if not sender:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Sender with ID {sender_id} not found",
-                )
+            check_exists(sender, "Sender not found.")
         stmt = (
             select(Message)
             .where(and_(Message.receiver_id == receiver_id, Message.is_read.is_(False)))
@@ -200,18 +178,28 @@ class MessageRepository:
             await self.session.refresh(message)
         return message
 
-    async def get_chat_history(self, user_id: int, limit: int = 30) -> list[Message]:
+    async def get_chat_history(
+        self,
+        user_id: int,
+        current_user_id: int,
+        limit: int = 30,
+    ) -> list[Message]:
         if user_id:
             result = await self.session.execute(select(User).where(User.id == user_id))
             user = result.scalars().first()
-            if not user:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"User with ID {user_id} not found",
-                )
+            check_exists(user, "User not found.")
         stmt = (
             select(Message)
-            .where((Message.sender_id == user_id) | (Message.receiver_id == user_id))
+            .where(
+                (
+                    (Message.sender_id == current_user_id)
+                    & (Message.receiver_id == user_id)
+                )
+                | (
+                    (Message.sender_id == user_id)
+                    & (Message.receiver_id == current_user_id)
+                )
+            )
             .order_by(Message.created_at.desc())
             .limit(limit)
             .options(selectinload(Message.sender), selectinload(Message.resiver))
