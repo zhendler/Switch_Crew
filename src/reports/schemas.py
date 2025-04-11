@@ -10,11 +10,8 @@ class ReportStatus(str, Enum):
 
 
 class ReportCreateBase(BaseModel):
-    id: int
-    user_id: int
-    reported_user_id: int
     reason: str
-    created_at: datetime  # Час створення скарги
+
 
 class ReportPhotoCreate(ReportCreateBase):
     photo_id: int                     # ID фото, на яке скаржаться
@@ -28,8 +25,14 @@ class ReportCommentCreate(ReportCreateBase):
     class Config:
         from_attributes = True
 
-class ReportPhotoResponse(ReportCreateBase):
-    photo_id: int            # ID фото, на яке скаржаться
+class ReportPhotoResponse(BaseModel):
+    id: int
+    user_id: int
+    reported_user_id: int
+    photo_id: int
+    reason: str
+    status: ReportStatus
+    created_at: datetime
 
     class Config:
         from_attributes = True
