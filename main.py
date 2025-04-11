@@ -29,6 +29,7 @@ from src.user_profile.repos import UserProfileRepository, PopularUsersRepository
 from src.user_profile.routers import router as user_router
 from src.utils.front_end_utils import truncatechars, format_datetime
 from src.subscription.routers import router as subscription_router
+from src.message.routers import router as message_router
 
 
 async def update_top_users():
@@ -95,6 +96,7 @@ app.include_router(
 )
 app.include_router(reaction_router, prefix="/reaction", tags=["reactions"])
 app.include_router(subscription_router, prefix="/subscriptions", tags=["Subscriptions"])
+app.include_router(message_router, prefix="/messages", tags=["Messages"])
 app.include_router(mainrouter, prefix="")
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
