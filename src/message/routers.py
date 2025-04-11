@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.models import User, Message
@@ -30,6 +30,18 @@ async def send_message(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Send a new message to another user.
+    Args:
+        receiver_id: ID of the message recipient.
+        message_model: Message content data.
+        current_user: Authenticated user (sender) obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        The created message with response model formatting.
+    Raises:
+        HTTPException: 400 Bad Request if trying to send message to self.
+        HTTPException: 404 Not Found if receiver doesn't exist.
+    """
     prevent_self_action(
         current_user, receiver_id, "You cannot send a message to yourself."
     )
@@ -54,6 +66,18 @@ async def get_last_sent_messages(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Retrieve messages sent by the current user.
+    Args:
+        receiver_id: Optional filter for messages sent to specific user.
+        limit: Maximum number of messages to return (1-30).
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        List of sent messages with receiver information.
+    Raises:
+        HTTPException: 400 Bad Request if receiver_id is same as current user.
+        HTTPException: 404 Not Found if no messages found.
+    """
     prevent_self_action(
         current_user, receiver_id, "You cannot send a message to yourself."
     )
@@ -76,6 +100,18 @@ async def get_last_received_messages(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Retrieve messages received by the current user.
+    Args:
+        sender_id: Optional filter for messages from specific sender.
+        limit: Maximum number of messages to return (1-30).
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        List of received messages with sender information.
+    Raises:
+        HTTPException: 400 Bad Request if sender_id is same as current user.
+        HTTPException: 404 Not Found if no messages found.
+    """
     prevent_self_action(
         current_user,
         sender_id,
@@ -100,6 +136,18 @@ async def get_last_unread_messages(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Retrieve and mark as read unread messages for current user.
+    Args:
+        sender_id: Optional filter for messages from specific sender.
+        limit: Maximum number of messages to return (1-30).
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        List of previously unread messages (now marked as read).
+    Raises:
+        HTTPException: 400 Bad Request if sender_id is same as current user.
+        HTTPException: 404 Not Found if no unread messages exist.
+    """
     prevent_self_action(
         current_user,
         sender_id,
@@ -128,6 +176,18 @@ async def get_chat_history_by_user_id(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Retrieve conversation history between current user and specified user.
+    Args:
+        user_id: ID of the other conversation participant.
+        limit: Maximum number of messages to return (1-30).
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        Chronological list of messages between the two users.
+    Raises:
+        HTTPException: 400 Bad Request if user_id is same as current user.
+        HTTPException: 404 Not Found if no messages exist or user doesn't exist.
+    """
     message_repo = MessageRepository(db)
     messages = await message_repo.get_chat_history(
         current_user_id=current_user.id, user_id=user_id, limit=limit
@@ -146,6 +206,17 @@ async def delete_own_message(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Delete a message that was sent by the current user.
+    Args:
+        message_id: ID of the message to delete.
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        Success message upon deletion.
+    Raises:
+        HTTPException: 403 Forbidden if user doesn't own the message.
+        HTTPException: 404 Not Found if message doesn't exist.
+    """
     message_repo = MessageRepository(db)
     message = await message_repo.get_message_by_id(message_id)
     check_exists(message, "Message not found.")
@@ -168,6 +239,18 @@ async def update_own_message(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(check_user_active),
 ):
+    """Update the content of a message sent by the current user.
+    Args:
+        message_id: ID of the message to update.
+        message_model: New message content data.
+        current_user: Authenticated user obtained from JWT token.
+        db: Database session dependency.
+    Returns:
+        The updated message with response model formatting.
+    Raises:
+        HTTPException: 403 Forbidden if user doesn't own the message.
+        HTTPException: 404 Not Found if message doesn't exist.
+    """
     message_repo = MessageRepository(db)
     message = await message_repo.get_message_by_id(message_id)
     check_exists(message, "Message not found.")
