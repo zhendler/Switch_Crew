@@ -82,17 +82,17 @@
         // Відправлення повідомлення
         sendBtn.addEventListener("click", () => {
             const content = input.value.trim();
+
+            // Перевірка на порожнє повідомлення чи відсутність ID
             if (!content || !currentUserId) return;
 
-            fetch(`/messages/send-message`, {
+            // Відправка POST-запиту на сервер
+            fetch(`/messages/send-message?receiver_id=${currentUserId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    receiver_id: currentUserId,
-                    content: content
-                })
+                body: JSON.stringify({ content: content })  // тільки контент у body
             })
             .then(response => {
                 if (!response.ok) {
@@ -101,11 +101,12 @@
                 return response.json();
             })
             .then(data => {
-                input.value = "";
-                fetchChatMessages(currentUserId); // Оновлюємо історію після відправлення
+                input.value = "";  // очищення поля вводу
+                fetchChatMessages(currentUserId);  // оновлення історії
             })
             .catch(error => console.error("Error sending message:", error));
         });
+
 
         // Завантажуємо список користувачів після завантаження сторінки
         fetchUsers();
