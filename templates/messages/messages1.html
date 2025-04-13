@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/admin_users.css">
+<link rel="stylesheet" href="/static/css/admin_comments_container.css">
+<link rel="stylesheet" href="/static/css/chat.css">
+
+
+<div class="admin-container">
+    <div class="user-list">
+        <h2>Users</h2>
+        <ul id="user-list"></ul>
+    </div>
+    <div class="chat-window">
+        <h2>Chat</h2>
+        <div id="chat-messages">
+            <p>Select a user to see messages</p>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message-input" placeholder="Type a message..." />
+            <button id="send-message-btn">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const userList = document.getElementById("user-list");
+        const chatBox = document.getElementById("chat-messages");
+        const sendBtn = document.getElementById("send-message-btn");
+        const input = document.getElementById("message-input");
+        let currentUserId = null;
+        let currentChatPartnerName = '';
+
+        // Отримання списку користувачів
+        function fetchUsers() {
+            fetch("/admin/users")
+                .then(response => response.json())
+                .then(users => {
+                    userList.innerHTML = "";
+                    users.forEach(user => {
+                        const li = document.createElement("li");
+                        li.textContent = user.username;
+                        li.dataset.userId = user.id;
+                        li.addEventListener("click", () => {
+                            currentUserId = user.id;
+                            currentChatPartnerName = user.username; // Встановлюємо ім'я співбесідника
+                            fetchChatMessages(user.id);
+                        });
+                        userList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error("Error fetching users:", error));
+        }
+
+        // Отримання історії повідомлень
+        function fetchChatMessages(userId) {
+            fetch(`/messages/chat-history/${userId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    chatBox.innerHTML = "";
+                    if (messages.length === 0) {
+                        chatBox.innerHTML = "<p>No messages yet.</p>";
+                        return;
+                    }
+
+                    messages.forEach(msg => {
+                        const msgDiv = document.createElement("div");
+                        msgDiv.classList.add("chat-message", msg.sender_id === currentUserId ? "admin-msg" : "user-msg");
+
+                        // Додаємо ім'я співбесідника
+                        const senderName = msg.sender_id === currentUserId ? currentChatPartnerName : "You";
+                        msgDiv.innerHTML = `<p><strong>${senderName}:</strong> ${msg.content}</p>`;
+                        chatBox.appendChild(msgDiv);
+                    });
+
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(error => console.error("Error fetching chat messages:", error));
+        }
+
+        // Відправлення повідомлення
+        sendBtn.addEventListener("click", () => {
+            const content = input.value.trim();
+            if (!content || !currentUserId) return;
+
+            fetch(`/messages/send-message`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    receiver_id: currentUserId,
+                    content: content
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Failed to send message");
+                }
+                return response.json();
+            })
+            .then(data => {
+                input.value = "";
+                fetchChatMessages(currentUserId); // Оновлюємо історію після відправлення
+            })
+            .catch(error => console.error("Error sending message:", error));
+        });
+
+        // Завантажуємо список користувачів після завантаження сторінки
+        fetchUsers();
+    });
+
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "admin_base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="/static/css/admin_users.css">
+<link rel="stylesheet" href="/static/css/admin_comments_container.css">
+
+<div class="admin-container">
+    <div class="user-list">
+        <h2>Users</h2>
+        <ul id="user-list"></ul>
+    </div>
+    <div class="chat-window">
+    <h2>Chat</h2>
+    <div id="chat-messages">
+        <p>Select a user to see messages</p>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="message-input" placeholder="Type a message..." />
+        <button id="send-message-btn">Send</button>
+    </div>
+</div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const userList = document.getElementById("user-list");
+        const userInfo = document.getElementById("user-info");
+        const userComments = document.getElementById("user-comments");
+
+
+
+        function fetchUsers() {
+            fetch("/admin/users")
+                .then(response => response.json())
+                .then(users => {
+                    userList.innerHTML = "";
+                    users.forEach(user => {
+                        const li = document.createElement("li");
+                        li.textContent = user.username;
+                        li.dataset.userId = user.id;
+                        li.addEventListener("click", () => {
+                            fetchUserDetails(user.id);
+                            fetchUserComments(user.id);
+                        });
+                        userList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error("Error fetching users:", error));
+        }
+
+        let currentUserId = null;
+
+            // при кліку на користувача
+            li.addEventListener("click", () => {
+                currentUserId = user.id;
+                fetchChatMessages(user.id);
+            });
+
+        function fetchChatMessages(userId) {
+            fetch(`/massages/chat-history/{user_id}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const chatBox = document.getElementById("chat-messages");
+                    chatBox.innerHTML = "";
+
+                    if (messages.length === 0) {
+                        chatBox.innerHTML = "<p>No messages yet.</p>";
+                        return;
+                    }
+
+                    messages.forEach(msg => {
+                        const msgDiv = document.createElement("div");
+                        msgDiv.classList.add("chat-message", msg.is_admin ? "admin-msg" : "user-msg");
+                        msgDiv.innerHTML = `<p><strong>${msg.sender}:</strong> ${msg.content}</p>`;
+                        chatBox.appendChild(msgDiv);
+                    });
+
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch(error => console.error("Error fetching chat messages:", error));
+        }
+
+        document.getElementById("send-message-btn").addEventListener("click", () => {
+            const input = document.getElementById("message-input");
+            const content = input.value.trim();
+            if (!content || !currentUserId) return;
+
+            fetch(`/admin/chat/${currentUserId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ content: content })
+            })
+            .then(response => response.json())
+            .then(data => {
+                input.value = "";
+                fetchChatMessages(currentUserId);
+            })
+            .catch(error => console.error("Error sending message:", error));
+        });
+
+
+
+
+
+
+</script>
+{% endblock %}
