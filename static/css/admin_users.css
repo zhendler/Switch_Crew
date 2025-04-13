@@ -131,3 +131,31 @@
 
 
 
+.chat-window {
+    flex-grow: 1;
+    padding: 20px;
+    border-left: 1px solid #ccc;
+}
+
+#chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.chat-input {
+    display: flex;
+    margin-top: 10px;
+}
+
+#message-input {
+    flex-grow: 1;
+    padding: 10px;
+}
+
+#send-message-btn {
+    margin-left: 10px;
+    padding: 10px;
+}

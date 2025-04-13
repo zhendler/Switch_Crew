@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 from src.models.models import User, Message
 from config.db import get_db
-from src.auth.utils import get_current_user, check_user_active
+from src.auth.utils import get_current_user, check_user_active, get_current_user_cookies
 from src.message.repos import MessageRepository
 from src.message.error_handlers import prevent_self_action, check_exists, check_owner
 from src.message.schemas import (
@@ -13,9 +14,16 @@ from src.message.schemas import (
     MessageUpdateResponse,
     ChatHistoryResponse,
 )
-
+from src.utils.front_end_utils import templates
 
 router = APIRouter()
+
+@router.get("/chat_page", response_model=MessageUpdateResponse)
+async def chat_page(request: Request,
+                       db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_cookies(request, db)
+
+    return templates.TemplateResponse("/messages/messages1.html", {"request": request, "user": user} )
 
 
 @router.post(
@@ -24,12 +32,14 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
 )
 async def send_message(
+    request: Request,
     receiver_id: int,
     message_model: MessageCreate,
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(check_user_active),
+    # _: None = Depends(check_user_active),
 ):
+    current_user = await get_current_user_cookies(request, db)
     """Send a new message to another user.
     Args:
         receiver_id: ID of the message recipient.
@@ -170,12 +180,14 @@ async def get_last_unread_messages(
     status_code=status.HTTP_200_OK,
 )
 async def get_chat_history_by_user_id(
+    request: Request,
     user_id: int,
     limit: int = Query(30, ge=1, le=30, description="Maximum number of messages"),
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    _: None = Depends(check_user_active),
+    # _: None = Depends(check_user_active),
 ):
+    current_user = await get_current_user_cookies(request, db)
     """Retrieve conversation history between current user and specified user.
     Args:
         user_id: ID of the other conversation participant.

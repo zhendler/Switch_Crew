@@ -46,7 +46,7 @@ async def create_comment_html(
         )
 
 
-@router.get("/user/", response_model=list[CommentResponse], dependencies=FORALL)
+@router.get("/user/", response_model=list[CommentResponse])
 async def get_user_comments(
     user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
@@ -62,8 +62,7 @@ async def get_user_comments(
 
 
 @router.get(
-    "/photo/{photo_id}/", response_model=list[CommentResponse], dependencies=FORALL
-)
+    "/photo/{photo_id}/", response_model=list[CommentResponse])
 async def get_photo_comments(
     request: Request,
     photo_id: int,

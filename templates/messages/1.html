@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+        .user-list {
+            width: 30%;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .chat-area {
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .messages {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .input-message {
+            display: flex;
+        }
+        .input-message input {
+            flex: 1;
+            padding: 5px;
+        }
+        .input-message button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-list">
+        <h3>Користувачі</h3>
+        <!-- Тут буде список користувачів -->
+    </div>
+    <div class="chat-area">
+        <div class="messages">
+            <!-- Тут буде історія повідомлень -->
+        </div>
+        <div class="input-message">
+            <input type="text" id="messageInput" placeholder="Введіть повідомлення...">
+            <button onclick="sendMessage()">Відправити</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (message) {
+                // Тут потрібно буде підключити API для відправки повідомлення
+                console.log('Відправлено повідомлення:', message);
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
